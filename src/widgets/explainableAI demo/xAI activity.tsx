@@ -7,6 +7,8 @@ import { Brain, Info, ArrowRight } from 'lucide-react';
 const XAIDemoWidget = () => {
   const [selectedExample, setSelectedExample] = useState(null);
   const [showSteps, setShowSteps] = useState(false);
+
+  // this is a test
   
   const examples = [
     {
