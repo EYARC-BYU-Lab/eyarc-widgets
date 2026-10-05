@@ -8,6 +8,23 @@ import {
 
 const modules = import.meta.glob('./widgets/**/*.{tsx,jsx}')
 
+// HTML artifacts are loaded as text and rendered in a full-page iframe.
+const htmlModules = import.meta.glob('./widgets/**/*.html', {
+  query: '?raw',
+  import: 'default',
+})
+
+const loadHtmlWidget = (load) => () =>
+  load().then((html) => ({
+    default: () => (
+      <iframe
+        className="fixed inset-0 h-full w-full border-0"
+        srcDoc={html}
+        title="HTML widget"
+      />
+    ),
+  }))
+
 const slugify = (value) =>
   value
     .split('/')
@@ -23,14 +40,23 @@ const slugify = (value) =>
 
 const baseUrl = import.meta.env.BASE_URL
 
-const widgets = Object.entries(modules)
+const widgets = [
+  ...Object.entries(modules).map(([file, load]) => [
+    file,
+    load,
+  ]),
+  ...Object.entries(htmlModules).map(([file, load]) => [
+    file,
+    loadHtmlWidget(load),
+  ]),
+]
   .map(([file, load]) => {
     const rel = file
       .replace('./widgets/', '')
-      .replace(/\.(tsx|jsx)$/, '')
+      .replace(/\.(tsx|jsx|html)$/, '')
 
     return {
-      file: `src/widgets/${rel}`,
+      file: file.replace('./', 'src/'),
       name: rel,
       path: `/${slugify(rel)}`,
       Widget: lazy(load),
@@ -81,7 +107,7 @@ function Index() {
 
       {widgets.length === 0 && (
         <p>
-          No widgets yet. Add a .tsx or .jsx file under
+          No widgets yet. Add a .tsx, .jsx or .html file under
           src/widgets/.
         </p>
       )}
