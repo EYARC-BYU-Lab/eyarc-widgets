@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10131a" />
+    <title>Quick Calculator</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+      :root { color: #f5f7fb; background: #0b0e14; font-family: 'Space Grotesk', system-ui, sans-serif; font-synthesis: none; text-rendering: optimizeLegibility; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; }
+      button { font: inherit; }
+      .app-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; overflow: hidden; background: radial-gradient(circle at 50% 0%, rgba(100, 111, 255, .2), transparent 38%), linear-gradient(135deg, #0b0e14 0%, #131826 100%); }
+      .calculator { width: min(100%, 390px); padding: 22px; border: 1px solid rgba(255, 255, 255, .09); border-radius: 30px; background: rgba(25, 29, 40, .82); box-shadow: 0 30px 80px rgba(0, 0, 0, .42), inset 0 1px rgba(255, 255, 255, .06); backdrop-filter: blur(18px); }
+      .calculator-topline { display: flex; align-items: center; justify-content: space-between; padding: 1px 5px 18px; }
+      .eyebrow { color: #818bff; font-size: .68rem; font-weight: 700; letter-spacing: .18em; }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #74dfb4; box-shadow: 0 0 14px #74dfb4; }
+      .screen { min-height: 146px; padding: 20px 18px 16px; display: flex; flex-direction: column; justify-content: end; align-items: end; border-radius: 20px; background: #10131a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .4); overflow: hidden; }
+      .history { width: 100%; min-height: 23px; color: #778096; font-family: 'DM Mono', monospace; font-size: .77rem; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .display { max-width: 100%; color: #f8f9ff; font-family: 'DM Mono', monospace; font-size: clamp(2.3rem, 10vw, 3.5rem); font-weight: 500; letter-spacing: -.08em; line-height: 1.15; overflow-wrap: anywhere; }
+      .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; margin-top: 18px; }
+      .key { min-height: 60px; border: 0; border-radius: 17px; color: #e8ebf5; background: #252b3a; cursor: pointer; font-size: 1.2rem; font-weight: 600; transition: transform .12s ease, background .12s ease, box-shadow .12s ease; box-shadow: inset 0 1px rgba(255, 255, 255, .04); }
+      .key:hover { background: #30384b; box-shadow: 0 8px 18px rgba(0, 0, 0, .2); }
+      .key:active { transform: scale(.95); }
+      .key.utility { color: #aeb6ff; background: #303550; }
+      .key.operator { color: #fff; background: #5d66df; }
+      .key.operator:hover { background: #7079f5; }
+      .key.equals { color: #161a25; background: #8ce4be; }
+      .key.equals:hover { background: #a9f3d1; }
+      .key.wide { grid-column: span 2; text-align: left; padding-left: 24px; }
+      .hint { margin: 17px 0 0; color: #687188; font-size: .7rem; letter-spacing: .04em; text-align: center; }
+      @media (max-width: 380px) { .app-shell { padding: 12px; } .calculator { padding: 16px; border-radius: 24px; } .keypad { gap: 8px; } .key { min-height: 56px; border-radius: 15px; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useEffect, useState } = React;
+      const keys = [
+        { label: 'AC', value: 'clear', kind: 'utility' }, { label: '±', value: 'sign', kind: 'utility' }, { label: '%', value: 'percent', kind: 'utility' }, { label: '÷', value: '/', kind: 'operator' },
+        { label: '7', value: '7' }, { label: '8', value: '8' }, { label: '9', value: '9' }, { label: '×', value: '*', kind: 'operator' },
+        { label: '4', value: '4' }, { label: '5', value: '5' }, { label: '6', value: '6' }, { label: '−', value: '-', kind: 'operator' },
+        { label: '1', value: '1' }, { label: '2', value: '2' }, { label: '3', value: '3' }, { label: '+', value: '+', kind: 'operator' },
+        { label: '0', value: '0', wide: true }, { label: '.', value: '.' }, { label: '=', value: 'equals', kind: 'equals' },
+      ];
+      const formatNumber = (value) => {
+        if (!Number.isFinite(value)) return 'Error';
+        return Number.isInteger(value) ? value.toLocaleString('en-US') : value.toLocaleString('en-US', { maximumFractionDigits: 10 });
+      };
+      const calculate = (left, operator, right) => {
+        const a = Number(left); const b = Number(right);
+        if (operator === '+') return a + b;
+        if (operator === '-') return a - b;
+        if (operator === '*') return a * b;
+        if (operator === '/') return b === 0 ? Number.NaN : a / b;
+        return b;
+      };
+      function App() {
+        const [display, setDisplay] = useState('0');
+        const [stored, setStored] = useState(null);
+        const [operator, setOperator] = useState(null);
+        const [waiting, setWaiting] = useState(false);
+        const [history, setHistory] = useState('');
+        const reset = () => { setDisplay('0'); setStored(null); setOperator(null); setWaiting(false); setHistory(''); };
+        const inputDigit = (digit) => {
+          if (display === 'Error' || waiting) { setDisplay(digit); setWaiting(false); return; }
+          setDisplay((current) => current === '0' ? digit : `${current}${digit}`);
+        };
+        const inputDecimal = () => {
+          if (display === 'Error' || waiting) { setDisplay('0.'); setWaiting(false); return; }
+          if (!display.includes('.')) setDisplay((current) => `${current}.`);
+        };
+        const chooseOperator = (nextOperator) => {
+          if (display === 'Error') return;
+          const current = Number(display.replace(/,/g, ''));
+          if (stored !== null && operator && !waiting) { const result = calculate(stored, operator, current); setStored(result); setDisplay(formatNumber(result)); }
+          else setStored(current);
+          setOperator(nextOperator); setWaiting(true); setHistory(`${formatNumber(current)} ${nextOperator}`);
+        };
+        const equals = () => {
+          if (stored === null || !operator || display === 'Error') return;
+          const current = Number(display.replace(/,/g, '')); const result = calculate(stored, operator, current);
+          setHistory(`${formatNumber(stored)} ${operator} ${formatNumber(current)} =`); setDisplay(formatNumber(result)); setStored(null); setOperator(null); setWaiting(true);
+        };
+        const handleAction = (value) => {
+          if (/^\d$/.test(value)) inputDigit(value);
+          else if (value === '.') inputDecimal();
+          else if (value === 'clear') reset();
+          else if (value === 'sign') setDisplay((current) => current === '0' || current === 'Error' ? current : current.startsWith('-') ? current.slice(1) : `-${current}`);
+          else if (value === 'percent') setDisplay((current) => formatNumber(Number(current.replace(/,/g, '')) / 100));
+          else if (value === 'equals') equals();
+          else chooseOperator(value);
+        };
+        useEffect(() => {
+          const onKeyDown = (event) => {
+            const { key } = event;
+            if (/^\d$/.test(key) || key === '.') handleAction(key);
+            else if (['+', '-', '*', '/'].includes(key)) handleAction(key);
+            else if (key === 'Enter' || key === '=') handleAction('equals');
+            else if (key === 'Escape' || key.toLowerCase() === 'c') handleAction('clear');
+            else if (key === '%') handleAction('percent');
+          };
+          window.addEventListener('keydown', onKeyDown);
+          return () => window.removeEventListener('keydown', onKeyDown);
+        });
+        return (
+          <main className="app-shell">
+            <section className="calculator" aria-label="Calculator">
+              <div className="calculator-topline"><span className="eyebrow">QUICK CALCULATOR</span><span className="status-dot" aria-hidden="true" /></div>
+              <div className="screen" aria-live="polite"><div className="history">{history || 'Ready when you are'}</div><div className="display">{display}</div></div>
+              <div className="keypad">{keys.map(({ label, value, kind = '', wide = false }) => <button className={`key ${kind} ${wide ? 'wide' : ''}`} key={value} onClick={() => handleAction(value)} aria-label={label === '×' ? 'multiply' : label === '÷' ? 'divide' : label}>{label}</button>)}</div>
+              <p className="hint">Use your keyboard · Esc to clear</p>
+            </section>
+          </main>
+        );
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>
