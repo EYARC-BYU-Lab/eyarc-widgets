@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Invoice Processing Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Matched to the assignment's existing process-map artifacts (EYARC tokens) */
+:root {
+  --navy: #002E5D; --yellow: #FFE600; --blue: #0D65C7; --sky: #B5E2FA; --sky-soft: #E6F4FD;
+  --gold: #F2BA05; --gold-dark: #C99A00; --red: #F84725;
+  --gray1: #EAEAF1; --gray2: #C2C2CE; --gray3: #747480;
+  --bg: #F6F7FA; --panel: #ffffff; --map: #ffffff; --border: #DDDEE6; --text: #0F1B2D; --muted: #5B5B68;
+  --ink: var(--navy); --row-solo: #FFFBD6;
+  --shadow: 0 1px 2px rgba(0,46,93,.06), 0 1px 4px rgba(0,46,93,.06);
+  --radius: 10px;
+  --font: "Open Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B1624; --panel: #12213A; --map: #0F1C31; --border: #253A5A; --text: #E4ECF6; --muted: #9FB0C6;
+    --ink: #CFE6F8; --sky-soft: #1A3050; --gray1: #22344F; --gray2: #3A5070; --row-solo: #3A3413;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B1624; --panel: #12213A; --map: #0F1C31; --border: #253A5A; --text: #E4ECF6; --muted: #9FB0C6;
+  --ink: #CFE6F8; --sky-soft: #1A3050; --gray1: #22344F; --gray2: #3A5070; --row-solo: #3A3413;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { font: 14px/1.5 var(--font); background: var(--bg); color: var(--text); padding: 8px; }
+button { font-family: var(--font); }
+
+.card { display: flex; flex-direction: column; height: 800px; max-height: calc(100vh - 16px); min-height: 640px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.rule { display: flex; align-items: baseline; gap: 12px; flex: 1 0 100%; }
+.rule b { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.coverage { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 8px; align-items: stretch; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.map-area { position: relative; flex: 1; min-height: 0; }
+
+.seg { display: inline-flex; border: 1px solid var(--gray2); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg-btn { border: 0; background: transparent; padding: 7px 14px; font-size: 13.5px; color: var(--ink); cursor: pointer; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--gray2); }
+.seg-btn:hover { background: var(--sky-soft); }
+.seg-btn.active { background: #002E5D; color: #fff; font-weight: 600; }
+.ctl { font: inherit; font-size: 16px; cursor: pointer; color: var(--ink); border: 1px solid var(--gray2); background: var(--panel);
+  border-radius: 8px; height: 36px; min-width: 36px; padding: 0 10px; }
+.ctl:hover { background: var(--sky-soft); border-color: var(--blue); }
+.pill-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 0 14px; }
+.pill-btn[aria-pressed="true"], .pill-btn[aria-expanded="true"] { background: #002E5D; color: #fff; border-color: #002E5D; }
+.swatch-red { width: 14px; height: 0; border-top: 3px solid var(--red); display: inline-block; }
+.zoom-group { display: inline-flex; align-items: center; border: 1px solid var(--gray2); border-radius: 8px; background: var(--panel); box-shadow: var(--shadow); }
+.zoom-group .ctl { border: 0; border-radius: 0; height: 34px; }
+.zoom-group .ctl:first-child { border-radius: 7px 0 0 7px; }
+.zoom-group .ctl:last-child { border-radius: 0 7px 7px 0; }
+.zoom-pct { min-width: 52px; text-align: center; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.seg-btn:focus-visible, .ctl:focus-visible, input:focus-visible, .pm-node:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.legend-inline { border-top: 1px solid var(--border); padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend-inline span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-node { display: inline-block; width: 22px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,.25); flex: none; }
+.lg-edge { display: inline-block; width: 22px; height: 0; border-top: 3px solid var(--red); flex: none; }
+
+/* popover menus (legend + variants) */
+.pop { position: absolute; right: 12px; top: 12px; z-index: 7; max-width: calc(100% - 24px); background: var(--panel);
+  border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,46,93,.16); font-size: 13px; }
+.pop-legend { width: 330px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pop-legend b { color: var(--ink); }
+.legend-row { display: flex; align-items: center; gap: 10px; }
+.legend-row .lg-edge.blue { border-top-color: var(--blue); }
+.lg-term { display: inline-block; width: 22px; height: 12px; border-radius: 6px; background: var(--yellow); border: 1px solid var(--gold); flex: none; }
+.muted { color: var(--muted); }
+
+.pop-variants { width: 470px; display: flex; flex-direction: column; max-height: calc(100% - 24px); overflow: hidden; }
+.pv-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.cov-row { display: flex; align-items: center; gap: 12px; }
+.donut { width: 52px; height: 52px; flex: none; }
+.donut-track { fill: none; stroke: var(--gray1); stroke-width: 12; }
+.donut-ring { fill: none; stroke: var(--blue); stroke-width: 12; transform: rotate(-90deg); transform-origin: 48px 48px; transition: stroke-dasharray .3s ease; }
+.donut-pct { font-size: 22px; font-weight: 700; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.cov-text { display: flex; flex-direction: column; line-height: 1.35; }
+.cov-text b { font-size: 15px; color: var(--ink); }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini-btn { border: 1px solid var(--gray2); background: var(--panel); color: var(--ink); border-radius: 7px; padding: 5px 11px; font-size: 13px; cursor: pointer; font-weight: 600; }
+.mini-btn:hover { background: var(--sky-soft); border-color: var(--blue); }
+.mini-btn.on { background: #002E5D; color: #fff; border-color: #002E5D; }
+.pv-table-wrap { overflow: auto; }
+.vt { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vt th { position: sticky; top: 0; background: var(--sky-soft); text-align: left; font-weight: 700; color: var(--ink);
+  padding: 8px 6px; border-bottom: 1px solid var(--sky); white-space: nowrap; font-size: 12.5px; }
+.vt .num { text-align: right; }
+.vt .chk { width: 32px; text-align: center; padding-left: 10px; padding-right: 2px; }
+.vt td { padding: 8px 6px; border-bottom: 1px solid var(--gray1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vt td.rank { font-weight: 700; color: var(--ink); }
+.vt tbody tr { cursor: pointer; }
+.vt tbody tr:hover { background: var(--sky-soft); }
+.vt tbody tr.off td { color: var(--gray3); }
+.vt tbody tr.off .strip i { opacity: .3; }
+.vt tbody tr.solo td { background: var(--row-solo); }
+.vt input[type=checkbox] { width: 16px; height: 16px; accent-color: #002E5D; cursor: pointer; vertical-align: middle; }
+.strip { display: inline-flex; gap: 2px; }
+.strip i { width: 10px; height: 14px; border-radius: 2px; display: inline-block; border: 1px solid rgba(0,0,0,.18); }
+.cov { display: inline-flex; align-items: center; gap: 6px; }
+.cov-bar { width: 30px; height: 6px; border-radius: 3px; background: var(--gray1); overflow: hidden; }
+.cov-bar i { display: block; height: 100%; background: var(--blue); border-radius: 3px; min-width: 3px; }
+.tag { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; }
+.tag.ok { background: #EEF5DC; color: #4A6500; }
+.tag.bad { background: #FDE6E1; color: #B3260A; }
+.pv-foot { padding: 6px 12px; font-size: 12px; color: var(--muted); }
+
+/* map */
+.diagram { position: absolute; inset: 0; background: radial-gradient(circle, var(--gray1) 1px, transparent 1px) 0 0 / 22px 22px, var(--map); }
+.pm-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.pm-svg:active { cursor: grabbing; }
+.pm-node { cursor: pointer; }
+.pm-node .node-rect { stroke: rgba(0,0,0,.28); stroke-width: 1; filter: drop-shadow(0 1px 2px rgba(0,46,93,.18)); }
+.pm-node:hover .node-rect { stroke: var(--sky); stroke-width: 2.5; }
+.pm-node.sel .node-rect { stroke: var(--gold-dark); stroke-width: 4; }
+.node-name { font-size: 13.5px; font-weight: 600; text-anchor: middle; fill: #fff; }
+.node-count { font-size: 13px; text-anchor: middle; fill: rgba(255,255,255,.85); }
+.pm-edge { cursor: pointer; }
+.edge-hit { stroke: transparent; stroke-width: 18; fill: none; }
+.edge-line { stroke: var(--blue); fill: none; transition: stroke .1s; }
+.pm-edge:hover .edge-line { stroke: var(--navy); }
+.pm-edge.viol .edge-line { stroke: var(--red); }
+.pm-edge.sel .edge-line { stroke: var(--gold-dark); }
+.edge-line.term { stroke-dasharray: 6 4; }
+.edge-label { font-size: 13.5px; font-weight: 700; fill: #002E5D; text-anchor: middle; dominant-baseline: middle; }
+.edge-label-bg { fill: #fff; stroke: var(--gray2); stroke-width: 1; }
+.pm-edge:hover .edge-label-bg { stroke: var(--navy); }
+.pm-edge.viol .edge-label-bg { stroke: var(--red); stroke-width: 1.5; }
+.pm-edge.viol .edge-label { fill: #C8300F; }
+.pm-edge.sel .edge-label-bg { stroke: var(--gold-dark); stroke-width: 2; }
+.pm-term rect { stroke-width: 1.5; fill: var(--yellow); stroke: var(--gold); }
+.pm-term text { font-size: 13px; font-weight: 700; text-anchor: middle; fill: #002E5D; }
+
+.tooltip { position: fixed; z-index: 100; pointer-events: none; background: #002E5D; color: #eaf2fb; border-radius: 8px; padding: 8px 11px;
+  font-size: 12.5px; line-height: 1.5; box-shadow: 0 6px 20px rgba(0,46,93,.35); max-width: 340px; }
+.tooltip b { color: #fff; }
+.tooltip i { color: var(--sky); font-size: 11.5px; }
+@media (prefers-reduced-motion: reduce) { .donut-ring, .edge-line { transition: none; } }
+</style>
+<style>.edge-line.time { stroke: #3F6EA6; } .pm-edge:hover .edge-line.time { stroke: var(--navy); }</style>
+</head>
+<body>
+<div class="card">
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Paths shown" id="viewSeg">
+      <button class="seg-btn" data-view="happy">Happy path</button>
+      <button class="seg-btn active" data-view="all">All paths</button>
+    </div>
+    <div class="seg" role="group" aria-label="Map metric" id="metricSeg">
+      <button class="seg-btn" data-metric="cases">Cases</button>
+      <button class="seg-btn active" data-metric="time">Avg. time</button>
+    </div>
+    <span class="coverage" id="coverage"></span>
+    <div class="tools">
+      <div class="zoom-group">
+        <button class="ctl" id="zFit" title="Fit to view" aria-label="Fit to view">⛶</button>
+        <button class="ctl" id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
+        <span class="zoom-pct" id="zoomPct">100%</span>
+        <button class="ctl" id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="map-area"><div class="diagram" id="diagram"></div></div>
+  <div class="legend-inline" id="legendInline"></div>
+</div>
+<div class="tooltip" id="tooltip" hidden></div>
+<script>
+(function () {
+'use strict';
+const TOTAL = 1840;
+const CATS = { intake: ['Invoice intake', '#0D65C7'], appr: ['Approval', '#6E9600'], pay: ['Payment', '#85428E'] };
+const ACTS = {
+  'Receive Invoice':        { cat: 'intake', x: 0, y: 138 },
+  'Enter Invoice':          { cat: 'intake', x: 0, y: 254 },
+  'Match to PO & Receipt':  { cat: 'intake', x: 0, y: 370 },
+  'Correct Invoice Entry':  { cat: 'intake', x: 300, y: 370 },
+  'Approve Invoice':        { cat: 'appr', x: 0, y: 486 },
+  'Schedule Payment':       { cat: 'pay', x: 0, y: 602 },
+  'Pay Invoice':            { cat: 'pay', x: 0, y: 718 }
+};
+/* average waiting time (days) on each connection */
+const TIME = {
+  'Receive Invoice>Enter Invoice': 1.2,
+  'Enter Invoice>Match to PO & Receipt': 0.3,
+  'Match to PO & Receipt>Correct Invoice Entry': 0.2,
+  'Correct Invoice Entry>Match to PO & Receipt': 0.4,
+  'Match to PO & Receipt>Approve Invoice': 8.6,
+  'Approve Invoice>Schedule Payment': 0.5,
+  'Schedule Payment>Pay Invoice': 2.1
+};
+const HAPPY = ['Receive Invoice', 'Enter Invoice', 'Match to PO & Receipt', 'Approve Invoice', 'Schedule Payment', 'Pay Invoice'];
+const VARIANTS = [
+  { count: 1620, acts: HAPPY },
+  { count: 220, acts: ['Receive Invoice', 'Enter Invoice', 'Match to PO & Receipt', 'Correct Invoice Entry', 'Match to PO & Receipt', 'Approve Invoice', 'Schedule Payment', 'Pay Invoice'] }
+];
+
+const CX = 300, NW = 210, NH = 52, TW = 96, TH = 30, L = CX - NW / 2, R = CX + NW / 2;
+const START_Y = 33, END_Y = 834;
+const GRAPH = { x0: 190, w: 520, h: 866 };
+const cx = a => CX + ACTS[a].x, yOf = a => ACTS[a].y;
+const top = a => yOf(a) - NH / 2, bot = a => yOf(a) + NH / 2;
+function geom(from, to) {
+  switch (from + '>' + to) {
+    case 'START>Receive Invoice': return { d: `M${CX},${START_Y + TH / 2} L${CX},${top(to)}`, lx: CX, ly: (START_Y + TH / 2 + top(to)) / 2, term: true };
+    case 'Pay Invoice>END': return { d: `M${CX},${bot(from)} L${CX},${END_Y - TH / 2}`, lx: CX, ly: (bot(from) + END_Y - TH / 2) / 2, term: true };
+    case 'Match to PO & Receipt>Correct Invoice Entry': {
+      const y = yOf(from) - 12, x2 = cx(to) - NW / 2;
+      return { d: `M${R},${y} C${R + 40},${y - 30} ${x2 - 40},${y - 30} ${x2 - 2},${y}`, lx: (R + x2) / 2, ly: y - 23 };
+    }
+    case 'Correct Invoice Entry>Match to PO & Receipt': {
+      const y = yOf(from) + 12, x1 = cx(from) - NW / 2;
+      return { d: `M${x1},${y} C${x1 - 40},${y + 30} ${R + 40},${y + 30} ${R + 2},${y}`, lx: (R + x1) / 2, ly: y + 23 };
+    }
+    default: return { d: `M${CX},${bot(from)} L${CX},${top(to)}`, lx: CX, ly: (bot(from) + top(to)) / 2 };
+  }
+}
+
+const S = { view: 'all', metric: 'time' };
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US');
+const days = d => d.toFixed(1) + ' d';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const nm = x => x === 'START' ? 'Start' : x === 'END' ? 'End' : x;
+
+function buildDFG() {
+  const edges = new Map(), nodes = new Map(); let cases = 0;
+  const vs = S.view === 'happy' ? [VARIANTS[0]] : VARIANTS;
+  for (const v of vs) {
+    cases += v.count;
+    const seq = ['START', ...v.acts, 'END'];
+    for (const a of v.acts) nodes.set(a, (nodes.get(a) || 0) + v.count);
+    for (let i = 0; i < seq.length - 1; i++) {
+      const k = seq[i] + '>' + seq[i + 1];
+      const e = edges.get(k) || { from: seq[i], to: seq[i + 1], count: 0 };
+      e.count += v.count; edges.set(k, e);
+    }
+  }
+  return { edges, nodes, cases };
+}
+
+const tipEl = $('tooltip');
+function tip(html, x, y) {
+  if (!html) { tipEl.hidden = true; return; }
+  tipEl.innerHTML = html; tipEl.hidden = false;
+  const r = tipEl.getBoundingClientRect();
+  let tx = x + 14, ty = y + 14;
+  if (tx + r.width > innerWidth - 8) tx = x - r.width - 14;
+  if (ty + r.height > innerHeight - 8) ty = y - r.height - 14;
+  tipEl.style.left = tx + 'px'; tipEl.style.top = ty + 'px';
+}
+const NS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent) { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const container = $('diagram');
+const svg = el('svg', { class: 'pm-svg', role: 'img', 'aria-label': 'Process map of paid invoices' }, container);
+const defs = el('defs', {}, svg);
+for (const [id, col] of [['arr', '#0D65C7'], ['arrTime', '#3F6EA6']]) {
+  const m = el('marker', { id, viewBox: '0 0 10 10', refX: 8.5, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: col }, m);
+}
+const vp = el('g', {}, svg);
+
+function render() {
+  vp.innerHTML = '';
+  const dfg = buildDFG();
+  const isTime = S.metric === 'time';
+  const maxC = Math.max(...[...dfg.edges.values()].map(e => e.count));
+  const maxT = Math.max(...Object.values(TIME));
+  for (const e of dfg.edges.values()) {
+    const key = e.from + '>' + e.to, gm = geom(e.from, e.to), t = TIME[key];
+    const grp = el('g', { class: 'pm-edge' }, vp);
+    el('path', { d: gm.d, class: 'edge-hit' }, grp);
+    const frac = isTime ? (gm.term ? 0.05 : t / maxT) : e.count / maxC;
+    el('path', { d: gm.d, class: 'edge-line' + (gm.term ? ' term' : '') + (isTime ? ' time' : ''),
+      'stroke-width': (1.5 + 5.5 * frac).toFixed(1), 'marker-end': 'url(#' + (isTime ? 'arrTime' : 'arr') + ')' }, grp);
+    if (!(isTime && gm.term)) {
+      const lt = el('text', { x: gm.lx, y: gm.ly, class: 'edge-label' }, grp);
+      lt.textContent = isTime ? days(t) : fmt(e.count);
+      let bb; try { bb = lt.getBBox(); } catch (_) { bb = { x: gm.lx - 16, y: gm.ly - 8, width: 32, height: 16 }; }
+      grp.insertBefore(el('rect', { x: bb.x - 6, y: bb.y - 2.5, width: bb.width + 12, height: bb.height + 5, rx: 9, class: 'edge-label-bg' }), lt);
+    }
+    grp.addEventListener('mousemove', ev => tip('<b>' + esc(nm(e.from)) + ' → ' + esc(nm(e.to)) + '</b><br>' + fmt(e.count) + ' invoices' +
+      (gm.term ? '' : '<br>Avg. wait: ' + days(t)), ev.clientX, ev.clientY));
+    grp.addEventListener('mouseleave', () => tip(null));
+  }
+  for (const [a, info] of Object.entries(ACTS)) {
+    const n = dfg.nodes.get(a); if (!n) continue;
+    const grp = el('g', { class: 'pm-node', transform: `translate(${cx(a) - NW / 2},${top(a)})` }, vp);
+    el('rect', { width: NW, height: NH, rx: 8, class: 'node-rect', fill: CATS[info.cat][1] }, grp);
+    el('text', { x: NW / 2, y: 22, class: 'node-name' }, grp).textContent = a;
+    el('text', { x: NW / 2, y: 40, class: 'node-count' }, grp).textContent = fmt(n) + ' events';
+    grp.addEventListener('mousemove', ev => tip('<b>' + esc(a) + '</b><br>' + fmt(n) + ' events', ev.clientX, ev.clientY));
+    grp.addEventListener('mouseleave', () => tip(null));
+  }
+  for (const [txt, y] of [['Start', START_Y], ['End', END_Y]]) {
+    const grp = el('g', { class: 'pm-term', transform: `translate(${CX - TW / 2},${y - TH / 2})` }, vp);
+    el('rect', { width: TW, height: TH, rx: TH / 2 }, grp);
+    el('text', { x: TW / 2, y: TH / 2 + 5 }, grp).textContent = txt;
+  }
+  const f = dfg.cases / TOTAL;
+  $('coverage').textContent = fmt(dfg.cases) + ' of ' + fmt(TOTAL) + ' invoices (' + (f * 100).toFixed(f === 1 ? 0 : 1) + '%)';
+}
+$('legendInline').innerHTML = Object.values(CATS).map(([n, c]) => `<span><i class="lg-node" style="background:${c}"></i>${n}</span>`).join('');
+for (const [segId, prop, attr] of [['viewSeg', 'view', 'view'], ['metricSeg', 'metric', 'metric']]) {
+  $(segId).querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
+    S[prop] = b.dataset[attr];
+    $(segId).querySelectorAll('.seg-btn').forEach(x => x.classList.toggle('active', x === b));
+    render();
+  }));
+}
+const st = { x: 0, y: 0, k: 1 };
+const apply = () => { vp.setAttribute('transform', `translate(${st.x},${st.y}) scale(${st.k})`); $('zoomPct').textContent = Math.round(st.k * 100) + '%'; };
+function fit() {
+  const cw = container.clientWidth || 800, ch = container.clientHeight || 600;
+  const k = Math.min(cw / GRAPH.w, ch / GRAPH.h, 1.3) * 0.96;
+  st.k = k; st.x = (cw - GRAPH.w * k) / 2 - GRAPH.x0 * k; st.y = (ch - GRAPH.h * k) / 2; apply();
+}
+function zoomAt(f, px, py) { const nk = Math.min(4, Math.max(0.2, st.k * f)); f = nk / st.k; st.x = px - (px - st.x) * f; st.y = py - (py - st.y) * f; st.k = nk; apply(); }
+svg.addEventListener('wheel', e => { e.preventDefault(); const r = svg.getBoundingClientRect(); zoomAt(Math.exp(-Math.max(-90, Math.min(90, e.deltaY)) * 0.0016), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+let down = null;
+svg.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, sx: st.x, sy: st.y }; });
+addEventListener('pointermove', e => { if (!down) return; st.x = down.sx + e.clientX - down.x; st.y = down.sy + e.clientY - down.y; apply(); });
+addEventListener('pointerup', () => { down = null; });
+$('zFit').addEventListener('click', fit);
+$('zIn').addEventListener('click', () => zoomAt(1.25, container.clientWidth / 2, container.clientHeight / 2));
+$('zOut').addEventListener('click', () => zoomAt(0.8, container.clientWidth / 2, container.clientHeight / 2));
+addEventListener('resize', fit);
+render(); fit();
+})();
+</script>
+</body>
+</html>

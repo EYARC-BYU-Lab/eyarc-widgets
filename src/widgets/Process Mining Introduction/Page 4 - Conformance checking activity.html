@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PO Approval Conformance Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Matched to the assignment's existing process-map artifacts (EYARC tokens) */
+:root {
+  --navy: #002E5D; --yellow: #FFE600; --blue: #0D65C7; --sky: #B5E2FA; --sky-soft: #E6F4FD;
+  --gold: #F2BA05; --gold-dark: #C99A00; --red: #F84725;
+  --gray1: #EAEAF1; --gray2: #C2C2CE; --gray3: #747480;
+  --bg: #F6F7FA; --panel: #ffffff; --map: #ffffff; --border: #DDDEE6; --text: #0F1B2D; --muted: #5B5B68;
+  --ink: var(--navy); --row-solo: #FFFBD6;
+  --shadow: 0 1px 2px rgba(0,46,93,.06), 0 1px 4px rgba(0,46,93,.06);
+  --radius: 10px;
+  --font: "Open Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B1624; --panel: #12213A; --map: #0F1C31; --border: #253A5A; --text: #E4ECF6; --muted: #9FB0C6;
+    --ink: #CFE6F8; --sky-soft: #1A3050; --gray1: #22344F; --gray2: #3A5070; --row-solo: #3A3413;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B1624; --panel: #12213A; --map: #0F1C31; --border: #253A5A; --text: #E4ECF6; --muted: #9FB0C6;
+  --ink: #CFE6F8; --sky-soft: #1A3050; --gray1: #22344F; --gray2: #3A5070; --row-solo: #3A3413;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { font: 14px/1.5 var(--font); background: var(--bg); color: var(--text); padding: 8px; }
+button { font-family: var(--font); }
+
+.card { display: flex; flex-direction: column; height: 800px; max-height: calc(100vh - 16px); min-height: 640px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.rule { display: flex; align-items: baseline; gap: 12px; flex: 1 0 100%; }
+.rule b { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.coverage { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 8px; align-items: stretch; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.map-area { position: relative; flex: 1; min-height: 0; }
+
+.seg { display: inline-flex; border: 1px solid var(--gray2); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg-btn { border: 0; background: transparent; padding: 7px 14px; font-size: 13.5px; color: var(--ink); cursor: pointer; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--gray2); }
+.seg-btn:hover { background: var(--sky-soft); }
+.seg-btn.active { background: #002E5D; color: #fff; font-weight: 600; }
+.ctl { font: inherit; font-size: 16px; cursor: pointer; color: var(--ink); border: 1px solid var(--gray2); background: var(--panel);
+  border-radius: 8px; height: 36px; min-width: 36px; padding: 0 10px; }
+.ctl:hover { background: var(--sky-soft); border-color: var(--blue); }
+.pill-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 0 14px; }
+.pill-btn[aria-pressed="true"], .pill-btn[aria-expanded="true"] { background: #002E5D; color: #fff; border-color: #002E5D; }
+.swatch-red { width: 14px; height: 0; border-top: 3px solid var(--red); display: inline-block; }
+.zoom-group { display: inline-flex; align-items: center; border: 1px solid var(--gray2); border-radius: 8px; background: var(--panel); box-shadow: var(--shadow); }
+.zoom-group .ctl { border: 0; border-radius: 0; height: 34px; }
+.zoom-group .ctl:first-child { border-radius: 7px 0 0 7px; }
+.zoom-group .ctl:last-child { border-radius: 0 7px 7px 0; }
+.zoom-pct { min-width: 52px; text-align: center; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.seg-btn:focus-visible, .ctl:focus-visible, input:focus-visible, .pm-node:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.legend-inline { border-top: 1px solid var(--border); padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend-inline span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-node { display: inline-block; width: 22px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,.25); flex: none; }
+.lg-edge { display: inline-block; width: 22px; height: 0; border-top: 3px solid var(--red); flex: none; }
+
+/* popover menus (legend + variants) */
+.pop { position: absolute; right: 12px; top: 12px; z-index: 7; max-width: calc(100% - 24px); background: var(--panel);
+  border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,46,93,.16); font-size: 13px; }
+.pop-legend { width: 330px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pop-legend b { color: var(--ink); }
+.legend-row { display: flex; align-items: center; gap: 10px; }
+.legend-row .lg-edge.blue { border-top-color: var(--blue); }
+.lg-term { display: inline-block; width: 22px; height: 12px; border-radius: 6px; background: var(--yellow); border: 1px solid var(--gold); flex: none; }
+.muted { color: var(--muted); }
+
+.pop-variants { width: 470px; display: flex; flex-direction: column; max-height: calc(100% - 24px); overflow: hidden; }
+.pv-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.cov-row { display: flex; align-items: center; gap: 12px; }
+.donut { width: 52px; height: 52px; flex: none; }
+.donut-track { fill: none; stroke: var(--gray1); stroke-width: 12; }
+.donut-ring { fill: none; stroke: var(--blue); stroke-width: 12; transform: rotate(-90deg); transform-origin: 48px 48px; transition: stroke-dasharray .3s ease; }
+.donut-pct { font-size: 22px; font-weight: 700; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.cov-text { display: flex; flex-direction: column; line-height: 1.35; }
+.cov-text b { font-size: 15px; color: var(--ink); }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini-btn { border: 1px solid var(--gray2); background: var(--panel); color: var(--ink); border-radius: 7px; padding: 5px 11px; font-size: 13px; cursor: pointer; font-weight: 600; }
+.mini-btn:hover { background: var(--sky-soft); border-color: var(--blue); }
+.mini-btn.on { background: #002E5D; color: #fff; border-color: #002E5D; }
+.pv-table-wrap { overflow: auto; }
+.vt { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vt th { position: sticky; top: 0; background: var(--sky-soft); text-align: left; font-weight: 700; color: var(--ink);
+  padding: 8px 6px; border-bottom: 1px solid var(--sky); white-space: nowrap; font-size: 12.5px; }
+.vt .num { text-align: right; }
+.vt .chk { width: 32px; text-align: center; padding-left: 10px; padding-right: 2px; }
+.vt td { padding: 8px 6px; border-bottom: 1px solid var(--gray1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vt td.rank { font-weight: 700; color: var(--ink); }
+.vt tbody tr { cursor: pointer; }
+.vt tbody tr:hover { background: var(--sky-soft); }
+.vt tbody tr.off td { color: var(--gray3); }
+.vt tbody tr.off .strip i { opacity: .3; }
+.vt tbody tr.solo td { background: var(--row-solo); }
+.vt input[type=checkbox] { width: 16px; height: 16px; accent-color: #002E5D; cursor: pointer; vertical-align: middle; }
+.strip { display: inline-flex; gap: 2px; }
+.strip i { width: 10px; height: 14px; border-radius: 2px; display: inline-block; border: 1px solid rgba(0,0,0,.18); }
+.cov { display: inline-flex; align-items: center; gap: 6px; }
+.cov-bar { width: 30px; height: 6px; border-radius: 3px; background: var(--gray1); overflow: hidden; }
+.cov-bar i { display: block; height: 100%; background: var(--blue); border-radius: 3px; min-width: 3px; }
+.tag { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; }
+.tag.ok { background: #EEF5DC; color: #4A6500; }
+.tag.bad { background: #FDE6E1; color: #B3260A; }
+.pv-foot { padding: 6px 12px; font-size: 12px; color: var(--muted); }
+
+/* map */
+.diagram { position: absolute; inset: 0; background: radial-gradient(circle, var(--gray1) 1px, transparent 1px) 0 0 / 22px 22px, var(--map); }
+.pm-svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.pm-svg:active { cursor: grabbing; }
+.pm-node { cursor: pointer; }
+.pm-node .node-rect { stroke: rgba(0,0,0,.28); stroke-width: 1; filter: drop-shadow(0 1px 2px rgba(0,46,93,.18)); }
+.pm-node:hover .node-rect { stroke: var(--sky); stroke-width: 2.5; }
+.pm-node.sel .node-rect { stroke: var(--gold-dark); stroke-width: 4; }
+.node-name { font-size: 13.5px; font-weight: 600; text-anchor: middle; fill: #fff; }
+.node-count { font-size: 13px; text-anchor: middle; fill: rgba(255,255,255,.85); }
+.pm-edge { cursor: pointer; }
+.edge-hit { stroke: transparent; stroke-width: 18; fill: none; }
+.edge-line { stroke: var(--blue); fill: none; transition: stroke .1s; }
+.pm-edge:hover .edge-line { stroke: var(--navy); }
+.pm-edge.viol .edge-line { stroke: var(--red); }
+.pm-edge.sel .edge-line { stroke: var(--gold-dark); }
+.edge-line.term { stroke-dasharray: 6 4; }
+.edge-label { font-size: 13.5px; font-weight: 700; fill: #002E5D; text-anchor: middle; dominant-baseline: middle; }
+.edge-label-bg { fill: #fff; stroke: var(--gray2); stroke-width: 1; }
+.pm-edge:hover .edge-label-bg { stroke: var(--navy); }
+.pm-edge.viol .edge-label-bg { stroke: var(--red); stroke-width: 1.5; }
+.pm-edge.viol .edge-label { fill: #C8300F; }
+.pm-edge.sel .edge-label-bg { stroke: var(--gold-dark); stroke-width: 2; }
+.pm-term rect { stroke-width: 1.5; fill: var(--yellow); stroke: var(--gold); }
+.pm-term text { font-size: 13px; font-weight: 700; text-anchor: middle; fill: #002E5D; }
+
+.tooltip { position: fixed; z-index: 100; pointer-events: none; background: #002E5D; color: #eaf2fb; border-radius: 8px; padding: 8px 11px;
+  font-size: 12.5px; line-height: 1.5; box-shadow: 0 6px 20px rgba(0,46,93,.35); max-width: 340px; }
+.tooltip b { color: #fff; }
+.tooltip i { color: var(--sky); font-size: 11.5px; }
+@media (prefers-reduced-motion: reduce) { .donut-ring, .edge-line { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="toolbar">
+    <div class="rule">
+      <b>Rule tested</b>
+      <span>Every purchase order must be approved by a manager before it is sent to the vendor.</span>
+    </div>
+    <span class="coverage" id="coverage">2,002 of 2,002 POs (100%)</span>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Connection labels">
+        <button class="seg-btn active" data-metric="count">POs</button>
+        <button class="seg-btn" data-metric="pct">% of POs</button>
+      </div>
+      <button class="ctl pill-btn" id="btnViol" aria-pressed="false"><span class="swatch-red"></span>Highlight rule breaks</button>
+      <button class="ctl pill-btn" id="btnVariants" aria-expanded="false" aria-controls="popVariants">Variants</button>
+      <button class="ctl pill-btn" id="btnLegend" aria-expanded="false" aria-controls="popLegend">Legend</button>
+      <div class="zoom-group">
+        <button class="ctl" id="zFit" title="Fit to view" aria-label="Fit to view">⛶</button>
+        <button class="ctl" id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
+        <span class="zoom-pct" id="zoomPct">100%</span>
+        <button class="ctl" id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-area">
+    <div class="diagram" id="diagram"></div>
+
+    <div class="pop pop-variants" id="popVariants" hidden role="dialog" aria-label="Process variants">
+      <div class="pv-head">
+        <div class="cov-row">
+          <svg class="donut" viewBox="0 0 96 96" role="img" aria-label="Share of POs shown on the map">
+            <circle class="donut-track" cx="48" cy="48" r="38"></circle>
+            <circle class="donut-ring" id="donutRing" cx="48" cy="48" r="38"></circle>
+            <text class="donut-pct" id="donutPct" x="48" y="48">100%</text>
+          </svg>
+          <div class="cov-text">
+            <b id="covCases">2,002 of 2,002 POs</b>
+            <span class="muted" id="covVariants">3 of 3 variants selected</span>
+          </div>
+        </div>
+        <div class="presets">
+          <button class="mini-btn" data-preset="all">All</button>
+          <button class="mini-btn" data-preset="ok">Follows rule</button>
+          <button class="mini-btn" data-preset="bad">Breaks rule</button>
+        </div>
+      </div>
+      <div class="pv-table-wrap">
+        <table class="vt">
+          <thead>
+            <tr>
+              <th class="chk"><input type="checkbox" id="chkAll" checked aria-label="Select all variants"></th>
+              <th>#</th><th>Steps</th><th class="num">POs</th><th>Share</th><th class="num">Avg time</th><th>Rule</th>
+            </tr>
+          </thead>
+          <tbody id="vBody"></tbody>
+        </table>
+      </div>
+      <div class="pv-foot">Click a row to show only that variant · tick boxes to combine · hover for the full path</div>
+    </div>
+
+    <div class="pop pop-legend" id="popLegend" hidden role="dialog" aria-label="Legend">
+      <b>Reading the process map</b>
+      <div class="legend-row"><span class="lg-edge blue"></span> Connection. Thicker means more POs took it; the label is the count or share.</div>
+      <div class="legend-row"><span class="lg-edge"></span> Connection used only by POs that break the rule (when highlighting is on)</div>
+      <div class="legend-row"><span class="lg-term"></span> Start and end of each PO</div>
+      <div class="legend-row muted">Click an activity or connection to show only the POs that include it · drag to pan · scroll to zoom</div>
+    </div>
+  </div>
+
+  <div class="legend-inline" id="legendInline"></div>
+</div>
+
+<div class="tooltip" id="tooltip" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------- data ---------- */
+const TOTAL = 2002;
+const CATS = {
+  buy:  ['Purchasing', '#0D65C7'],
+  appr: ['Approval', '#6E9600'],
+  pay:  ['Receiving & payment', '#85428E']
+};
+const ACTS = {
+  'Create PO':         { cat: 'buy',  y: 138 },
+  'Approve PO':        { cat: 'appr', y: 254 },
+  'Send PO to Vendor': { cat: 'buy',  y: 370 },
+  'Receive Goods':     { cat: 'pay',  y: 486 },
+  'Receive Invoice':   { cat: 'pay',  y: 602 },
+  'Pay Invoice':       { cat: 'pay',  y: 718 }
+};
+const VARIANTS = [
+  { id: 1, count: 1822, avg: '21.6 d', ok: true,
+    acts: ['Create PO', 'Approve PO', 'Send PO to Vendor', 'Receive Goods', 'Receive Invoice', 'Pay Invoice'] },
+  { id: 2, count: 140, avg: '19.3 d', ok: false,
+    acts: ['Create PO', 'Send PO to Vendor', 'Approve PO', 'Receive Goods', 'Receive Invoice', 'Pay Invoice'] },
+  { id: 3, count: 40, avg: '17.8 d', ok: false,
+    acts: ['Create PO', 'Send PO to Vendor', 'Receive Goods', 'Receive Invoice', 'Pay Invoice'] }
+];
+
+/* ---------- hand-placed layout (graph space), sized like the other assignment maps ---------- */
+const CX = 300, NW = 210, NH = 52, TW = 96, TH = 30, L = CX - NW / 2, R = CX + NW / 2;
+const START_Y = 33, END_Y = 834;
+const GRAPH = { x0: 60, w: 470, h: 866 };
+const yOf = a => ACTS[a].y;
+const top = a => yOf(a) - NH / 2, bot = a => yOf(a) + NH / 2;
+function geom(from, to) {
+  switch (from + '>' + to) {
+    case 'START>Create PO': return { d: `M${CX},${START_Y + TH / 2} L${CX},${top('Create PO')}`, lx: CX, ly: (START_Y + TH / 2 + top('Create PO')) / 2, term: true };
+    case 'Pay Invoice>END': return { d: `M${CX},${bot('Pay Invoice')} L${CX},${END_Y - TH / 2}`, lx: CX, ly: (bot('Pay Invoice') + END_Y - TH / 2) / 2, term: true };
+    case 'Create PO>Send PO to Vendor': {
+      const y1 = yOf('Create PO') + 8, y2 = yOf('Send PO to Vendor') - 8;
+      return { d: `M${L},${y1} C${L - 85},${y1} ${L - 85},${y2} ${L - 2},${y2}`, lx: L - 64, ly: (y1 + y2) / 2 };
+    }
+    case 'Send PO to Vendor>Approve PO': {
+      const y1 = yOf('Send PO to Vendor') - 6, y2 = yOf('Approve PO') + 10;
+      return { d: `M${R},${y1} C${R + 65},${y1} ${R + 65},${y2} ${R + 2},${y2}`, lx: R + 49, ly: (y1 + y2) / 2 };
+    }
+    case 'Approve PO>Receive Goods': {
+      const y1 = yOf('Approve PO') - 10, y2 = yOf('Receive Goods');
+      return { d: `M${R},${y1} C${R + 165},${y1} ${R + 165},${y2} ${R + 2},${y2}`, lx: R + 124, ly: yOf('Send PO to Vendor') };
+    }
+    default: return { d: `M${CX},${bot(from)} L${CX},${top(to)}`, lx: CX, ly: (bot(from) + top(to)) / 2 };
+  }
+}
+
+/* ---------- state ---------- */
+const S = { sel: new Set(VARIANTS.map(v => v.id)), metric: 'count', viol: false, focus: null };
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('en-US');
+const pct = n => (n / TOTAL * 100).toFixed(n / TOTAL < 0.1 ? 1 : 0) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function buildDFG() {
+  const edges = new Map(), nodes = new Map();
+  let cases = 0;
+  for (const v of VARIANTS) {
+    if (!S.sel.has(v.id)) continue;
+    cases += v.count;
+    const seq = ['START', ...v.acts, 'END'];
+    for (const a of v.acts) nodes.set(a, (nodes.get(a) || 0) + v.count);
+    for (let i = 0; i < seq.length - 1; i++) {
+      const k = seq[i] + '>' + seq[i + 1];
+      const e = edges.get(k) || { from: seq[i], to: seq[i + 1], count: 0, okCount: 0 };
+      e.count += v.count;
+      if (v.ok) e.okCount += v.count;
+      edges.set(k, e);
+    }
+  }
+  return { edges, nodes, cases };
+}
+
+/* ---------- tooltip ---------- */
+const tipEl = $('tooltip');
+function tip(html, x, y) {
+  if (!html) { tipEl.hidden = true; return; }
+  tipEl.innerHTML = html; tipEl.hidden = false;
+  const r = tipEl.getBoundingClientRect();
+  let tx = x + 14, ty = y + 14;
+  if (tx + r.width > innerWidth - 8) tx = x - r.width - 14;
+  if (ty + r.height > innerHeight - 8) ty = y - r.height - 14;
+  tipEl.style.left = tx + 'px'; tipEl.style.top = ty + 'px';
+}
+
+/* ---------- SVG ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent) {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const container = $('diagram');
+const svg = el('svg', { class: 'pm-svg', role: 'img', 'aria-label': 'Process map of purchase orders' }, container);
+const defs = el('defs', {}, svg);
+for (const [id, col] of [['arr', '#0D65C7'], ['arrRed', '#F84725'], ['arrSel', '#C99A00']]) {
+  const m = el('marker', { id, viewBox: '0 0 10 10', refX: 8.5, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: col }, m);
+}
+const vp = el('g', {}, svg);
+let dragged = false;
+const nm = x => x === 'START' ? 'Start' : x === 'END' ? 'End' : x;
+
+function render() {
+  vp.innerHTML = '';
+  const dfg = buildDFG();
+  const maxE = Math.max(1, ...[...dfg.edges.values()].map(e => e.count));
+
+  for (const e of dfg.edges.values()) {
+    const gm = geom(e.from, e.to);
+    const key = e.from + '>' + e.to;
+    const viol = S.viol && e.okCount === 0;
+    const focused = S.focus && S.focus.type === 'edge' && S.focus.key === key;
+    const grp = el('g', { class: 'pm-edge' + (viol ? ' viol' : '') + (focused ? ' sel' : '') }, vp);
+    el('path', { d: gm.d, class: 'edge-hit' }, grp);
+    const w = 1.5 + 5.5 * (e.count / maxE);
+    el('path', { d: gm.d, class: 'edge-line' + (gm.term ? ' term' : ''), 'stroke-width': w.toFixed(1),
+      'marker-end': 'url(#' + (focused ? 'arrSel' : viol ? 'arrRed' : 'arr') + ')' }, grp);
+    const lt = el('text', { x: gm.lx, y: gm.ly, class: 'edge-label' }, grp);
+    lt.textContent = S.metric === 'pct' ? pct(e.count) : fmt(e.count);
+    let bb; try { bb = lt.getBBox(); } catch (_) { bb = { x: gm.lx - 16, y: gm.ly - 8, width: 32, height: 16 }; }
+    grp.insertBefore(el('rect', { x: bb.x - 6, y: bb.y - 2.5, width: bb.width + 12, height: bb.height + 5, rx: 9, class: 'edge-label-bg' }), lt);
+    grp.addEventListener('mousemove', ev => tip('<b>' + esc(nm(e.from)) + ' → ' + esc(nm(e.to)) + '</b><br>' +
+      fmt(e.count) + ' POs · ' + pct(e.count) + ' of all POs' +
+      (gm.term ? '' : '<br><i>click to show only POs that take this connection</i>'), ev.clientX, ev.clientY));
+    grp.addEventListener('mouseleave', () => tip(null));
+    if (!gm.term) grp.addEventListener('click', ev => { ev.stopPropagation(); if (!dragged) focusOn('edge', key); });
+  }
+
+  for (const [a, info] of Object.entries(ACTS)) {
+    const n = dfg.nodes.get(a);
+    if (!n) continue;
+    const focused = S.focus && S.focus.type === 'node' && S.focus.key === a;
+    const grp = el('g', { class: 'pm-node' + (focused ? ' sel' : ''), transform: `translate(${L},${top(a)})`, tabindex: 0 }, vp);
+    el('rect', { width: NW, height: NH, rx: 8, class: 'node-rect', fill: CATS[info.cat][1] }, grp);
+    el('text', { x: NW / 2, y: 22, class: 'node-name' }, grp).textContent = a;
+    el('text', { x: NW / 2, y: 40, class: 'node-count' }, grp).textContent = fmt(n) + ' events';
+    grp.addEventListener('mousemove', ev => tip('<b>' + esc(a) + '</b><br>' + fmt(n) + ' of ' + fmt(TOTAL) + ' POs' +
+      '<br><i>click to show only POs that include this activity</i>', ev.clientX, ev.clientY));
+    grp.addEventListener('mouseleave', () => tip(null));
+    grp.addEventListener('click', ev => { ev.stopPropagation(); if (!dragged) focusOn('node', a); });
+    grp.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); focusOn('node', a); } });
+  }
+
+  for (const [txt, y] of [['Start', START_Y], ['End', END_Y]]) {
+    const grp = el('g', { class: 'pm-term', transform: `translate(${CX - TW / 2},${y - TH / 2})` }, vp);
+    el('rect', { width: TW, height: TH, rx: TH / 2 }, grp);
+    el('text', { x: TW / 2, y: TH / 2 + 5 }, grp).textContent = txt;
+    grp.addEventListener('mousemove', ev => tip('<b>' + txt + '</b><br>' + fmt(dfg.cases) + ' POs', ev.clientX, ev.clientY));
+    grp.addEventListener('mouseleave', () => tip(null));
+  }
+  renderPanel(dfg.cases);
+}
+
+function focusOn(type, key) {
+  if (S.focus && S.focus.type === type && S.focus.key === key) { S.focus = null; S.sel = new Set(VARIANTS.map(v => v.id)); render(); return; }
+  const has = v => {
+    if (type === 'node') return v.acts.includes(key);
+    const seq = ['START', ...v.acts, 'END'];
+    for (let i = 0; i < seq.length - 1; i++) if (seq[i] + '>' + seq[i + 1] === key) return true;
+    return false;
+  };
+  S.focus = { type, key };
+  S.sel = new Set(VARIANTS.filter(has).map(v => v.id));
+  render();
+}
+
+/* ---------- variants menu ---------- */
+const sameSet = (s, arr) => s.size === arr.length && arr.every(x => s.has(x));
+function renderPanel(cases) {
+  const f = cases / TOTAL, C = 2 * Math.PI * 38;
+  $('coverage').textContent = fmt(cases) + ' of ' + fmt(TOTAL) + ' POs (' + (f * 100).toFixed(f === 1 || f === 0 ? 0 : 1) + '%)';
+  $('donutRing').style.strokeDasharray = (C * f) + ' ' + C;
+  $('donutPct').textContent = Math.round(f * 100) + '%';
+  $('covCases').textContent = fmt(cases) + ' of ' + fmt(TOTAL) + ' POs';
+  $('covVariants').textContent = S.sel.size + ' of ' + VARIANTS.length + ' variants selected';
+  $('chkAll').checked = S.sel.size === VARIANTS.length;
+  $('chkAll').indeterminate = S.sel.size > 0 && S.sel.size < VARIANTS.length;
+  const solo = S.sel.size === 1 ? [...S.sel][0] : null;
+  $('vBody').innerHTML = VARIANTS.map(v => {
+    const on = S.sel.has(v.id);
+    const strip = v.acts.map(a => `<i style="background:${CATS[ACTS[a].cat][1]}"></i>`).join('');
+    return `<tr data-id="${v.id}" class="${on ? '' : 'off'} ${solo === v.id ? 'solo' : ''}" title="${esc(v.acts.join(' → '))}">
+      <td class="chk"><input type="checkbox" ${on ? 'checked' : ''} aria-label="Include variant ${v.id}"></td>
+      <td class="rank">${v.id}</td>
+      <td><span class="strip">${strip}</span></td>
+      <td class="num">${fmt(v.count)}</td>
+      <td><span class="cov"><span class="cov-bar"><i style="width:${(v.count / TOTAL * 100).toFixed(1)}%"></i></span>${pct(v.count)}</span></td>
+      <td class="num">${v.avg}</td>
+      <td>${v.ok ? '<span class="tag ok">Follows</span>' : '<span class="tag bad">Breaks</span>'}</td>
+    </tr>`;
+  }).join('');
+  const preset = S.sel.size === VARIANTS.length ? 'all'
+    : sameSet(S.sel, VARIANTS.filter(v => v.ok).map(v => v.id)) ? 'ok'
+    : sameSet(S.sel, VARIANTS.filter(v => !v.ok).map(v => v.id)) ? 'bad' : null;
+  document.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === preset));
+}
+$('vBody').addEventListener('click', ev => {
+  const tr = ev.target.closest('tr'); if (!tr) return;
+  const id = +tr.dataset.id;
+  S.focus = null;
+  if (ev.target.matches('input') || ev.ctrlKey || ev.metaKey) { S.sel.has(id) ? S.sel.delete(id) : S.sel.add(id); }
+  else { S.sel = (S.sel.size === 1 && S.sel.has(id)) ? new Set(VARIANTS.map(v => v.id)) : new Set([id]); }
+  render();
+});
+$('chkAll').addEventListener('change', ev => { S.focus = null; S.sel = ev.target.checked ? new Set(VARIANTS.map(v => v.id)) : new Set(); render(); });
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  S.focus = null;
+  const p = b.dataset.preset;
+  S.sel = new Set(VARIANTS.filter(v => p === 'all' || (p === 'ok' ? v.ok : !v.ok)).map(v => v.id));
+  render();
+}));
+$('legendInline').innerHTML = Object.values(CATS).map(([n, c]) => `<span><i class="lg-node" style="background:${c}"></i>${n}</span>`).join('');
+
+/* ---------- toolbar ---------- */
+document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
+  S.metric = b.dataset.metric;
+  document.querySelectorAll('.seg-btn').forEach(x => x.classList.toggle('active', x === b));
+  render();
+}));
+$('btnViol').addEventListener('click', () => { S.viol = !S.viol; $('btnViol').setAttribute('aria-pressed', S.viol); render(); });
+
+/* one popover open at a time; outside click or Escape closes it */
+const POPS = [['btnVariants', 'popVariants'], ['btnLegend', 'popLegend']];
+function setPop(which) {
+  for (const [b, p] of POPS) {
+    const open = p === which;
+    $(p).hidden = !open;
+    $(b).setAttribute('aria-expanded', open);
+  }
+}
+for (const [b, p] of POPS) $(b).addEventListener('click', ev => { ev.stopPropagation(); setPop($(p).hidden ? p : null); });
+for (const [, p] of POPS) $(p).addEventListener('click', ev => ev.stopPropagation());
+document.addEventListener('click', () => setPop(null));
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') setPop(null); });
+
+/* ---------- pan and zoom ---------- */
+const st = { x: 0, y: 0, k: 1 };
+const apply = () => { vp.setAttribute('transform', `translate(${st.x},${st.y}) scale(${st.k})`); $('zoomPct').textContent = Math.round(st.k * 100) + '%'; };
+function fit() {
+  const cw = container.clientWidth || 800, ch = container.clientHeight || 600;
+  const k = Math.min(cw / GRAPH.w, ch / GRAPH.h, 1.3) * 0.96;
+  st.k = k;
+  st.x = (cw - GRAPH.w * k) / 2 - GRAPH.x0 * k;
+  st.y = (ch - GRAPH.h * k) / 2;
+  apply();
+}
+function zoomAt(f, cx, cy) {
+  const nk = Math.min(4, Math.max(0.2, st.k * f)); f = nk / st.k;
+  st.x = cx - (cx - st.x) * f; st.y = cy - (cy - st.y) * f; st.k = nk; apply();
+}
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = svg.getBoundingClientRect();
+  zoomAt(Math.exp(-Math.max(-90, Math.min(90, e.deltaY)) * 0.0016), e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+let down = null;
+svg.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, sx: st.x, sy: st.y }; dragged = false; });
+addEventListener('pointermove', e => {
+  if (!down) return;
+  const dx = e.clientX - down.x, dy = e.clientY - down.y;
+  if (Math.abs(dx) + Math.abs(dy) > 4) dragged = true;
+  if (dragged) { st.x = down.sx + dx; st.y = down.sy + dy; apply(); }
+});
+addEventListener('pointerup', () => { down = null; setTimeout(() => { dragged = false; }, 0); });
+$('zFit').addEventListener('click', fit);
+$('zIn').addEventListener('click', () => zoomAt(1.25, container.clientWidth / 2, container.clientHeight / 2));
+$('zOut').addEventListener('click', () => zoomAt(0.8, container.clientWidth / 2, container.clientHeight / 2));
+addEventListener('resize', fit);
+
+render();
+fit();
+})();
+</script>
+</body>
+</html>
