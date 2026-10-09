@@ -190,12 +190,6 @@ function Index() {
     <main className="min-h-screen bg-slate-100 px-4 py-10 text-slate-800 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] ring-1 ring-slate-100 backdrop-blur-sm sm:p-8">
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-700">
-              Widget library
-            </span>
-          </div>
-
           <div className="mb-4">
             <h1 className="!text-indigo-700 text-3xl font-extrabold tracking-tight sm:text-4xl">
               Widgets
