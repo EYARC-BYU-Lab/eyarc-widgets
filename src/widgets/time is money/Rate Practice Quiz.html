@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interest rate practice</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
+  :root {
+    --navy: #002E5D;
+    --navy-dark: #001E3F;
+    --gold: #F2BA05;
+    --yellow: #FFE600;
+    --light-blue: #B5E2FA;
+    --blue-accent: #2563EB;
+    --blue-accent-dark: #1D4ED8;
+    --text: #334155;
+    --track: #E2E8F0;
+    --border: #E2E8F0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background: #EEF1F5;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+  }
+
+  .wrap { max-width: 720px; width: 100%; }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--navy);
+    margin: 0;
+  }
+
+  .progress-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748B;
+  }
+
+  .track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--track);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px 40px;
+    margin-bottom: 24px;
+  }
+
+  .card h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0;
+  }
+
+  .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .freq-badge {
+    background: var(--light-blue);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: capitalize;
+  }
+
+  .question {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0;
+  }
+
+  .question b {
+    color: var(--blue-accent);
+    font-weight: 700;
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .input-row:focus-within {
+    outline: 2px solid var(--blue-accent);
+    outline-offset: 0;
+  }
+
+  .dollar {
+    background: #F8FAFC;
+    border-right: 1px solid #CBD5E1;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    color: #64748B;
+    font-weight: 600;
+  }
+
+  .years-suffix {
+    border-right: none;
+    border-left: 1px solid #CBD5E1;
+  }
+
+  input[type=text] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    background: #fff;
+  }
+
+  input[type=text]:disabled { background: #F8FAFC; color: #64748B; }
+
+  .feedback {
+    min-height: 20px;
+    margin-bottom: 20px;
+  }
+
+  .box {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .box.hint { background: #FFF9E0; border: 1px solid var(--gold); color: #7A5B00; }
+  .box.correct { background: #EAF6EE; border: 1px solid #22A559; color: #1B6B3A; font-weight: 600; }
+  .box.reveal { background: #F1F5F9; border: 1px solid #CBD5E1; color: #334155; }
+  .box.reveal .answer-line { font-weight: 700; margin-bottom: 4px; }
+  .box.reveal .formula-line { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #64748B; }
+
+  .retype-note { font-size: 13px; color: #64748B; margin: -8px 0 20px; }
+
+  button {
+    width: 100%;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s ease;
+  }
+
+  button.primary { background: var(--blue-accent); color: #fff; }
+  button.primary:hover { background: var(--blue-accent-dark); }
+  button.primary:disabled { background: #CBD5E1; color: #94A3B8; cursor: not-allowed; }
+
+  button.dark { background: var(--navy); color: #fff; }
+  button.dark:hover { background: var(--navy-dark); }
+
+  /* choice screen */
+  .choice-card { text-align: center; padding: 56px 40px; }
+  .choice-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--light-blue); color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 30px;
+  }
+  .choice-card h3 { font-size: 22px; color: #1E293B; margin: 0 0 10px; }
+  .choice-card p { color: #64748B; max-width: 420px; margin: 0 auto 32px; line-height: 1.6; }
+  .choice-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .choice-buttons button { width: auto; padding: 14px 28px; }
+  button.ghost { background: #fff; border: 1px solid #CBD5E1; color: #334155; }
+  button.ghost:hover { background: #F8FAFC; }
+
+  /* finish screen */
+  .finish-card { text-align: center; padding: 64px 40px; }
+  .finish-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #EAF6EE; color: #22A559;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 40px;
+  }
+  .finish-card h1 { font-size: 28px; margin: 0 0 12px; }
+  .finish-card p { color: #64748B; font-size: 16px; margin: 0 0 32px; }
+  .finish-card button { width: auto; padding: 14px 32px; margin: 0 auto; }
+
+  footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #94A3B8;
+    text-align: center;
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="quizScreen">
+  <div class="header-row">
+    <h1>Interest rate practice</h1>
+    <span class="progress-label" id="progressLabel">Problem 1 of 5</span>
+  </div>
+  <div class="track"><div class="fill" id="progressFill" style="width:20%"></div></div>
+
+  <div class="card">
+    <div class="badge-row">
+      <h2 id="problemTitle">Problem 1</h2>
+      <span class="freq-badge" id="freqBadge">Compounding: monthly</span>
+    </div>
+    <p class="question" id="questionText"></p>
+  </div>
+
+  <label>Your Answer (Annual Percentage Rate):</label>
+  <div class="input-row">
+    <input type="text" id="answerInput" placeholder="0.00" autocomplete="off">
+    <div class="dollar years-suffix">%</div>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <button class="primary" id="submitBtn" onclick="handleSubmit()" disabled>Submit Answer</button>
+</div>
+
+<div class="wrap hidden" id="choiceScreen">
+  <div class="card choice-card">
+    <div class="choice-icon">&#10003;</div>
+    <h3>Compounding Logic Mastered!</h3>
+    <p>You've successfully solved for annual rates with different compounding periods. Keep going, or finish now.</p>
+    <div class="choice-buttons">
+      <button class="ghost" onclick="finishModule()">Finish Now</button>
+      <button class="primary" onclick="continuePractice()">Continue Practice &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="finishScreen">
+  <div class="card finish-card">
+    <div class="finish-icon">&#10003;</div>
+    <h1>Module Complete!</h1>
+    <p>Excellent work! You've mastered solving for interest rates (r) across different compounding frequencies.</p>
+    <button class="dark" onclick="restart()">&#8634; Restart Module</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: 'You invest <b>$1,000</b> today and it grows to <b>$1,500</b> over <b>5 years</b> with monthly compounding. What is the stated annual interest rate (APR)?',
+    freq: 'monthly',
+    answer: 8.14,
+    hint1: "First, solve for the monthly rate using n = 60 periods. Then multiply that monthly rate by 12 to find the APR.",
+    hint2: "Step 1: r_monthly = (1500/1000)^(1/60) - 1. Step 2: APR = r_monthly \u00d7 12 \u00d7 100."
+  },
+  {
+    text: 'An investment of <b>$5,000</b> grows to <b>$7,000</b> in exactly <b>4 years</b> with quarterly compounding. What is the stated annual interest rate (APR)?',
+    freq: 'quarterly',
+    answer: 8.49,
+    hint1: "Find the quarterly rate using n = 16 (4 years \u00d7 4 quarters). Then multiply by 4 to get the APR.",
+    hint2: "Step 1: r_quarter = (7000/5000)^(1/16) - 1. Step 2: APR = r_quarter \u00d7 4 \u00d7 100."
+  },
+  {
+    text: 'Practice: You want to double your money in exactly <b>10 years</b> with annual compounding. What annual rate of return do you need?',
+    freq: 'annually',
+    answer: 7.18,
+    hint1: "Since this is annual, simply solve for r = (FV/PV)^(1/n) - 1.",
+    hint2: "Calculation: (2)^(1/10) - 1. Multiply by 100 for the percentage."
+  },
+  {
+    text: 'Practice: A collectible item was bought for <b>$200</b> and sold <b>15 years</b> later for <b>$1,000</b>. What was the annual rate of appreciation?',
+    freq: 'annually',
+    answer: 11.33,
+    hint1: "Use n = 15 and FV/PV = 5.",
+    hint2: "Calculation: (5)^(1/15) - 1"
+  },
+  {
+    text: 'Practice: You save <b>$10,000</b> today and need it to grow to <b>$25,000</b> in <b>20 years</b> for a down payment. What annual interest rate do you need?',
+    freq: 'annually',
+    answer: 4.69,
+    hint1: "Use the formula r = (25000/10000)^(1/20) - 1.",
+    hint2: "Calculation: (2.5)^0.05 - 1"
+  }
+];
+
+let currentIdx = 0;
+let attempts = 0;
+let status = 'idle';
+let awaitingRetype = false;
+
+const quizScreen = document.getElementById('quizScreen');
+const choiceScreen = document.getElementById('choiceScreen');
+const finishScreen = document.getElementById('finishScreen');
+const answerInput = document.getElementById('answerInput');
+const submitBtn = document.getElementById('submitBtn');
+const feedback = document.getElementById('feedback');
+
+answerInput.addEventListener('input', () => {
+  answerInput.value = answerInput.value.replace(/[^0-9.]/g, '');
+  submitBtn.disabled = answerInput.value.trim() === '';
+});
+
+answerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!submitBtn.disabled) submitBtn.click();
+  }
+});
+
+function renderQuestion() {
+  const q = questions[currentIdx];
+  document.getElementById('problemTitle').textContent = 'Problem ' + (currentIdx + 1);
+  document.getElementById('freqBadge').textContent = 'Compounding: ' + q.freq;
+  document.getElementById('questionText').innerHTML = q.text;
+  document.getElementById('progressLabel').textContent = 'Problem ' + (currentIdx + 1) + ' of ' + questions.length;
+  document.getElementById('progressFill').style.width = (((currentIdx + 1) / questions.length) * 100) + '%';
+  answerInput.value = '';
+  answerInput.disabled = false;
+  answerInput.placeholder = '0.00';
+  submitBtn.disabled = true;
+  attempts = 0;
+  status = 'idle';
+  awaitingRetype = false;
+  feedback.innerHTML = '';
+  submitBtn.textContent = 'Submit Answer';
+  submitBtn.className = 'primary';
+  submitBtn.onclick = handleSubmit;
+  answerInput.focus();
+}
+
+function handleSubmit() {
+  const val = parseFloat(answerInput.value);
+  if (isNaN(val)) return;
+  const q = questions[currentIdx];
+
+  if (Math.abs(val - q.answer) <= 1.00) {
+    status = 'correct';
+    feedback.innerHTML = '<div class="box correct">&#10003; Correct! Your calculation is within the rounding margin.</div>';
+    answerInput.disabled = true;
+    submitBtn.textContent = (currentIdx === questions.length - 1) ? 'Finish Module' : 'Next Problem';
+    submitBtn.onclick = advance;
+    return;
+  }
+
+  attempts++;
+  if (attempts >= 3) {
+    status = 'failed';
+    feedback.innerHTML =
+      '<div class="box reveal">' +
+        '<div>' +
+          '<div class="answer-line">The answer is ' + q.answer.toFixed(2) + '%.</div>' +
+          '<div class="formula-line">Formula: r = (FV / PV)^(1/n) - 1</div>' +
+        '</div>' +
+      '</div>';
+    answerInput.value = '';
+    answerInput.disabled = false;
+    answerInput.placeholder = 'Retype the answer to continue';
+    submitBtn.textContent = 'Confirm & Continue';
+    submitBtn.disabled = true;
+    awaitingRetype = true;
+    submitBtn.onclick = handleRetype;
+  } else {
+    status = 'wrong';
+    const hintText = attempts === 1 ? q.hint1 : q.hint2;
+    feedback.innerHTML = '<div class="box hint">Hint: ' + hintText + '</div>';
+  }
+}
+
+function handleRetype() {
+  const q = questions[currentIdx];
+  const val = parseFloat(answerInput.value);
+  if (Math.abs(val - q.answer) <= 1.00) {
+    advance();
+  } else {
+    feedback.innerHTML =
+      '<div class="box reveal">' +
+        '<div>' +
+          '<div class="answer-line">The answer is ' + q.answer.toFixed(2) + '%.</div>' +
+          '<div class="formula-line">Type it exactly to continue.</div>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+function advance() {
+  // After problem 2 (idx 1), offer the choice screen once
+  if (currentIdx === 1) {
+    quizScreen.classList.add('hidden');
+    choiceScreen.classList.remove('hidden');
+    return;
+  }
+  if (currentIdx < questions.length - 1) {
+    currentIdx++;
+    renderQuestion();
+  } else {
+    finishModule();
+  }
+}
+
+function continuePractice() {
+  choiceScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  currentIdx = 2;
+  renderQuestion();
+}
+
+function finishModule() {
+  quizScreen.classList.add('hidden');
+  choiceScreen.classList.add('hidden');
+  finishScreen.classList.remove('hidden');
+}
+
+function restart() {
+  currentIdx = 0;
+  finishScreen.classList.add('hidden');
+  choiceScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+
+</body>
+</html>

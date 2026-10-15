@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TVM Vocabulary — EYARC</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Open Sans', Arial, sans-serif;
+  background: #f0f4f8;
+  min-height: 100vh;
+  padding: 40px 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.bottom-row {
+  display: flex;
+  justify-content: center;
+  max-width: 780px;
+  margin: 0 auto;
+  margin-top: 0;
+}
+
+/* FLIP CARD */
+.scene {
+  perspective: 1200px;
+  height: 360px;
+  cursor: pointer;
+}
+
+.bottom-row .scene {
+  width: calc(50% - 12px);
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.scene.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #B5E2FA;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 46, 93, 0.10);
+  box-shadow: 0 4px 18px rgba(0, 46, 93, 0.10);
+  overflow: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* FRONT */
+.card-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  text-align: center;
+}
+
+.card-icon { margin-bottom: 16px; }
+
+.card-title {
+  font-family: 'Open Sans', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #002E5D;
+  line-height: 1.35;
+}
+
+.card-hint {
+  margin-top: 14px;
+  font-size: 11px;
+  color: #0d65c7;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* BACK */
+.card-back {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+thead tr {
+  border-bottom: 2px solid rgba(0, 46, 93, 0.2);
+}
+
+th {
+  padding: 3px 7px 6px;
+  text-align: left;
+  color: #002E5D;
+  font-family: 'Open Sans', Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(0, 46, 93, 0.09);
+}
+
+tbody tr:last-child { border-bottom: none; }
+
+td {
+  padding: 4px 7px;
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+td:first-child {
+  font-weight: 700;
+  color: #002E5D;
+  font-family: 'Open Sans', Arial, sans-serif;
+  width: 38%;
+}
+
+td:last-child {
+  color: #334155;
+  font-family: Arial, sans-serif;
+}
+
+.card-back.small-text table {
+  font-size: 10px;
+}
+.card-back.small-text td {
+  padding: 3px 6px;
+  line-height: 1.35;
+}
+.card-back.small-text th {
+  padding: 2px 6px 5px;
+  font-size: 8.5px;
+}
+.card-back.small-text td:first-child {
+  width: 34%;
+}
+  text-align: center;
+  margin-top: 32px;
+  font-size: 10px;
+  color: #c2c2ce;
+  letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<div class="grid">
+
+  <!-- Card 1: Interest Rate Names -->
+  <div class="scene" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-face card-front">
+        <div class="card-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#002E5D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="14" cy="14" r="5"/>
+            <circle cx="34" cy="34" r="5"/>
+            <line x1="10" y1="38" x2="38" y2="10"/>
+          </svg>
+        </div>
+        <div class="card-title">Interest rate names</div>
+        <div class="card-hint">click to reveal</div>
+      </div>
+      <div class="card-face card-back">
+        <table>
+          <thead>
+            <tr><th>Term</th><th>Definition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Discount rate</td><td>The interest rate used to convert a future amount of money into its value today.</td></tr>
+            <tr><td>Required rate of return</td><td>The minimum return an investor expects to earn before choosing to invest.</td></tr>
+            <tr><td>Nominal rate</td><td>The stated interest rate before considering inflation.</td></tr>
+            <tr><td>Real rate</td><td>The rate of return after adjusting for inflation. Approximately equal to the nominal rate minus inflation.</td></tr>
+            <tr><td>Annual percentage rate (APR)</td><td>The stated annual interest rate before accounting for the effects of compounding.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Compounding vs Discounting -->
+  <div class="scene" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-face card-front">
+        <div class="card-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#002E5D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6,36 16,24 24,30 38,12"/>
+            <polyline points="32,12 38,12 38,18"/>
+          </svg>
+        </div>
+        <div class="card-title">Compounding vs. discounting</div>
+        <div class="card-hint">click to reveal</div>
+      </div>
+      <div class="card-face card-back small-text">
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Definition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Simple interest</td><td>Interest earned only on the original amount (the principal) invested or borrowed.</td></tr>
+            <tr><td>Compound interest</td><td>Interest earned on both the original amount (the principal) and previously earned interest.</td></tr>
+            <tr><td>Compounding</td><td>Moving money forward in time to determine its future value (PV → FV).</td></tr>
+            <tr><td>Discounting</td><td>Moving money backward in time to determine its present value (FV → PV).</td></tr>
+            <tr><td>Sign convention</td><td>PV and FV must always have opposite signs when using a financial calculator or Excel because one represents cash out and the other represents cash in.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom centered card -->
+<div style="height: 24px;"></div>
+<div class="bottom-row">
+  <div class="scene" onclick="this.classList.toggle('flipped')">
+    <div class="card-inner">
+      <div class="card-face card-front">
+        <div class="card-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#002E5D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="24" cy="24" r="16"/>
+            <line x1="24" y1="14" x2="24" y2="16"/>
+            <line x1="24" y1="32" x2="24" y2="34"/>
+            <path d="M20 20 Q20 17 24 17 Q28 17 28 20.5 Q28 24 24 24 Q28 24 28 27.5 Q28 31 24 31 Q20 31 20 28"/>
+          </svg>
+        </div>
+        <div class="card-title">Cash flow types</div>
+        <div class="card-hint">click to reveal</div>
+      </div>
+      <div class="card-face card-back small-text">
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Definition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Lump sum</td><td>Single payment made or received at one point in time.</td></tr>
+            <tr><td>Annuity</td><td>A series of equal payments made or received at regular intervals.</td></tr>
+            <tr><td>Perpetuity</td><td>A series of equal payments that continues indefinitely.<br><span style="font-family:'Courier New',monospace;font-size:9.5px;color:#002E5D;font-weight:700;">PV = PMT ÷ r</span><br><span style="font-size:9px;color:#747480;">r = interest rate or required rate of return</span></td></tr>
+            <tr><td>Growing perpetuity</td><td>Payments continue indefinitely and grow at a constant rate.<br><span style="font-family:'Courier New',monospace;font-size:9.5px;color:#002E5D;font-weight:700;">PV = PMT ÷ (r − g)</span><br><span style="font-size:9px;color:#747480;">r = interest rate &nbsp;·&nbsp; g = growth rate</span></td></tr>
+            <tr><td>Uneven cash flows</td><td>A series of cash flows where the amounts vary from one period to the next.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</body>
+</html>

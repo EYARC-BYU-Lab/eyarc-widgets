@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WealthLab — EYARC</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
+function syncFromSlider(slId, inputId) {
+  const sl = document.getElementById(slId);
+  const inp = document.getElementById(inputId);
+  inp.value = sl.value;
+  update();
+}
+function syncFromInput(slId, inputId, min, max) {
+  const inp = document.getElementById(inputId);
+  const sl = document.getElementById(slId);
+  const raw = inp.value;
+  if (raw === '' || raw === '-') return; // still typing
+  let val = parseFloat(raw);
+  if (isNaN(val)) return;
+  // Move slider if in range, but never rewrite the input while typing
+  const clamped = Math.min(max, Math.max(min, val));
+  sl.value = clamped;
+  update();
+}
+function syncFromInputBlur(slId, inputId, min, max) {
+  const inp = document.getElementById(inputId);
+  const sl = document.getElementById(slId);
+  let val = parseFloat(inp.value);
+  if (isNaN(val) || inp.value === '') val = min;
+  val = Math.min(max, Math.max(min, val));
+  inp.value = val;
+  sl.value = val;
+  update();
+}
+</script>
+<style>
+:root {
+  --navy:   #002E5D;
+  --blue:   #0d65c7;
+  --lblue:  #B5E2FA;
+  --yellow: #FFE600;
+  --yamber: #F2BA05;
+  --bg:     #f0f4f8;
+  --card:   #ffffff;
+  --gray1:  #EAEAF1;
+  --gray2:  #C2C2CE;
+  --gray3:  #747480;
+  --border: #dce4ed;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Open Sans', Arial, sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
+
+.header {
+  background: var(--navy); padding: 0 28px; height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-ey { font-size: 9px; font-weight: 400; color: rgba(255,255,255,0.75); letter-spacing: .04em; }
+.logo-name { font-size: 15px; font-weight: 700; color: #fff; }
+.logo-name span { color: var(--yellow); }
+.logo-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.2); margin: 0 10px; }
+.logo-sub { font-size: 11px; color: rgba(255,255,255,0.55); }
+.presets-bar { display: flex; align-items: center; gap: 8px; }
+.presets-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-right: 4px; }
+.preset-btn {
+  padding: 5px 14px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.3);
+  background: transparent; font-family: 'Open Sans', Arial, sans-serif;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75);
+  cursor: pointer; transition: all .15s; letter-spacing: .03em; text-transform: uppercase;
+}
+.preset-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+.preset-btn.active { background: var(--yellow); color: var(--navy); border-color: var(--yellow); }
+
+.main { display: grid; grid-template-columns: 300px 1fr; gap: 18px; padding: 18px 28px 28px; max-width: 1300px; margin: 0 auto; }
+.left-col { display: flex; flex-direction: column; gap: 14px; }
+.right-col { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
+.card-pad { padding: 18px 20px; }
+
+.section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .12em; color: var(--gray3);
+  text-transform: uppercase; margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.preset-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: .06em;
+  padding: 3px 10px; border-radius: 20px;
+  background: var(--navy); color: var(--yellow); text-transform: uppercase;
+}
+
+.slider-group { margin-bottom: 16px; }
+.slider-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.slider-name { font-size: 10px; font-weight: 700; letter-spacing: .07em; color: var(--gray3); text-transform: uppercase; }
+.slider-val { font-size: 14px; font-weight: 700; color: var(--blue); font-family: 'Courier New', monospace; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--gray1); outline: none; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); cursor: pointer; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--blue);
+}
+
+.milestone-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--gray1); }
+.milestone-item:last-child { border-bottom: none; }
+.milestone-amount { font-size: 13px; font-weight: 600; color: var(--navy); }
+.milestone-year { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--lblue); color: var(--navy); font-family: 'Courier New', monospace; }
+.milestone-year.na { background: var(--gray1); color: var(--gray3); }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.stat-card { border-radius: var(--radius); border: 1px solid var(--border); padding: 16px 18px; background: var(--card); }
+.stat-card.navy-card { background: var(--navy); border-color: var(--navy); }
+.stat-card.yellow-card { background: #fffbe6; border-color: #f0d800; }
+.stat-label { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gray3); margin-bottom: 8px; }
+.navy-card .stat-label { color: rgba(255,255,255,0.5); }
+.yellow-card .stat-label { color: #8a6e00; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--navy); font-family: 'Courier New', monospace; }
+.navy-card .stat-value { color: #fff; }
+.yellow-card .stat-value { color: #5a4700; }
+.stat-sub { font-size: 10px; color: var(--gray3); margin-top: 3px; }
+.navy-card .stat-sub { color: rgba(255,255,255,0.4); }
+.yellow-card .stat-sub { color: #8a6e00; }
+
+.chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.chart-title { font-size: 15px; font-weight: 700; color: var(--navy); }
+.chart-sub { font-size: 11px; color: var(--gray3); margin-top: 2px; }
+
+/* Legend with clickable tooltips */
+.chart-legend { display: flex; align-items: center; gap: 14px; position: relative; }
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; color: var(--gray3);
+  cursor: pointer; position: relative; user-select: none;
+  padding: 4px 6px; border-radius: 6px; transition: background .12s;
+}
+.legend-item:hover { background: var(--gray1); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.legend-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 230px;
+  background: #0f1535;
+  border-radius: 10px;
+  padding: 14px 16px;
+  z-index: 200;
+  pointer-events: none;
+}
+.legend-tooltip.visible { display: block; }
+.legend-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px; right: 18px;
+  width: 12px; height: 12px;
+  background: #0f1535;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.tt-title { font-size: 11px; font-weight: 700; color: #fff; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+.tt-body { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 8px; }
+.tt-tag { font-size: 11px; font-style: italic; color: var(--blue); }
+
+.chart-wrap { position: relative; width: 100%; height: 250px; }
+
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dark-card {
+  background: var(--navy); border-radius: var(--radius); padding: 18px 22px;
+  display: flex; align-items: center; gap: 18px; border: none;
+}
+.comp-label { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+.comp-text { font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.85); line-height: 1.5; }
+.comp-text b { color: var(--yellow); font-size: 20px; }
+.donut-wrap { flex-shrink: 0; width: 64px; height: 64px; }
+.donut-wrap canvas { width: 64px !important; height: 64px !important; }
+
+.tip-card {
+  background: #fffbe6; border-radius: var(--radius); border: 1px solid #f0d800;
+  padding: 18px 20px; display: flex; align-items: flex-start; gap: 12px;
+}
+.tip-icon {
+  flex-shrink: 0; margin-top: 1px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--yamber); border-radius: 6px;
+}
+.tip-icon svg { width: 16px; height: 16px; }
+.tip-label { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8a6e00; margin-bottom: 5px; }
+.tip-text { font-size: 12px; color: #5a4700; line-height: 1.6; }
+.tip-text b { color: var(--navy); font-weight: 700; }
+.tip-text u { text-decoration-color: var(--blue); text-underline-offset: 2px; }
+
+.footer { text-align: center; padding: 10px; font-size: 9px; color: var(--gray2); letter-spacing: .04em; }
+
+.slider-val { font-size: 14px; font-weight: 700; color: var(--blue); font-family: 'Courier New', monospace; }
+.num-input-wrap { display: flex; align-items: center; background: var(--gray1); border-radius: 6px; border: 1px solid var(--border); overflow: hidden; }
+.num-prefix, .num-suffix { font-size: 12px; font-weight: 700; color: var(--blue); padding: 0 5px; background: transparent; font-family: 'Courier New', monospace; }
+.num-input {
+  width: 72px; border: none; outline: none; background: transparent;
+  font-size: 13px; font-weight: 700; color: var(--blue);
+  font-family: 'Courier New', monospace; padding: 4px 4px;
+  text-align: right;
+}
+.num-input::-webkit-inner-spin-button,
+.num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.num-input[type=number] { -moz-appearance: textfield; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="presets-bar">
+    <span class="presets-label">Presets:</span>
+    <button class="preset-btn" onclick="applyPreset('saver', this)">The Steady Saver</button>
+    <button class="preset-btn" onclick="applyPreset('grad', this)">The Grad Gift</button>
+    <button class="preset-btn" onclick="applyPreset('aggressive', this)">The Aggressive Start</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left-col">
+    <div class="card card-pad">
+      <div class="section-label">Adjust Variables <span class="preset-tag" id="preset-tag">Custom</span></div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="slider-name">Starting Amount</span>
+          <div class="num-input-wrap"><span class="num-prefix">$</span><input type="number" class="num-input" id="val-start" min="0" max="100000" step="any" value="0" oninput="syncFromInput('sl-start','val-start',0,100000)" onblur="syncFromInputBlur('sl-start','val-start',0,100000)"/></div>
+        </div>
+        <input type="range" id="sl-start" min="0" max="100000" step="1000" value="0" oninput="syncFromSlider('sl-start','val-start')"/>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="slider-name">Monthly Savings</span>
+          <div class="num-input-wrap"><span class="num-prefix">$</span><input type="number" class="num-input" id="val-monthly" min="0" max="5000" step="any" value="250" oninput="syncFromInput('sl-monthly','val-monthly',0,5000)" onblur="syncFromInputBlur('sl-monthly','val-monthly',0,5000)"/></div>
+        </div>
+        <input type="range" id="sl-monthly" min="0" max="5000" step="25" value="250" oninput="syncFromSlider('sl-monthly','val-monthly')"/>
+      </div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="slider-name">Expected Return (%)</span>
+          <div class="num-input-wrap"><input type="number" class="num-input" id="val-rate" min="1" max="15" step="any" value="7" oninput="syncFromInput('sl-rate','val-rate',1,15)" onblur="syncFromInputBlur('sl-rate','val-rate',1,15)"/><span class="num-suffix">%</span></div>
+        </div>
+        <input type="range" id="sl-rate" min="1" max="15" step="0.5" value="7" oninput="syncFromSlider('sl-rate','val-rate')"/>
+      </div>
+      <div class="slider-group" style="margin-bottom:0">
+        <div class="slider-row">
+          <span class="slider-name">Years to Grow</span>
+          <div class="num-input-wrap"><input type="number" class="num-input" id="val-years" min="1" max="50" step="any" value="40" oninput="syncFromInput('sl-years','val-years',1,50)" onblur="syncFromInputBlur('sl-years','val-years',1,50)"/><span class="num-suffix">yrs</span></div>
+        </div>
+        <input type="range" id="sl-years" min="1" max="50" step="1" value="40" oninput="syncFromSlider('sl-years','val-years')"/>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <div class="section-label">Milestone Tracker</div>
+      <div id="milestones"></div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Your Total Savings</div>
+        <div class="stat-value" id="stat-saved">$0</div>
+        <div class="stat-sub">Total out-of-pocket</div>
+      </div>
+      <div class="stat-card navy-card">
+        <div class="stat-label">Portfolio Value</div>
+        <div class="stat-value" id="stat-portfolio">$0</div>
+        <div class="stat-sub">Estimated future wealth</div>
+      </div>
+      <div class="stat-card yellow-card">
+        <div class="stat-label">Total Interest Earned</div>
+        <div class="stat-value" id="stat-interest">$0</div>
+        <div class="stat-sub">"Free" wealth from growth</div>
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Wealth Projection</div>
+          <div class="chart-sub">How time and interest work together.</div>
+        </div>
+        <div class="chart-legend">
+          <!-- Portfolio legend item -->
+          <div class="legend-item" onclick="toggleTooltip('tt-portfolio')">
+            <span class="legend-dot" style="background:var(--navy)"></span>
+            PORTFOLIO
+            <div class="legend-tooltip" id="tt-portfolio">
+              <div class="tt-title">The Portfolio (Investing)</div>
+              <div class="tt-body">Your money is put to work in the market. It earns interest, and then that interest earns more interest.</div>
+              <div class="tt-tag">"Exponential Growth"</div>
+            </div>
+          </div>
+          <!-- Cash Box legend item -->
+          <div class="legend-item" onclick="toggleTooltip('tt-cashbox')">
+            <span class="legend-dot" style="background:var(--lblue); border:1.5px dashed var(--gray2);"></span>
+            CASH BOX
+            <div class="legend-tooltip" id="tt-cashbox">
+              <div class="tt-title">The Cash Box (Savings)</div>
+              <div class="tt-body">Like putting money under a mattress. You keep exactly what you put in, but it doesn't grow on its own.</div>
+              <div class="tt-tag">"Linear Growth"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="mainChart" role="img" aria-label="Wealth projection line chart showing portfolio growth vs cash savings over time"></canvas>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="dark-card">
+        <div>
+          <div class="comp-label">Wealth Composition</div>
+          <div class="comp-text"><b id="comp-pct">82%</b> of your final wealth is pure interest.</div>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="donutChart" role="img" aria-label="Donut chart showing percentage of wealth from interest"></canvas>
+        </div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="7" stroke="#412402" stroke-width="1.5"/>
+            <line x1="8" y1="5" x2="8" y2="8.5" stroke="#412402" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="11" r="0.75" fill="#412402"/>
+          </svg>
+        </div>
+        <div>
+          <div class="tip-label">The Tipping Point</div>
+          <div class="tip-text" id="tip-text">In <b><u>Year 11</u></b>, your annual returns will actually be larger than what you save out of pocket.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2026 Ernst &amp; Young Foundation (US). All Rights Reserved.</div>
+
+<script>
+const PRESETS = {
+  saver:      { start: 0,    monthly: 250, rate: 7,  years: 40, tag: 'Future Mover' },
+  grad:       { start: 5000, monthly: 150, rate: 8,  years: 35, tag: 'Solid Foundation' },
+  aggressive: { start: 1000, monthly: 750, rate: 10, years: 25, tag: 'Wealth Icon' },
+};
+const MILESTONES = [25000, 100000, 250000, 500000, 1000000];
+let mainChart = null, donutChart = null;
+
+function fmt(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+  return '$' + Math.round(n).toLocaleString();
+}
+function fmtTooltip(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function calcPortfolio(start, monthly, rate, years) {
+  const r = rate / 100 / 12, n = years * 12;
+  let fv = start * Math.pow(1 + r, n);
+  if (r > 0) fv += monthly * (Math.pow(1 + r, n) - 1) / r;
+  else fv += monthly * n;
+  return fv;
+}
+
+function buildYearlyData(start, monthly, rate, years) {
+  const portfolio = [], cashbox = [];
+  for (let y = 0; y <= years; y++) {
+    portfolio.push(calcPortfolio(start, monthly, rate, y));
+    cashbox.push(start + monthly * 12 * y);
+  }
+  return { portfolio, cashbox };
+}
+
+function findTippingPoint(start, monthly, rate, years) {
+  for (let y = 1; y <= years; y++) {
+    if (calcPortfolio(start, monthly, rate, y) * (rate / 100) >= monthly * 12) return y;
+  }
+  return null;
+}
+
+function findMilestoneYears(start, monthly, rate, years) {
+  return MILESTONES.map(m => {
+    for (let y = 0; y <= years; y++) {
+      if (calcPortfolio(start, monthly, rate, y) >= m) return y;
+    }
+    return null;
+  });
+}
+
+function update() {
+  const start   = parseFloat(document.getElementById('val-start').value) || 0;
+  const monthly = parseFloat(document.getElementById('val-monthly').value) || 0;
+  const rate    = parseFloat(document.getElementById('val-rate').value) || 7;
+  const years   = parseInt(document.getElementById('val-years').value) || 40;
+
+  if (document.activeElement.id !== 'val-start') document.getElementById('val-start').value = start;
+  if (document.activeElement.id !== 'val-monthly') document.getElementById('val-monthly').value = monthly;
+  if (document.activeElement.id !== 'val-rate') document.getElementById('val-rate').value = rate;
+  if (document.activeElement.id !== 'val-years') document.getElementById('val-years').value = years;
+
+  const portfolio = calcPortfolio(start, monthly, rate, years);
+  const saved     = start + monthly * 12 * years;
+  const interest  = portfolio - saved;
+
+  document.getElementById('stat-saved').textContent     = fmt(saved);
+  document.getElementById('stat-portfolio').textContent = fmt(portfolio);
+  document.getElementById('stat-interest').textContent  = fmt(interest);
+
+  const pct = Math.round(Math.max(0, (interest / portfolio) * 100));
+  document.getElementById('comp-pct').textContent = pct + '%';
+
+  const tip = findTippingPoint(start, monthly, rate, years);
+  document.getElementById('tip-text').innerHTML = tip
+    ? `In <b><u>Year ${tip}</u></b>, your annual returns will actually be larger than what you save out of pocket.`
+    : `Keep growing — the tipping point arrives when your balance generates more in annual returns than your yearly savings.`;
+
+  const ms = findMilestoneYears(start, monthly, rate, years);
+  document.getElementById('milestones').innerHTML = MILESTONES.map((m, i) => {
+    const y = ms[i], ok = y !== null && y <= years;
+    return `<div class="milestone-item">
+      <span class="milestone-amount">$${m.toLocaleString()}</span>
+      <span class="milestone-year${ok ? '' : ' na'}">${ok ? 'Year ' + y : '—'}</span>
+    </div>`;
+  }).join('');
+
+  const { portfolio: portArr, cashbox: cashArr } = buildYearlyData(start, monthly, rate, years);
+  const labels = portArr.map((_, i) => i % 5 === 0 ? i + 'y' : '');
+  const maxVal = Math.max(...portArr);
+
+  if (mainChart) {
+    mainChart.data.labels = labels;
+    mainChart.data.datasets[0].data = portArr;
+    mainChart.data.datasets[1].data = cashArr;
+    mainChart.options.scales.y.max = Math.ceil(maxVal * 1.15 / 100000) * 100000;
+    mainChart.update('none');
+  }
+  if (donutChart) {
+    const safe = Math.max(0, Math.min(100, pct));
+    donutChart.data.datasets[0].data = [safe, 100 - safe];
+    donutChart.update('none');
+  }
+}
+
+function applyPreset(key, btn) {
+  const p = PRESETS[key];
+  document.getElementById('sl-start').value   = p.start;   document.getElementById('val-start').value   = p.start;
+  document.getElementById('sl-monthly').value = p.monthly; document.getElementById('val-monthly').value = p.monthly;
+  document.getElementById('sl-rate').value    = p.rate;    document.getElementById('val-rate').value    = p.rate;
+  document.getElementById('sl-years').value   = p.years;   document.getElementById('val-years').value   = p.years;
+  document.getElementById('preset-tag').textContent = p.tag;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function toggleTooltip(id) {
+  const el = document.getElementById(id);
+  const wasVisible = el.classList.contains('visible');
+  document.querySelectorAll('.legend-tooltip').forEach(t => t.classList.remove('visible'));
+  if (!wasVisible) el.classList.add('visible');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.legend-item')) {
+    document.querySelectorAll('.legend-tooltip').forEach(t => t.classList.remove('visible'));
+  }
+});
+
+window.addEventListener('load', () => {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  mainChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Portfolio', data: [], borderColor: '#002E5D', borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.4 },
+        { label: 'Cash', data: [], borderColor: '#B5E2FA', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, fill: false, tension: 0 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: '#0f1535',
+          titleColor: '#fff',
+          titleFont: { size: 13, weight: '700', family: "'Open Sans', Arial, sans-serif" },
+          bodyColor: 'rgba(255,255,255,0.8)',
+          bodyFont: { size: 12, family: "'Open Sans', Arial, sans-serif" },
+          padding: 14,
+          cornerRadius: 10,
+          displayColors: true,
+          boxWidth: 10,
+          boxHeight: 10,
+          callbacks: {
+            title: items => {
+              const idx = items[0].dataIndex;
+              return idx + 'y';
+            },
+            label: ctx => '  ' + ctx.dataset.label + ': $' + Math.round(ctx.parsed.y).toLocaleString()
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 11, family: "'Open Sans', Arial, sans-serif" },
+            color: '#747480', autoSkip: false, maxRotation: 0,
+            callback: (val, idx) => mainChart.data.labels[idx] || '',
+          }
+        },
+        y: {
+          min: 0,
+          ticks: {
+            callback: v => {
+              if (v >= 1000000) return '$' + (v / 1000000).toFixed(1) + 'M';
+              if (v >= 1000) return '$' + (v / 1000) + 'k';
+              return '$' + v;
+            },
+            font: { size: 11, family: "'Courier New', monospace" },
+            color: '#747480',
+          },
+          grid: { color: '#EAEAF1' }
+        }
+      }
+    }
+  });
+
+  const dctx = document.getElementById('donutChart').getContext('2d');
+  donutChart = new Chart(dctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{ data: [82, 18], backgroundColor: ['#FFE600', 'rgba(255,255,255,0.15)'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: false, cutout: '68%', animation: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } }
+    }
+  });
+
+  update();
+});
+
+function syncFromSlider(slId, inputId) {
+  const sl = document.getElementById(slId);
+  const inp = document.getElementById(inputId);
+  inp.value = sl.value;
+  update();
+}
+function syncFromInput(slId, inputId, min, max) {
+  const inp = document.getElementById(inputId);
+  const sl = document.getElementById(slId);
+  const raw = inp.value;
+  if (raw === '' || raw === '-') return; // still typing
+  let val = parseFloat(raw);
+  if (isNaN(val)) return;
+  // Move slider if in range, but never rewrite the input while typing
+  const clamped = Math.min(max, Math.max(min, val));
+  sl.value = clamped;
+  update();
+}
+function syncFromInputBlur(slId, inputId, min, max) {
+  const inp = document.getElementById(inputId);
+  const sl = document.getElementById(slId);
+  let val = parseFloat(inp.value);
+  if (isNaN(val) || inp.value === '') val = min;
+  val = Math.min(max, Math.max(min, val));
+  inp.value = val;
+  sl.value = val;
+  update();
+}
+</script>
+</body>
+</html>

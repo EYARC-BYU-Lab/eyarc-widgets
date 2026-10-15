@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Would You Rather — Time Value of Money</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #002E5D;
+  --navy2:   #003f7f;
+  --yellow:  #FFE600;
+  --yellowD: #F2BA05;
+  --blue:    #0d65c7;
+  --blueL:   #B5E2FA;
+  --blueP:   #ddeeff;
+  --gL:      #EAEAF1;
+  --gM:      #C2C2CE;
+  --gD:      #747480;
+  --white:   #ffffff;
+  --green:   #6E9600;
+  --greenL:  #eef5d9;
+  --orange:  #F88400;
+  --orangeL: #fff3e0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Open Sans',Arial,sans-serif;background:#f0f0f5;color:var(--navy);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);border-bottom:4px solid var(--yellow)}
+.hdr-in{max-width:800px;margin:0 auto;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{background:var(--yellow);width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo h1{font-size:.95rem;font-weight:800;color:#fff;line-height:1.2}
+.logo p{font-size:10px;color:var(--blueL);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.hdr-score{display:none;gap:8px;align-items:center}
+.schip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 14px;text-align:center;min-width:58px}
+.schip .n{font-size:1.1rem;font-weight:800;color:var(--yellow);line-height:1;display:block}
+.schip .l{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.5);font-weight:600}
+.prog{display:none;background:var(--navy2);height:4px}
+.prog-fill{height:100%;background:var(--yellow);transition:width .5s ease;width:0%}
+
+/* ── MAIN ── */
+main{max-width:800px;margin:0 auto;padding:2rem 1.5rem 3rem}
+
+/* ── INTRO ── */
+.intro{background:var(--navy);border-radius:16px;padding:3.5rem 2rem;text-align:center;border-bottom:5px solid var(--yellow)}
+.eyebrow{display:inline-block;background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;padding:4px 14px;border-radius:999px;margin-bottom:1.5rem}
+.intro h2{font-size:clamp(2rem,5vw,3rem);font-weight:800;color:#fff;line-height:1.1;margin-bottom:1rem;letter-spacing:-.02em}
+.intro h2 em{color:var(--yellow);font-style:normal}
+.intro p{font-size:15px;color:var(--blueL);max-width:480px;margin:0 auto 2rem;line-height:1.7}
+.btn-start{background:var(--yellow);color:var(--navy);font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border:none;border-radius:8px;padding:.9rem 2.5rem;cursor:pointer;transition:background .15s,transform .1s}
+.btn-start:hover{background:var(--yellowD);transform:translateY(-1px)}
+
+/* ── GAME ── */
+.game{display:none}
+.qmeta{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.ctag{background:var(--blue);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;border-radius:999px}
+.qnum{font-size:12px;font-weight:700;color:var(--gD);text-transform:uppercase;letter-spacing:.08em;margin-left:auto}
+
+/* ── FLIP SCENE ── */
+.scene{width:100%;perspective:1400px;margin-bottom:1.25rem}
+.ci{position:relative;width:100%;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,0,.2,1)}
+.ci.flipped{transform:rotateY(180deg)}
+.face{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.face-back{position:absolute;top:0;left:0;transform:rotateY(180deg)}
+
+/* ── FRONT CARD ── */
+.front-card{
+  background:var(--white);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,46,93,.1);
+}
+
+/* Yellow accent bar at top */
+.front-accent{
+  height:6px;
+  background:var(--yellow);
+}
+
+.front-body{
+  padding:2.25rem 2rem 0;
+}
+
+/* WYR label */
+.wyr-label{
+  text-align:center;
+  font-size:clamp(1.4rem,3.5vw,2rem);
+  font-weight:800;
+  color:var(--navy);
+  letter-spacing:-.01em;
+  margin-bottom:.5rem;
+  line-height:1.15;
+}
+
+/* Question */
+.wyr-q{ display:none; }
+
+/* Option buttons */
+.opts{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:stretch;
+  border-top:1px solid var(--gL);
+}
+
+.opt-btn{
+  background:transparent;
+  border:none;
+  padding:1.5rem 1.25rem;
+  cursor:pointer;
+  text-align:center;
+  transition:background .18s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.opt-btn:hover:not(:disabled){background:var(--blueP)}
+.opt-btn:disabled{cursor:default}
+.opt-btn:first-child{}
+
+.opt-letter{
+  width:32px;height:32px;
+  border-radius:50%;
+  background:var(--navy);
+  color:var(--yellow);
+  font-size:13px;
+  font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:background .18s;
+}
+.opt-btn:hover:not(:disabled) .opt-letter{background:var(--blue)}
+.opt-title{font-size:13px;font-weight:700;color:var(--navy);line-height:1.5;text-align:center;}
+
+
+
+
+
+.vs-col{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  width:48px;
+  flex-shrink:0;
+  position:relative;
+}
+.vs-col::before{
+  content:'';
+  position:absolute;
+  top:0; bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:1px;
+  background:var(--gL);
+}
+.vs-col span{
+  position:relative;
+  z-index:1;
+  background:var(--white);
+  padding:6px 4px;
+  font-size:11px;
+  font-weight:800;
+  color:var(--gM);
+  letter-spacing:.1em;
+}
+
+
+.answer-input{
+  width:100%;
+  padding:7px 10px;
+  border:2px solid var(--gM);
+  border-radius:8px;
+  font-family:'Open Sans',Arial,sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color:var(--navy);
+  background:var(--white);
+  outline:none;
+  transition:border-color .15s;
+  cursor:text;
+}
+.answer-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(13,101,199,.12)}
+.answer-input.filled{border-color:var(--blue)}
+.answer-input:disabled{background:var(--gL);color:var(--gD);border-color:var(--gM)}
+
+/* Select prompt bar */
+.select-prompt{
+  border-top:1px solid var(--gL);
+  padding:.85rem 1.5rem;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+  color:var(--gD);
+  background:var(--white);
+  letter-spacing:.03em;
+  transition:color .2s;
+}
+.select-prompt.ready{color:var(--blue)}
+
+/* Answer states */
+.opt-btn.picked-correct{background:var(--greenL) !important}
+.opt-btn.picked-correct .opt-letter{background:var(--green);color:#fff}
+.opt-btn.picked-correct .opt-title{color:var(--green)}
+.opt-btn.picked-wrong{background:var(--orangeL) !important}
+.opt-btn.picked-wrong .opt-letter{background:var(--orange);color:#fff}
+.opt-btn.picked-wrong .opt-title{color:var(--orange)}
+.opt-btn.reveal-winner{background:var(--greenL) !important}
+.opt-btn.reveal-winner .opt-letter{background:var(--green);color:#fff}
+.opt-btn.reveal-winner .opt-title{color:var(--green)}
+
+/* ── BACK CARD ── */
+.back-card{
+  background:var(--navy);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,46,93,.2);
+}
+
+.back-accent{height:6px;background:var(--yellow)}
+
+.back-verdict-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1.25rem 1.75rem 1rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.verdict-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.verdict-badge.correct{color:#8fcc2e}
+.verdict-badge.wrong{color:var(--orange)}
+
+.verdict-icon{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#fff;flex-shrink:0;
+}
+.verdict-badge.correct .verdict-icon{background:var(--green)}
+.verdict-badge.wrong   .verdict-icon{background:var(--orange)}
+
+.ctag-back{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--yellow);background:rgba(255,230,0,.1);
+  border:1px solid rgba(255,230,0,.25);border-radius:999px;padding:3px 10px;
+}
+
+/* Math section */
+.back-section{padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.back-slbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:var(--yellow);margin-bottom:.75rem}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.calc-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+.calc-block-label{background:rgba(255,230,0,.12);border-bottom:1px solid rgba(255,230,0,.2);padding:6px 12px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--yellow)}
+.calc-rows{padding:6px 0}
+.calc-row{display:flex;align-items:center;padding:5px 12px;gap:8px}
+.calc-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,.05)}
+.calc-key{font-size:11px;font-weight:800;color:rgba(255,230,0,.7);min-width:44px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.calc-val{font-size:12px;color:rgba(255,255,255,.85);font-weight:600}
+.calc-solve-row{background:rgba(110,150,0,.2);border-top:1px solid rgba(110,150,0,.4) !important}
+.calc-solve-row .calc-key{color:#8fcc2e}
+.calc-solve-row .calc-val{color:#8fcc2e;font-weight:800}
+.winner-row{background:rgba(110,150,0,.15);border:1px solid rgba(110,150,0,.35);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-top:10px}
+.winner-icon{width:20px;height:20px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
+.winner-text{font-size:13px;font-weight:700;color:#8fcc2e}
+
+/* Lesson section */
+.back-lesson{padding:1.5rem 1.75rem}
+.back-ltext{font-size:13.5px;color:rgba(255,255,255,.85);line-height:1.75}
+.back-ltext strong{color:var(--yellow);font-weight:700}
+
+/* Back card prompt */
+.back-prompt{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:.85rem 1.5rem;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+  color:rgba(255,255,255,.4);
+  letter-spacing:.03em;
+  background:transparent;
+}
+
+/* Flip back button */
+.btn-flip-back{
+  display:none;
+  align-items:center;
+  gap:6px;
+  background:transparent;
+  color:var(--gD);
+  font-family:'Open Sans',Arial,sans-serif;
+  font-size:12px;
+  font-weight:700;
+  border:1px solid var(--gM);
+  border-radius:6px;
+  padding:.5rem 1rem;
+  cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.btn-flip-back:hover{background:var(--gL);color:var(--navy);border-color:var(--navy)}
+
+/* ── NAV ── */
+.nav-row{display:flex;justify-content:flex-end}
+.btn-return{display:none;align-items:center;background:transparent;color:var(--navy);font-family:'Open Sans',Arial,sans-serif;font-size:13px;font-weight:700;border:2px solid var(--navy);border-radius:8px;padding:.7rem 1.5rem;cursor:pointer;transition:background .15s,color .15s}
+.btn-return:hover{background:var(--navy);color:var(--yellow)}
+.btn-next{display:none;align-items:center;gap:8px;background:var(--navy);color:var(--yellow);font-family:'Open Sans',Arial,sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;border:none;border-radius:8px;padding:.75rem 1.75rem;cursor:pointer;transition:background .15s,transform .1s}
+.btn-next:hover{background:var(--navy2);transform:translateY(-1px)}
+
+/* ── RESULTS ── */
+.res-screen{display:none;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.res-hero{background:var(--navy);border-radius:16px;padding:2.5rem 2rem;text-align:center;margin-bottom:1.25rem;border-bottom:5px solid var(--yellow)}
+.res-trophy{font-size:3rem;margin-bottom:.5rem;display:block}
+.res-score{font-size:clamp(3rem,10vw,5rem);font-weight:800;color:var(--yellow);line-height:1;letter-spacing:-.03em;margin-bottom:.4rem}
+.res-msg{font-size:15px;color:var(--blueL)}
+.res-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.rstat{background:var(--white);border:1px solid var(--gM);border-radius:12px;padding:1rem;text-align:center}
+.rstat .val{font-size:2rem;font-weight:800;color:var(--navy);line-height:1;margin-bottom:4px}
+.rstat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--gD);font-weight:700}
+.bd-wrap{background:var(--white);border:1px solid var(--gM);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.bd-hdr{background:var(--gL);padding:.6rem 1rem;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gD);border-bottom:1px solid var(--gM)}
+.bd-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem 1rem;font-size:13px;color:var(--navy);font-weight:600;border-bottom:1px solid var(--gL)}
+.bd-row.reviewable{cursor:pointer;transition:background .15s}
+.bd-row.reviewable:hover{background:var(--orangeL)}
+.bd-row:last-child{border-bottom:none}
+.bd-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:3px 10px;border-radius:999px}
+.bd-badge.hit{background:var(--greenL);color:var(--green)}
+.bd-badge.miss{background:var(--orangeL);color:var(--orange)}
+.res-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-ol{background:var(--white);color:var(--navy);font-family:'Open Sans',Arial,sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border:2px solid var(--navy);border-radius:8px;padding:.7rem 1.5rem;cursor:pointer;transition:background .15s,color .15s}
+.btn-ol:hover{background:var(--navy);color:var(--yellow)}
+.btn-fl{background:var(--yellow);color:var(--navy);font-family:'Open Sans',Arial,sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border:2px solid var(--yellowD);border-radius:8px;padding:.7rem 1.5rem;cursor:pointer}
+.btn-fl:hover{background:var(--yellowD)}
+@media(max-width:520px){.opts{grid-template-columns:1fr;}.vs-col{padding:.5rem;border-top:1px solid var(--gL);border-bottom:1px solid var(--gL)}.opt-btn:first-child{border-right:none}}
+@media print{.btn-next,.btn-start,.res-btns{display:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <polygon points="5,21 13,5 21,21 17,21 13,13 9,21" fill="#002E5D"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Would You Rather?</h1>
+        <p>Time Value of Money</p>
+      </div>
+    </div>
+    <div class="hdr-score" id="hdr-score">
+      <div class="schip"><span class="n" id="sc-correct">0</span><span class="l">Correct</span></div>
+      <div class="schip"><span class="n" id="sc-wrong">0</span><span class="l">Wrong</span></div>
+      <div class="schip"><span class="n" id="sc-pct">&mdash;</span><span class="l">Score</span></div>
+    </div>
+  </div>
+  <div class="prog" id="prog"><div class="prog-fill" id="prog-fill"></div></div>
+</header>
+
+<main>
+
+  <!-- INTRO -->
+  <div id="intro-screen">
+    <div class="intro">
+
+      <h2>Would You<br><em>Rather...?</em></h2>
+      <p>You've read about Time Value of Money. Now put your instincts to the test. Choose between two financial scenarios — then flip the card to see the math.</p>
+      <button class="btn-start" onclick="startGame()">Start Activity &rarr;</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game-screen" class="game">
+    <div class="qmeta">
+      <div class="ctag" id="concept-chip">Concept</div>
+      <div class="qnum" id="q-counter">Question 1 of 15</div>
+    </div>
+
+    <div class="scene">
+      <div class="ci" id="card-inner">
+
+        <!-- FRONT -->
+        <div class="face face-front">
+          <div class="front-card">
+            <div class="front-accent"></div>
+            <div class="front-body" style="padding-bottom:1.25rem;">
+              <div class="wyr-label">Would You Rather&hellip;</div>
+            </div>
+            <div class="opts">
+              <button class="opt-btn" id="btn-a">
+                <div class="opt-letter">A</div>
+                <div class="opt-title" id="opt-a-title"></div>
+                <input class="answer-input" id="ans-a" type="text" placeholder="e.g. 102584.45" autocomplete="off" inputmode="decimal" onclick="event.stopPropagation()"/>
+              </button>
+              <div class="vs-col"><span id="vs-label">OR</span></div>
+              <button class="opt-btn" id="btn-b">
+                <div class="opt-letter">B</div>
+                <div class="opt-title" id="opt-b-title"></div>
+                <input class="answer-input" id="ans-b" type="text" placeholder="e.g. 102584.45" autocomplete="off" inputmode="decimal" onclick="event.stopPropagation()"/>
+              </button>
+            </div>
+            <div class="select-prompt" id="select-prompt">Enter both answers above, then select the winner</div>
+          </div>
+        </div>
+
+        <!-- BACK -->
+        <div class="face face-back">
+          <div class="back-card">
+            <div class="back-accent"></div>
+            <div class="back-verdict-row">
+              <div class="verdict-badge" id="verdict-badge">
+                <div class="verdict-icon" id="verdict-icon"></div>
+                <span id="verdict-text"></span>
+              </div>
+              <span class="ctag-back" id="back-tag"></span>
+            </div>
+            <div class="back-section">
+              <div class="back-slbl" style="text-transform:none;letter-spacing:.03em;font-size:12px;">Calculator inputs</div>
+              <div class="calc-grid" id="calc-grid"></div>
+              <div class="winner-row" id="winner-row">
+                <div class="winner-icon">&#10003;</div>
+                <div class="winner-text" id="winner-text"></div>
+              </div>
+            </div>
+            <div class="back-lesson">
+              <div class="back-slbl" id="key-label" style="text-transform:none;letter-spacing:.03em;font-size:12px;">Key concept:</div>
+              <div class="back-ltext" id="back-ltext"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav-row" style="gap:10px;">
+      <button class="btn-flip-back" id="btn-flip-back" onclick="flipBack()">&#8635; View question</button>
+      <button class="btn-return" id="btn-return" onclick="returnToResults()" style="display:none;">
+        &larr; Return to Results
+      </button>
+      <button class="btn-next" id="btn-next" onclick="nextQ()">
+        <span id="next-label">Next Question</span>&nbsp;&rarr;
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-screen" class="res-screen">
+    <div class="res-hero">
+      <span class="res-trophy" id="trophy">&#127891;</span>
+      <div class="res-score" id="big-score">0/15</div>
+      <div class="res-msg" id="res-msg">Here's how you did</div>
+    </div>
+    <div class="res-stats">
+      <div class="rstat"><div class="val" id="rs-correct">0</div><div class="lbl">Correct</div></div>
+      <div class="rstat"><div class="val" id="rs-wrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="rstat"><div class="val" id="rs-pct">0%</div><div class="lbl">Accuracy</div></div>
+    </div>
+    <div class="bd-wrap">
+      <div class="bd-hdr">Concept Breakdown</div>
+      <div id="bd-list"></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-ol" onclick="restart()">&#8635; Play Again</button>
+      
+    </div>
+  </div>
+
+</main>
+
+<script>
+const questions = [
+  {
+    concept: "Long-Term Savings",
+    conceptFull: "FV \u2014 Retirement Savings Comparison",
+    q: "Save for retirement by depositing $550 per month for 30 years at 6% APR compounded monthly, or deposit $700 per month for 20 years at 8% APR compounded monthly. Which plan produces the larger future value?",
+    a: { title: "Start saving at age 20 and deposit $550 per month for 30 years into a retirement savings at 6% APR compounded monthly. Solve for the Future Value (FV).", detail: "Lower monthly deposit, 30-year horizon" },
+    b: { title: "Wait until age 30 and then deposit $700 per month into retirement savings for 20 years at 8% APR compounded monthly. Solve for the Future Value (FV).", detail: "Higher monthly deposit, 20-year horizon" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","360"],["I/YR","0.5"],["PV","0"],["PMT","-550"],["Solve","FV = $552,483.27"]] },
+      { label: "Option B", rows: [["N","240"],["I/YR","0.6667"],["PV","0"],["PMT","-700"],["Solve","FV = $412,314.29"]] }
+    ],
+    winner: "Option A results in a larger retirement savings balance by $140,169.",
+    lesson: "30 years of compounding dominates 20 years, even when earning a lower rate. Option A produces approximately $140,000 more despite contributing $150 less each month and earning a lower rate of interest. The extra decade of compounding is the decisive factor."
+  },
+
+  {
+    concept: "FV with Lump Sum + PMT",
+    conceptFull: "Future Value \u2014 PV and PMT Combined",
+    q: "Deposit $4,000 today and contribute $1,500 annually for 8 years at 6% APR, or deposit $6,000 today and contribute $1,000 annually for 8 years at 7% APR. Which account ends with the higher future value?",
+    a: { title: "Deposit $4,000 today and contribute $1,500 annually for 8 years at 6% APR. Solve for the Future Value (FV).", detail: "Higher annual contributions, lower rate" },
+    b: { title: "Deposit $6,000 today and contribute $1,000 annually for 8 years at 7% APR. Solve for the Future Value (FV).", detail: "Larger starting balance, higher rate" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","8"],["I/YR","6"],["PV","-4,000"],["PMT","-1,500"],["Solve","FV = $21,221.59"]] },
+      { label: "Option B", rows: [["N","8"],["I/YR","7"],["PV","-6,000"],["PMT","-1,000"],["Solve","FV = $20,568.92"]] }
+    ],
+    winner: "Option A\u2019s future value exceeds Option B\u2019s by $652.67.",
+    lesson: "PV and PMT are entered as both negative values because money is flowing out. The calculator compounds the lump sum and accumulates the payment stream, then adds them."
+  },
+
+  {
+    concept: "Solving for N with PMT",
+    conceptFull: "Number of Periods (N) with Payments",
+    q: "Start with $8,000 today and add $1,500 per year at 6% APR, or start with $12,000 today and add $1,000 per year at 5% APR. Which account reaches $25,000 first?",
+    a: { title: "Invest $8,000 today and contribute $1,500 per year at 6% APR until the account reaches $25,000. Solve for the Number of Years (N).", detail: "Smaller start, larger annual contribution, higher rate" },
+    b: { title: "Invest $12,000 today and contribute $1,000 per year at 5% APR until the account reaches $25,000. Solve for the Number of Years (N).", detail: "Larger start, smaller annual contribution, lower rate" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["I/YR","6"],["PV","-8,000"],["PMT","-1,500"],["FV","25,000"],["Solve","N = 7.13 years"]] },
+      { label: "Option B", rows: [["I/YR","5"],["PV","-12,000"],["PMT","-1,000"],["FV","25,000"],["Solve","N = 6.99 years"]] }
+    ],
+    winner: "Option B reaches $25,000 about 7 weeks faster than Option A.",
+    lesson: "Both the PV and PMT are entered as negative numbers because money is flowing out of your pocket."
+  },
+
+  {
+    concept: "Monthly Loan Payment",
+    conceptFull: "Payments (PMT) \u2014 Loan Comparison",
+    q: "Borrow $20,000 for 4 years at 7% APR with monthly payments, or borrow $25,000 for 5 years at 5.5% APR with monthly payments. Which loan has the lower monthly payment?",
+    a: { title: "Borrow $20,000 for 4 years at 7% APR with monthly payments. Solve for the Monthly Payment (PMT).", detail: "Smaller loan, higher rate, shorter term" },
+    b: { title: "Borrow $25,000 for 5 years at 5.5% APR with monthly payments. Solve for the Monthly Payment (PMT).", detail: "Larger loan, lower rate, longer term" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["N","48"],["I/YR","0.5833"],["PV","20,000"],["FV","0"],["Solve","PMT = -$478.92/mo"]] },
+      { label: "Option B", rows: [["N","60"],["I/YR","0.4583"],["PV","25,000"],["FV","0"],["Solve","PMT = -$477.53/mo"]] }
+    ],
+    winner: "Option B is slightly cheaper than Option A by $1.39 per month.",
+    lesson: "Remember to put the variables in the same timeframe.<br><br>PV is positive because the loan amount is money coming in to you. The PMT solves as negative because the monthly payments represent money going out. The FV equals 0 because at the end of the loan, it will be fully repaid."
+  },
+
+  {
+    concept: "Comparing Investments",
+    conceptFull: "Future Value Comparison",
+    q: "Investor A deposits $9,000 at 6% APR for 15 years, or Investor B deposits $7,000 at 8% APR for 15 years. Which investor ends with more money, and by how much?",
+    a: { title: "Investor A deposits $9,000 at 6% APR for 15 years. Solve for the Future Value (FV).", detail: "Larger principal, lower rate" },
+    b: { title: "Investor B deposits $7,000 at 8% APR for 15 years. Solve for the Future Value (FV).", detail: "Smaller principal, higher rate" },
+    correct: "b",
+    inputs: [
+      { label: "Investor A", rows: [["N","15"],["I/YR","6"],["PV","-9,000"],["PMT","0"],["Solve","FV = $21,569.02"]] },
+      { label: "Investor B", rows: [["N","15"],["I/YR","8"],["PV","-7,000"],["PMT","0"],["Solve","FV = $22,205.18"]] }
+    ],
+    winner: "Investment B results in a higher overall future value investment by $636.16 compared to Investment A.",
+    lesson: "Over long time horizons, rate advantage overtakes principal advantage. With 15 years to compound, Investor B\u2019s 8% rate overcomes starting $2,000 behind."
+  },
+
+  {
+    concept: "Perpetuity",
+    conceptFull: "Perpetuity \u2014 PV = PMT \u00f7 r",
+    q: "Own a perpetuity that pays $3,000 per year forever when interest rates are 6%, or own a perpetuity that pays $2,400 per year forever when interest rates are 4%. Which perpetuity has the greater present value?",
+    a: { title: "Own a perpetuity that pays $3,000 per year forever with a 6% interest rate. Solve for the Present Value (PV).", detail: "Higher payment, higher discount rate" },
+    b: { title: "Own a perpetuity that pays $2,400 per year forever with an interest rate of 4%. Solve for the Present Value (PV).", detail: "Lower payment, lower discount rate" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["Formula","PV = PMT \u00f7 r"],["","PV = $3,000 \u00f7 0.06"],["Solve","PV = $50,000"]] },
+      { label: "Option B", rows: [["Formula","PV = PMT \u00f7 r"],["","PV = $2,400 \u00f7 0.04"],["Solve","PV = $60,000"]] }
+    ],
+    winner: "Option B is $10,000 higher than Option A.",
+    lesson: "Perpetuities cannot be solved on a financial calculator in the traditional sense because there is no finite N. Instead, to solve these questions, we use the formula: PV = PMT \u00f7 r.<br><br>Option B\u2019s lower 4% discount rate means each dollar of payment is discounted less aggressively, pushing its present value $10,000 higher than Option A, despite having a smaller annual payment."
+  },
+
+  {
+    concept: "Interest Rate (I/YR)",
+    conceptFull: "Solving for I/YR",
+    q: "Invest $5,500 today and grow it to $10,000 in 9 years, or invest $8,000 today and grow it to $14,000 in 11 years. Which investment earned the higher annual interest rate?",
+    a: { title: "Invest $5,500 today and grow it to $10,000 in 9 years. Solve for the annual Interest Rate (I/YR).", detail: "Smaller investment, shorter timeline" },
+    b: { title: "Invest $8,000 today and grow it to $14,000 in 11 years. Solve for the annual Interest Rate (I/YR).", detail: "Larger investment, longer timeline" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","9"],["PV","-5,500"],["PMT","0"],["FV","10,000"],["Solve","I/YR = 6.87%"]] },
+      { label: "Option B", rows: [["N","11"],["PV","-8,000"],["PMT","0"],["FV","14,000"],["Solve","I/YR = 5.22%"]] }
+    ],
+    winner: "Option A\u2019s 6.87% vs. Option B\u2019s 5.22% \u2014 a 1.65-point difference that compounds significantly over time.",
+    lesson: "Solving for the interest rate reveals the investment\u2019s annual return.<br><br>PV is entered as a negative number because cash is flowing out today. FV is entered as a positive number because cash will be coming back in. There are not recurring payments associated with this example, so the PMT is 0."
+  },
+
+  {
+    concept: "PV of an Annuity",
+    conceptFull: "Present Value of Monthly Payments",
+    q: "Receive $700 per month for 4 years with a discount rate of 5% APR, or receive $550 per month for 6 years with a discount rate of 4% APR. Which payment stream has the larger present value today?",
+    a: { title: "Receive $700 per month for 4 years with a discount rate of 5% APR. Solve for the Present Value (PV).", detail: "Higher monthly payment, shorter stream" },
+    b: { title: "Receive $550 per month for 6 years with a discount rate of 4% APR. Solve for the Present Value (PV).", detail: "Lower monthly payment, longer stream" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["N","48"],["I/YR","0.4167"],["PMT","700"],["FV","0"],["Solve","PV = $30,396.07"]] },
+      { label: "Option B", rows: [["N","72"],["I/YR","0.3333"],["PMT","550"],["FV","0"],["Solve","PV = $35,154.59"]] }
+    ],
+    winner: "Option B is worth more than Option A by $4,758.52",
+    lesson: "Although Option B\u2019s monthly payment is lower, it includes 24 additional payments and uses a lower discount rate. Together, these factors produce a higher present value."
+  },
+
+  {
+    concept: "APR with Monthly Compounding",
+    conceptFull: "Solving for APR \u2014 Monthly Compounding",
+    q: "Invest $3,000 today and grow it to $5,200 in 5 years with monthly compounding, or invest $4,500 today and grow it to $7,000 in 7 years with monthly compounding. Which investment earned the higher APR?",
+    a: { title: "Invest $3,000 today and grow it to $5,200 in 5 years with monthly compounding. Solve for the APR.", detail: "5-year investment with monthly compounding" },
+    b: { title: "Invest $4,500 today and grow it to $7,000 in 7 years with monthly compounding. Solve for the APR.", detail: "7-year investment with monthly compounding" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","60"],["PV","-3,000"],["PMT","0"],["FV","5,200"],["Solve","I/YR = 11.05% APR"]] },
+      { label: "Option B", rows: [["N","84"],["PV","-4,500"],["PMT","0"],["FV","7,000"],["Solve","I/YR = 6.33% APR"]] }
+    ],
+    winner: "Option A earned 11.05% APR and Option B earned 6.33% APR, which is a difference of 4.72 percentage points.",
+    lesson: "With monthly compounding, remember to convert to months for N. N = years \u00d7 12."
+  },
+
+  {
+    concept: "FV of Monthly Deposits",
+    conceptFull: "Future Value \u2014 Monthly PMT Comparison",
+    q: "Deposit $250 per month for 10 years at 7% APR compounded monthly, or deposit $400 per month for 6 years at 8% APR compounded monthly. Which account ends with the higher future value?",
+    a: { title: "Deposit $250 per month for 10 years at 7% APR compounded monthly. Solve for the Future Value (FV).", detail: "Lower monthly deposit, longer time horizon" },
+    b: { title: "Deposit $400 per month for 6 years at 8% APR compounded monthly. Solve for the Future Value (FV).", detail: "Higher monthly deposit, shorter time horizon" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","120"],["I/YR","0.5833"],["PV","0"],["PMT","-250"],["Solve","FV = $43,271.20"]] },
+      { label: "Option B", rows: [["N","72"],["I/YR","0.6667"],["PV","0"],["PMT","-400"],["Solve","FV = $36,810.13"]] }
+    ],
+    winner: "Option A wins by $6,461.07",
+    lesson: "The PMT is entered as a negative number because it represents money going out each month. The PV in both options is 0 because nothing was saved today.<br><br>Option A\u2019s 120 months of compounding vs. Option B\u2019s 72 months creates approximately a $6,461 advantage despite the lower deposit and rate due to the benefit of time."
+  },
+
+  {
+    concept: "Number of Periods (N)",
+    conceptFull: "Solving for N",
+    q: "Invest $7,000 today at 4.5% APR until it reaches $12,000, or invest $9,000 today at 6% APR until it reaches $15,000. Which investment reaches its target faster?",
+    a: { title: "Invest $7,000 today at 4.5% APR until it reaches $12,000. Solve for the number of years (N).", detail: "Smaller principal, lower rate, smaller gap to close" },
+    b: { title: "Invest $9,000 today at 6% APR until it reaches $15,000. Solve for the number of years (N).", detail: "Larger principal, higher rate, larger gap to close" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["I/YR","4.5"],["PV","-7,000"],["PMT","0"],["FV","12,000"],["Solve","N = 12.25 years"]] },
+      { label: "Option B", rows: [["I/YR","6"],["PV","-9,000"],["PMT","0"],["FV","15,000"],["Solve","N = 8.77 years"]] }
+    ],
+    winner: "Option B reaches its target 3.48 years faster compared to Option A.",
+    lesson: "<strong>A higher rate dramatically shortens time to the goal.</strong> Even though Option B needs $1,000 more in growth, its 6% rate gets to its goal 3.48 years sooner.<br><br>The higher the rate, the faster an investment grows from its PV to its FV."
+  },
+
+  {
+    concept: "Present Value",
+    conceptFull: "Present Value (PV)",
+    q: "Receive $18,000 in 6 years when the discount rate is 5%, or receive $14,500 today. Which option has the greater present value?",
+    a: { title: "Receive $18,000 in 6 years at 5% discount rate. Solve for the Present Value (PV).", detail: "Larger amount \u2014 but you wait 6 years" },
+    b: { title: "Receive $14,500 today. This is already the Present Value (PV).", detail: "Smaller amount \u2014 available immediately" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["N","6"],["I/YR","5"],["PMT","0"],["FV","18,000"],["Solve","PV = $13,431.88"]] },
+      { label: "Option B", rows: [["PV","$14,500 (already today)"],["","No discounting needed"]] }
+    ],
+    winner: "Option B has a greater present value by $1,068.12 when compared to Option A.",
+    lesson: "<strong>A bigger future value number isn\u2019t always worth more today.</strong> Receiving $18,000 in 6 years is only worth $13,432 in today\u2019s dollars, assuming a 5% rate. This is $1,068 less than having $14,500 in hand today.<br><br>Always discount future cash flows before comparing."
+  },
+
+  {
+    concept: "FV of Monthly Deposits",
+    conceptFull: "Future Value \u2014 Monthly PMT",
+    q: "Save $350 per month for 8 years at 5% APR compounded monthly, or save $500 per month for 5 years at 6% APR compounded monthly. Which savings plan produces the larger future value?",
+    a: { title: "Save $350 per month for 8 years at 5% APR compounded monthly. Solve for the Future Value (FV).", detail: "Lower monthly payment, longer time horizon" },
+    b: { title: "Save $500 per month for 5 years at 6% APR compounded monthly. Solve for the Future Value (FV).", detail: "Higher monthly payment, shorter time horizon" },
+    correct: "a",
+    inputs: [
+      { label: "Option A", rows: [["N","96"],["I/YR","0.4167"],["PV","0"],["PMT","-350"],["Solve","FV = $41,209.18"]] },
+      { label: "Option B", rows: [["N","60"],["I/YR","0.5"],["PV","0"],["PMT","-500"],["Solve","FV = $34,885.02"]] }
+    ],
+    winner: "Option A wins by $6,324.16",
+    lesson: "<strong>Time in the market matters more than deposit size.</strong> Option A\u2019s additional 3 years of compounding (96 months vs. 60) overcomes Option B\u2019s higher monthly deposit and interest rate.<br><br>Remember to convert both the rate and the timeframe to monthly units."
+  },
+
+  {
+    concept: "Future Value",
+    conceptFull: "Future Value (FV)",
+    q: "Invest $4,500 today at 7% APR for 12 years, or invest $6,000 today at 5% APR for 12 years. Which investment ends with the higher future value, and by how much?",
+    a: { title: "Invest $4,500 today at 7% APR for 12 years. Solve for the Future Value (FV).", detail: "Higher rate, smaller principal" },
+    b: { title: "Invest $6,000 today at 5% APR for 12 years. Solve for the Future Value (FV).", detail: "Lower rate, larger principal" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["N","12"],["I/YR","7"],["PV","-4,500"],["PMT","0"],["Solve","FV = $10,134.86"]] },
+      { label: "Option B", rows: [["N","12"],["I/YR","5"],["PV","-6,000"],["PMT","0"],["Solve","FV = $10,775.14"]] }
+    ],
+    winner: "Option B results in a higher overall future value by $640.28",
+    lesson: "<strong>Principal size can outweigh rate advantage, especially assuming the same time period.</strong><br><br>Option A\u2019s 7% interest rate is 2 points higher, but Option B\u2019s $1,500 larger initial principal produces $640 more after 12 years.<br><br>Always calculate both sides because a bigger starting amount can overcome a lower rate."
+  },
+
+  {
+    concept: "Comparing Cash Flows",
+    conceptFull: "Present Value Comparison",
+    q: "Receive $6,500 in 4 years when the discount rate is 9%, or receive $4,800 today. Which deal is worth more in today’s dollars?",
+    a: { title: "Receive $6,500 in 4 years at a 9% discount rate. Solve for the Present Value (PV).", detail: "Larger amount, but 4 years away" },
+    b: { title: "Receive $4,800 today. This is already the Present Value (PV).", detail: "Smaller amount and no waiting" },
+    correct: "b",
+    inputs: [
+      { label: "Option A", rows: [["N","4"],["I/YR","9"],["PMT","0"],["FV","6,500"],["Solve","PV = $4,604.76"]] },
+      { label: "Option B", rows: [["PV","$4,800"],["","No discounting needed"]] }
+    ],
+    winner: "Option B wins by $195.24",
+    lesson: "<strong>Never compare cash flows at different points in time by their face value.</strong> Always discount the future value back to present value and then compare. At a 9% rate, waiting 4 years compares $6,500 into $4,605 which is $195 less than the $4,800 Option B provides today.<br><br><strong>Noteworthy:</strong> The higher the discount rate, the more future money loses its value."
+  }];
+
+let shuffled=[], current=0, correctCount=0, wrongCount=0, answered=false, conceptTrack={};
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startGame(){
+  shuffled=[...questions];current=0;correctCount=0;wrongCount=0;answered=false;conceptTrack={};
+  document.getElementById('intro-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  document.getElementById('hdr-score').style.display='flex';
+  document.getElementById('prog').style.display='block';
+  loadQ();
+}
+
+function loadQ(){
+  const q=shuffled[current]; answered=false;
+  const ci=document.getElementById('card-inner');
+  ci.classList.remove('flipped'); ci.style.minHeight='';
+  document.getElementById('btn-return').style.display='none';
+  document.getElementById('btn-flip-back').style.display='none';
+  document.getElementById('concept-chip').textContent=q.concept;
+  document.getElementById('q-counter').textContent='Question '+(current+1)+' of '+shuffled.length;
+  document.getElementById('prog-fill').style.width=(current/shuffled.length*100)+'%';
+  document.getElementById('vs-label').textContent = 'OR';
+  document.getElementById('opt-a-title').textContent = q.a.title;
+  document.getElementById('opt-b-title').textContent = q.b.title;
+  // reset answer inputs
+  const ansA=document.getElementById('ans-a'), ansB=document.getElementById('ans-b');
+  ansA.value=''; ansB.value='';
+  ansA.disabled=false; ansB.disabled=false;
+  ansA.classList.remove('filled'); ansB.classList.remove('filled');
+  const prompt=document.getElementById('select-prompt');
+  prompt.textContent='Enter both answers above, then select the winner';
+  prompt.classList.remove('ready');
+  // buttons locked until both inputs filled
+  const bA=document.getElementById('btn-a'), bB=document.getElementById('btn-b');
+  bA.className='opt-btn'; bB.className='opt-btn';
+  bA.disabled=true; bB.disabled=true;
+  bA.onclick=null; bB.onclick=null;
+  // Numeric validation: allow digits, one decimal point, up to 2 decimal places, optional leading minus
+  function sanitize(input){
+    let v = input.value;
+    // Strip anything that isn't a digit, dot, or leading minus
+    v = v.replace(/[^0-9.\-]/g, '');
+    // Only allow one minus, at the start
+    v = v.replace(/(?!^)-/g, '');
+    // Only allow one decimal point
+    const parts = v.split('.');
+    if(parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+    // Limit to 2 decimal places
+    if(parts.length === 2 && parts[1].length > 2) v = parts[0] + '.' + parts[1].slice(0,2);
+    if(input.value !== v) input.value = v;
+  }
+
+  // watch inputs
+  function checkInputs(){
+    sanitize(ansA); sanitize(ansB);
+    const aValid = ansA.value.trim() !== '' && /^-?\d*\.?\d{0,2}$/.test(ansA.value.trim()) && ansA.value.trim() !== '-' && ansA.value.trim() !== '.';
+    const bValid = ansB.value.trim() !== '' && /^-?\d*\.?\d{0,2}$/.test(ansB.value.trim()) && ansB.value.trim() !== '-' && ansB.value.trim() !== '.';
+    ansA.classList.toggle('filled', aValid);
+    ansB.classList.toggle('filled', bValid);
+    if(aValid && bValid){
+      bA.disabled=false; bB.disabled=false;
+      bA.onclick=()=>pick('a'); bB.onclick=()=>pick('b');
+      prompt.textContent='Enter both answers above, then select the winner';
+      prompt.classList.add('ready');
+    } else {
+      bA.disabled=true; bB.disabled=true;
+      bA.onclick=null; bB.onclick=null;
+      prompt.textContent='Enter both answers above, then select the winner';
+      prompt.classList.remove('ready');
+    }
+  }
+  ansA.oninput=checkInputs;
+  ansB.oninput=checkInputs;
+  document.getElementById('btn-next').style.display='none';
+  updateScore();
+  requestAnimationFrame(()=>{
+    const front=document.querySelector('.front-card');
+    if(front) ci.style.minHeight=front.offsetHeight+'px';
+  });
+}
+
+function pick(choice){
+  if(answered) return; answered=true;
+  const q=shuffled[current]; const ok=choice===q.correct;
+  const bA=document.getElementById('btn-a'), bB=document.getElementById('btn-b');
+  bA.onclick=null; bB.onclick=null; bA.disabled=true; bB.disabled=true;
+  // lock inputs
+  document.getElementById('ans-a').disabled=true;
+  document.getElementById('ans-b').disabled=true;
+  if(ok){correctCount++;document.getElementById('btn-'+choice).classList.add('picked-correct');}
+  else{wrongCount++;document.getElementById('btn-'+choice).classList.add('picked-wrong');document.getElementById('btn-'+q.correct).classList.add('reveal-winner');}
+  conceptTrack[q.concept]={label:q.conceptFull,hit:ok};
+  updateScore();
+  // populate back — verdict
+  const vb=document.getElementById('verdict-badge');
+  vb.className='verdict-badge '+(ok?'correct':'wrong');
+  document.getElementById('verdict-icon').textContent=ok?'✓':'✗';
+  document.getElementById('verdict-text').textContent=ok?'Correct!':'Not quite';
+  document.getElementById('back-tag').textContent=q.concept;
+  // build calculator input grid
+  const grid = document.getElementById('calc-grid');
+  grid.innerHTML = '';
+  q.inputs.forEach(block => {
+    const div = document.createElement('div');
+    div.className = 'calc-block';
+    let rowsHtml = block.rows.map((r) => {
+      const isSolve = r[0].toLowerCase() === 'solve';
+      const isEmpty = r[0] === '';
+      return '<div class="calc-row' + (isSolve ? ' calc-solve-row' : '') + '">' +
+        '<span class="calc-key">' + (isEmpty ? '' : r[0]) + '</span>' +
+        '<span class="calc-val">' + r[1] + '</span>' +
+        '</div>';
+    }).join('');
+    div.innerHTML = '<div class="calc-block-label">' + block.label + '</div><div class="calc-rows">' + rowsHtml + '</div>';
+    grid.appendChild(div);
+  });
+  document.getElementById('winner-text').textContent = q.winner;
+  document.getElementById('key-label').textContent = 'Key concept:';
+  document.getElementById('back-ltext').innerHTML = q.lesson;
+  setTimeout(()=>{
+    const ci=document.getElementById('card-inner');
+    const fH=document.querySelector('.front-card').offsetHeight;
+    const bH=document.querySelector('.back-card').scrollHeight;
+    ci.style.minHeight=Math.max(fH,bH)+'px';
+    ci.classList.add('flipped');
+    const nb=document.getElementById('btn-next');
+    const rb=document.getElementById('btn-return');
+    const fb=document.getElementById('btn-flip-back');
+    fb.style.display='flex';
+    if(reviewingFromResults){
+      rb.style.display='flex';
+      nb.style.display='none';
+    } else {
+      nb.style.display='flex';
+      rb.style.display='none';
+      document.getElementById('next-label').textContent=current<shuffled.length-1?'Next Question':'See Results';
+    }
+  },60);
+}
+
+function flipBack(){
+  const ci=document.getElementById('card-inner');
+  const fb=document.getElementById('btn-flip-back');
+  if(ci.classList.contains('flipped')){
+    ci.classList.remove('flipped');
+    fb.innerHTML='&#8635; View answer';
+  } else {
+    ci.classList.add('flipped');
+    fb.innerHTML='&#8635; View question';
+  }
+}
+
+function nextQ(){current++;if(current>=shuffled.length)showResults();else loadQ();}
+
+function updateScore(){
+  document.getElementById('sc-correct').textContent=correctCount;
+  document.getElementById('sc-wrong').textContent=wrongCount;
+  const t=correctCount+wrongCount;
+  document.getElementById('sc-pct').textContent=t?Math.round(correctCount/t*100)+'%':'—';
+}
+
+function showResults(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('prog-fill').style.width='100%';
+  const total=shuffled.length, pct=Math.round(correctCount/total*100);
+  let trophy='📚',msg='';
+  if(pct===100){trophy='🏆';msg='Perfect score — excellent command of TVM!';}
+  else if(pct>=87){trophy='🎓';msg='Strong work — solid TVM fundamentals.';}
+  else if(pct>=62){trophy='📈';msg='Good start — review the concepts you missed.';}
+  else{trophy='📖';msg='TVM takes practice — re-read the explanations and try again!';}
+  document.getElementById('trophy').textContent=trophy;
+  document.getElementById('big-score').textContent=correctCount+'/'+total;
+  document.getElementById('res-msg').textContent=msg;
+  document.getElementById('rs-correct').textContent=correctCount;
+  document.getElementById('rs-wrong').textContent=wrongCount;
+  document.getElementById('rs-pct').textContent=pct+'%';
+  const list=document.getElementById('bd-list'); list.innerHTML='';
+  Object.values(conceptTrack).forEach((c,i)=>{
+    const row=document.createElement('div');
+    row.className='bd-row'+(c.hit?'':' reviewable');
+    row.innerHTML='<span>'+c.label+'</span><span class="bd-badge '+(c.hit?'hit':'miss')+'">'+(c.hit?'Correct':'&#9654; Review')+'</span>';
+    if(!c.hit){
+      // find the index in shuffled that matches this concept
+      const qIdx = shuffled.findIndex(q => q.conceptFull === c.label);
+      if(qIdx !== -1){
+        row.addEventListener('click', () => reviewQuestion(qIdx));
+      }
+    }
+    list.appendChild(row);
+  });
+  document.getElementById('results-screen').style.display='block';
+}
+
+let reviewingFromResults = false;
+
+function reviewQuestion(idx){
+  reviewingFromResults = true;
+  document.getElementById('results-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  answered=false;
+  current=idx;
+  const q=shuffled[idx];
+  delete conceptTrack[q.concept];
+  loadQ();
+  // show return button immediately (before they answer)
+  const rb = document.getElementById('btn-return');
+  rb.style.display='flex';
+}
+
+function returnToResults(){
+  reviewingFromResults = false;
+  document.getElementById('btn-return').style.display='none';
+  document.getElementById('game-screen').style.display='none';
+  // refresh the breakdown with updated conceptTrack
+  const list=document.getElementById('bd-list');
+  list.innerHTML='';
+  const total=shuffled.length;
+  const pct=Math.round(correctCount/total*100);
+  document.getElementById('big-score').textContent=correctCount+'/'+total;
+  document.getElementById('rs-correct').textContent=correctCount;
+  document.getElementById('rs-wrong').textContent=wrongCount;
+  document.getElementById('rs-pct').textContent=pct+'%';
+  let trophy='\u{1F4DA}',msg='';
+  if(pct===100){trophy='\u{1F3C6}';msg='Perfect score \u2014 excellent command of TVM!';}
+  else if(pct>=87){trophy='\u{1F393}';msg='Strong work \u2014 solid TVM fundamentals.';}
+  else if(pct>=62){trophy='\u{1F4C8}';msg='Good start \u2014 review the concepts you missed.';}
+  else{trophy='\u{1F4D6}';msg='TVM takes practice \u2014 re-read the explanations and try again!';}
+  document.getElementById('trophy').textContent=trophy;
+  document.getElementById('res-msg').textContent=msg;
+  Object.values(conceptTrack).forEach((ct)=>{
+    const row=document.createElement('div');
+    row.className='bd-row'+(ct.hit?'':' reviewable');
+    row.innerHTML='<span>'+ct.label+'</span><span class="bd-badge '+(ct.hit?'hit':'miss')+'">'+(ct.hit?'Correct':'&#9654; Review')+'</span>';
+    if(!ct.hit){
+      const qIdx=shuffled.findIndex(q=>q.conceptFull===ct.label);
+      if(qIdx!==-1) row.addEventListener('click',()=>reviewQuestion(qIdx));
+    }
+    list.appendChild(row);
+  });
+  document.getElementById('results-screen').style.display='block';
+}
+
+function restart(){
+  document.getElementById('results-screen').style.display='none';
+  shuffled=shuffle(questions);current=0;correctCount=0;wrongCount=0;answered=false;conceptTrack={};
+  updateScore();document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('game-screen').style.display='block';loadQ();
+}
+</script>
+</body>
+</html>

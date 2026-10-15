@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Financial Calculator | EYARC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#002E5D; --yellow:#FFE600; --gold:#F2BA05; --sky:#B5E2FA;
+  --bg:#EEF3F8; --panel:#FFFFFF; --ink:#0D1E33; --muted:#4A5B71; --line:#D3DDE8;
+  --sans:"Open Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#041529; --panel:#0A2546; --ink:#EAF1F9; --muted:#A9BCD3; --line:#1F3F66; }
+}
+:root[data-theme="dark"]{ --bg:#041529; --panel:#0A2546; --ink:#EAF1F9; --muted:#A9BCD3; --line:#1F3F66; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.stage{max-width:1000px;margin:0 auto;padding:28px 20px 48px;display:flex;justify-content:center}
+
+/* ---------- calculator body ---------- */
+.calc{width:min(360px,100%);flex:0 0 auto;background:linear-gradient(170deg,#0D427C 0%,#002E5D 28%,#001E3F 100%);
+  border-radius:26px 26px 38px 38px;padding:18px 18px 26px;
+  box-shadow:0 22px 44px rgba(0,20,45,.45),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -6px 0 rgba(0,0,0,.3)}
+.brand{display:flex;justify-content:space-between;align-items:baseline;color:#fff;padding:0 4px 10px}
+.brand b{font-weight:800;letter-spacing:.02em;font-size:1rem}
+.brand b i{font-style:normal;color:var(--yellow)}
+.brand span{font-size:.72rem;color:#9FC3E6}
+.lcd{background:linear-gradient(#CFD9CC,#BCC9B9);border-radius:8px;padding:8px 12px 10px;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.35),0 0 0 4px #0A1A2C,0 0 0 5px rgba(255,255,255,.12);margin:4px 2px 20px}
+.ann{display:flex;gap:10px;font:700 .68rem var(--mono);color:#2A3A2E;min-height:1.1em}
+.ann .on{opacity:1}.ann .off{opacity:.12}
+.ann .lab{margin-left:auto;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.digits{font:500 2.1rem/1.15 var(--mono);color:#16221A;text-align:right;white-space:nowrap;overflow:hidden;letter-spacing:.02em}
+
+.keys{display:grid;grid-template-columns:repeat(5,1fr);column-gap:9px;row-gap:6px}
+.cell{display:flex;flex-direction:column;align-items:stretch}
+.cell.span2{grid-column:span 2}
+.sl{font:700 .6rem var(--sans);color:var(--gold);text-align:center;height:.95rem;line-height:.95rem;white-space:nowrap}
+.key{font:700 .95rem var(--sans);color:#fff;height:40px;border:0;border-radius:7px 7px 11px 11px;cursor:pointer;
+  background:linear-gradient(#34404F,#1C2530);box-shadow:0 3px 0 #0A0F15,inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .05s, box-shadow .05s}
+.key:active,.key.down{transform:translateY(2px);box-shadow:0 1px 0 #0A0F15,inset 0 1px 0 rgba(255,255,255,.18)}
+.key.num{background:linear-gradient(#5A6677,#3E4958);font-size:1.15rem}
+.key.tvm{background:linear-gradient(#2F6DAD,#1B4F86);font-family:var(--mono);font-size:.85rem}
+.key.cf{background:linear-gradient(#244F80,#16385F);font-family:var(--mono);font-size:.78rem}
+.key.shift{background:linear-gradient(#FFD23F,var(--gold));color:var(--navy)}
+.key.eq{background:linear-gradient(#FFF26A,var(--yellow));color:var(--navy);font-size:1.25rem}
+.key.lit{box-shadow:0 0 0 3px var(--yellow),0 0 16px rgba(255,230,0,.8)}
+.key:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+/* ---------- side panel ---------- */
+.side{flex:1 1 340px;max-width:520px;display:flex;flex-direction:column;gap:18px}
+h1{margin:0;font-size:1.6rem;line-height:1.2;font-weight:800}
+.intro{margin:.35rem 0 0;color:var(--muted);max-width:60ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h2{margin:0 0 .6rem;font-size:1rem}
+.regs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.reg{background:var(--bg);border-radius:8px;padding:6px 10px}
+.reg small{display:block;font:700 .72rem var(--mono);color:var(--muted)}
+.reg span{font:500 .95rem var(--mono)}
+.reg.hot{outline:2px solid var(--gold)}
+.tape{list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto;font-size:.9rem}
+.tape li{padding:5px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.tape li:first-child{border-top:0}
+.tape li b{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.tape .err{color:#9A6A00}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .tape .err{color:#FFD86B} }
+:root[data-theme="dark"] .tape .err{color:#FFD86B}
+.empty{color:var(--muted);margin:0;font-size:.9rem}
+.row{display:flex;justify-content:space-between;align-items:center}
+.link{font:600 .82rem var(--sans);background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
+.ex p{margin:0 0 .5rem;font-size:.92rem}
+.seq{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font:500 .85rem var(--mono)}
+.chip{font:700 .75rem var(--mono);padding:.2rem .45rem;border-radius:5px;background:var(--navy);color:#fff}
+.chip.sh{background:var(--gold);color:var(--navy)}
+.hint{font-size:.82rem;color:var(--muted);margin:.6rem 0 0}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="calc" role="application" aria-label="Financial calculator">
+    <div class="brand"><b>EYARC <i>FC</i></b><span>Financial Calculator</span></div>
+    <div class="lcd" aria-live="polite">
+      <div class="ann"><span id="aShift" class="off">SHIFT</span><span id="aBeg" class="off">BEGIN</span><span id="aRcl" class="off">RCL</span><span class="lab" id="aLab"></span></div>
+      <div class="digits" id="digits">0.00</div>
+    </div>
+    <div class="keys" id="keys"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // ---------- key layout ----------
+  var LAYOUT = [
+    [{id:'N',t:'N',c:'tvm',s:'×P/YR'},{id:'I',t:'I/YR',c:'tvm'},{id:'PV',t:'PV',c:'tvm'},{id:'PMT',t:'PMT',c:'tvm',s:'P/YR'},{id:'FV',t:'FV',c:'tvm',s:'BEG/END'}],
+    [{id:'CFJ',t:'CFj',c:'cf'},{id:'NJ',t:'Nj',c:'cf'},{id:'NPV',t:'NPV',c:'cf'},{id:'IRR',t:'IRR/YR',c:'cf'},{id:'RCL',t:'RCL',c:'cf'}],
+    [{id:'SHIFT',t:'SHIFT',c:'shift'},{id:'C',t:'C',s:'C ALL'},{id:'BS',t:'⌫'},{id:'NEG',t:'+/−'},{id:'DIV',t:'÷'}],
+    [{id:'7',t:'7',c:'num'},{id:'8',t:'8',c:'num'},{id:'9',t:'9',c:'num'},{id:'MUL',t:'×'},{id:'POW',t:'yˣ'}],
+    [{id:'4',t:'4',c:'num'},{id:'5',t:'5',c:'num'},{id:'6',t:'6',c:'num'},{id:'SUB',t:'−'},{id:'SQRT',t:'√x',s:'x²'}],
+    [{id:'1',t:'1',c:'num'},{id:'2',t:'2',c:'num'},{id:'3',t:'3',c:'num'},{id:'ADD',t:'+'},{id:'INV',t:'1/x'}],
+    [{id:'0',t:'0',c:'num'},{id:'DOT',t:'.',c:'num',s:'DISP'},{id:'PCT',t:'%'},{id:'EQ',t:'=',c:'eq',span:2}]
+  ];
+  var NAMES = {N:'N',I:'I/YR',PV:'PV',PMT:'PMT',FV:'FV'};
+  var TVM = ['N','I','PV','PMT','FV'];
+
+  // ---------- state ----------
+  var S = {x:0, entry:'', typing:false, acc:null, op:null, hasOperand:false, fresh:true,
+           shift:false, rcl:false, disp:false, dec:2, err:null, label:'', hot:null,
+           reg:{N:0,I:0,PV:0,PMT:0,FV:0}, P:12, begin:false, cf:[]};
+
+  var $ = function(id){ return document.getElementById(id); };
+  var btns = {};
+
+  // ---------- formatting ----------
+  function fmt(v, d){
+    if (d === undefined) d = S.dec;
+    if (!isFinite(v)) return 'Error';
+    if (Math.abs(v) >= 1e12) return v.toExponential(Math.min(d,6));
+    var s = Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+    return (v < 0 && Number(s.replace(/,/g,'')) !== 0 ? '-' : '') + s;
+  }
+  function fmtEntry(e){
+    var neg = e[0] === '-'; if (neg) e = e.slice(1);
+    var parts = e.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-' : '') + parts.join('.');
+  }
+
+  // ---------- tape ----------
+  function log(text, val, isErr){
+    var t = $('tape'); if (!t) return;
+    if (t.firstElementChild && t.firstElementChild.classList.contains('empty')) t.innerHTML = '';
+    var li = document.createElement('li');
+    if (isErr) li.className = 'err';
+    li.innerHTML = '<span></span><b></b>';
+    li.firstChild.textContent = text; li.lastChild.textContent = val || '';
+    t.appendChild(li); t.scrollTop = t.scrollHeight;
+  }
+
+  // ---------- core helpers ----------
+  function commit(){ if (S.typing){ S.x = parseFloat(S.entry) || 0; S.typing = false; } }
+  function fail(short, long){ S.err = short; S.label = short; S.op = null; S.acc = null; S.typing = false; log(long || short, '', true); }
+  function apply(a, o, b){
+    switch(o){
+      case 'ADD': return a + b; case 'SUB': return a - b; case 'MUL': return a * b;
+      case 'DIV': if (b === 0) return NaN; return a / b;
+      case 'POW': return Math.pow(a, b);
+    }
+    return b;
+  }
+  function finishArith(){
+    commit();
+    if (S.op){
+      var r = apply(S.acc, S.op, S.x);
+      S.op = null; S.acc = null;
+      if (!isFinite(r)){ fail('Error', 'That calculation has no result (for example, dividing by zero).'); return false; }
+      S.x = r;
+    }
+    return true;
+  }
+
+  // ---------- TVM math ----------
+  function tvmF(r,n,pv,pmt,fv,t){
+    if (Math.abs(r) < 1e-12) return pv + pmt*n + fv;
+    var g = Math.pow(1+r,n); return pv*g + pmt*(1+r*t)*(g-1)/r + fv;
+  }
+  function root(fn, pos, neg){
+    function scan(list){
+      for (var i=0;i<list.length-1;i++){
+        var a=list[i], b=list[i+1], fa=fn(a), fb=fn(b);
+        if (fa === 0) return a;
+        if (isFinite(fa) && isFinite(fb) && fa*fb < 0){
+          for (var j=0;j<200;j++){ var m=(a+b)/2, fm=fn(m); if (fm===0) return m; if (fa*fm<0) b=m; else {a=m; fa=fm;} }
+          return (a+b)/2;
+        }
+      }
+      return null;
+    }
+    var r = scan(pos); return r === null ? scan(neg) : r;
+  }
+  var POS = [1e-9,0.0005,0.001,0.0025,0.005,0.01,0.02,0.04,0.08,0.15,0.3,0.6,1,2,5];
+  var NEG = [-1e-9,-0.001,-0.01,-0.05,-0.1,-0.25,-0.5,-0.9,-0.99];
+  var NOSOL = 'No solution. Check that money paid out is negative and money received is positive.';
+
+  function solveTVM(k){
+    var R = S.reg, t = S.begin ? 1 : 0, n = R.N, r = R.I/100/S.P, pv = R.PV, pmt = R.PMT, fv = R.FV;
+    var zero = Math.abs(r) < 1e-12, g = Math.pow(1+r,n), v;
+    switch(k){
+      case 'FV': v = zero ? -(pv+pmt*n) : -(pv*g + pmt*(1+r*t)*(g-1)/r); break;
+      case 'PV': v = zero ? -(fv+pmt*n) : -(fv + pmt*(1+r*t)*(g-1)/r)/g; break;
+      case 'PMT':
+        if (!(n > 0)) return {e:'N must be greater than 0 to compute PMT.'};
+        v = zero ? -(pv+fv)/n : -(pv*g+fv)/((1+r*t)*(g-1)/r); break;
+      case 'N':
+        if (zero){ if (pmt === 0) return {e:NOSOL}; v = -(pv+fv)/pmt; }
+        else { var A = pmt*(1+r*t)/r, x = (A-fv)/(pv+A); if (!(x > 0)) return {e:NOSOL}; v = Math.log(x)/Math.log(1+r); }
+        if (!(v > 0)) return {e:NOSOL}; break;
+      case 'I':
+        if (!(n > 0)) return {e:'N must be greater than 0 to compute I/YR.'};
+        var fl = [pv,pmt,fv].filter(function(x){return x!==0;});
+        if (!fl.some(function(x){return x>0;}) || !fl.some(function(x){return x<0;})) return {e:NOSOL};
+        if (Math.abs(tvmF(0,n,pv,pmt,fv,t)) < 1e-9) { v = 0; break; }
+        var rr = root(function(q){ return tvmF(q,n,pv,pmt,fv,t); }, POS, NEG);
+        if (rr === null) return {e:NOSOL};
+        v = rr * S.P * 100; break;
+    }
+    if (!isFinite(v)) return {e:NOSOL};
+    return {v:v};
+  }
+
+  function flows(){
+    var out = [];
+    S.cf.forEach(function(c){ for (var i=0;i<c.n;i++) out.push(c.v); });
+    return out;
+  }
+  function npvAt(r, f){ var s = 0; for (var i=0;i<f.length;i++) s += f[i]/Math.pow(1+r,i); return s; }
+
+  // ---------- key handler ----------
+  function press(id){
+    if (S.err){
+      S.err = null; S.label = ''; S.x = 0; S.typing = false; S.shift = false;
+      if (!/^[0-9]$/.test(id) && id !== 'DOT') return;
+    }
+    if (S.disp){
+      S.disp = false;
+      if (/^[0-9]$/.test(id)){ S.dec = +id; S.label = 'DISP ' + id; log('Display set to ' + id + ' decimal places'); return; }
+      S.label = '';
+    }
+    if (S.rcl){
+      S.rcl = false;
+      if (TVM.indexOf(id) >= 0){
+        commit(); S.x = S.reg[id]; S.label = NAMES[id]; S.fresh = true; S.hasOperand = true; S.hot = id;
+        return;
+      }
+      if (id === 'PMT'){ /* handled above */ }
+    }
+    var sh = S.shift; S.shift = false;
+
+    if (/^[0-9]$/.test(id) || id === 'DOT'){
+      if (id === 'DOT' && sh){ S.disp = true; S.label = 'DISP'; return; }
+      var d = id === 'DOT' ? '.' : id;
+      if (!S.typing){ S.entry = d === '.' ? '0.' : d; S.typing = true; }
+      else {
+        if (S.entry.replace(/[-.]/g,'').length >= 12) return;
+        if (d === '.' && S.entry.indexOf('.') >= 0) return;
+        if ((S.entry === '0' || S.entry === '-0') && d !== '.') S.entry = S.entry.replace('0', d);
+        else S.entry += d;
+      }
+      S.fresh = true; S.hasOperand = true; S.label = ''; S.hot = null;
+      return;
+    }
+
+    switch(id){
+      case 'SHIFT': S.shift = !sh; return;
+      case 'RCL': commit(); S.rcl = true; S.label = 'RCL'; return;
+
+      case 'C':
+        S.typing = false; S.entry = ''; S.x = 0; S.op = null; S.acc = null; S.fresh = true; S.label = ''; S.hot = null;
+        if (sh){
+          S.reg = {N:0,I:0,PV:0,PMT:0,FV:0}; S.cf = [];
+          S.label = S.P + ' P/YR';
+          log('C ALL: TVM and cash flows cleared', S.P + ' P/YR');
+        }
+        return;
+      case 'BS':
+        if (S.typing){
+          S.entry = S.entry.slice(0,-1);
+          if (S.entry === '' || S.entry === '-') S.entry = '0';
+        } else { S.x = 0; S.label = ''; }
+        return;
+      case 'NEG':
+        if (S.typing){ S.entry = S.entry[0] === '-' ? S.entry.slice(1) : '-' + S.entry; }
+        else { S.x = -S.x; S.fresh = true; }
+        return;
+
+      case 'ADD': case 'SUB': case 'MUL': case 'DIV': case 'POW':
+        commit();
+        if (S.op && S.hasOperand){
+          var r = apply(S.acc, S.op, S.x);
+          if (!isFinite(r)){ fail('Error','That calculation has no result (for example, dividing by zero).'); return; }
+          S.x = r;
+        }
+        S.acc = S.x; S.op = id; S.hasOperand = false; S.fresh = true; S.label = '';
+        return;
+      case 'EQ':
+        if (!finishArith()) return;
+        S.fresh = true; S.hasOperand = true; S.label = '';
+        return;
+      case 'PCT':
+        commit();
+        S.x = (S.op === 'ADD' || S.op === 'SUB') ? S.acc * S.x / 100 : S.x / 100;
+        S.fresh = true; S.hasOperand = true;
+        return;
+      case 'SQRT':
+        commit();
+        if (sh){ S.x = S.x * S.x; }
+        else { if (S.x < 0){ fail('Error','Square root of a negative number.'); return; } S.x = Math.sqrt(S.x); }
+        S.fresh = true; S.hasOperand = true; return;
+      case 'INV':
+        commit();
+        if (S.x === 0){ fail('Error','1/x of zero has no result.'); return; }
+        S.x = 1 / S.x; S.fresh = true; S.hasOperand = true; return;
+
+      case 'N': case 'I': case 'PV': case 'PMT': case 'FV':
+        if (sh && id === 'PMT'){
+          if (!finishArith()) return;
+          var p = Math.round(S.x);
+          if (!(p >= 1) || Math.abs(S.x - p) > 1e-9){ fail('Error','P/YR must be a whole number of 1 or more.'); return; }
+          S.P = p; S.x = p; S.label = p + ' P/YR'; S.fresh = false; log('Periods per year set', p + ' P/YR'); return;
+        }
+        if (sh && id === 'FV'){
+          S.begin = !S.begin; S.label = S.begin ? 'BEGIN' : 'END';
+          log('Payment timing', S.begin ? 'BEGIN' : 'END'); return;
+        }
+        if (sh && id === 'N'){
+          if (!finishArith()) return;
+          S.x = S.x * S.P; S.fresh = true; S.hasOperand = true; S.label = '×P/YR'; return;
+        }
+        if (!finishArith()) return;
+        if (S.fresh){
+          S.reg[id] = S.x; S.label = NAMES[id] + ' stored'; S.fresh = false; S.hot = id;
+          log('Stored ' + NAMES[id], (id === 'N' || id === 'I') ? fmt(S.x, 4).replace(/\.?0+$/, '') : fmt(S.x, 2));
+        } else {
+          var res = solveTVM(id);
+          if (res.e){ fail('no Soln', res.e); return; }
+          S.reg[id] = res.v; S.x = res.v; S.label = NAMES[id] + ' ='; S.fresh = false; S.hot = id; S.hasOperand = true;
+          log('Computed ' + NAMES[id], fmt(res.v));
+        }
+        return;
+
+      case 'CFJ':
+        if (!finishArith()) return;
+        if (S.cf.length >= 50){ fail('Error','The calculator holds up to 50 cash flows.'); return; }
+        S.cf.push({v:S.x, n:1});
+        S.label = 'CF' + (S.cf.length - 1); S.fresh = false; S.hot = 'CF';
+        log('Cash flow CF' + (S.cf.length - 1), fmt(S.x));
+        return;
+      case 'NJ':
+        if (!finishArith()) return;
+        if (!S.cf.length){ fail('Error','Enter a cash flow with CFj before setting Nj.'); return; }
+        var nj = Math.round(S.x);
+        if (!(nj >= 1 && nj <= 99) || Math.abs(S.x - nj) > 1e-9){ fail('Error','Nj must be a whole number from 1 to 99.'); return; }
+        S.cf[S.cf.length-1].n = nj; S.label = 'N' + (S.cf.length - 1) + ' = ' + nj; S.fresh = false; S.hot = 'CF';
+        log('CF' + (S.cf.length-1) + ' repeats', nj + ' times');
+        return;
+      case 'NPV':
+        commit();
+        if (!S.cf.length){ fail('Error','Enter cash flows with CFj first.'); return; }
+        var v = npvAt(S.reg.I/100/S.P, flows());
+        S.x = v; S.label = 'NPV'; S.fresh = true; S.hasOperand = true; S.hot = 'CF';
+        log('NPV at ' + fmt(S.reg.I, 4).replace(/\.?0+$/,'') + '% I/YR', fmt(v));
+        return;
+      case 'IRR':
+        commit();
+        var f = flows();
+        if (!f.some(function(x){return x>0;}) || !f.some(function(x){return x<0;})){ fail('no Soln','IRR needs at least one negative and one positive cash flow.'); return; }
+        var rr = root(function(q){ return npvAt(q, f); }, POS, NEG);
+        if (rr === null){ fail('no Soln','No IRR found for these cash flows.'); return; }
+        S.x = rr * S.P * 100; S.reg.I = S.x; S.label = 'IRR/YR'; S.fresh = true; S.hasOperand = true; S.hot = 'I';
+        log('IRR/YR (also stored in I/YR)', fmt(S.x) + '%');
+        return;
+    }
+  }
+
+  // ---------- rendering ----------
+  function render(){
+    var d;
+    if (S.err) d = S.err === 'no Soln' ? 'no Solution' : 'Error';
+    else if (S.typing) d = fmtEntry(S.entry);
+    else d = fmt(S.x);
+    $('digits').textContent = d;
+    $('aShift').className = S.shift ? 'on' : 'off';
+    $('aBeg').className = S.begin ? 'on' : 'off';
+    $('aRcl').className = S.rcl ? 'on' : 'off';
+    $('aLab').textContent = S.err ? '' : S.label;
+
+    if (!$('regs')) return;
+    var cells = TVM.map(function(k){
+      var v = S.reg[k];
+      var shown = k === 'N' ? fmt(v,2).replace(/\.00$/,'') : k === 'I' ? fmt(v,4).replace(/\.?0+$/,'') + '%' : fmt(v,2);
+      return '<div class="reg' + (S.hot === k ? ' hot' : '') + '"><small>' + NAMES[k] + '</small><span>' + shown + '</span></div>';
+    });
+    cells.push('<div class="reg"><small>P/YR</small><span>' + S.P + '</span></div>');
+    cells.push('<div class="reg"><small>Timing</small><span>' + (S.begin ? 'BEGIN' : 'END') + '</span></div>');
+    var cfText = S.cf.length ? S.cf.map(function(c,i){ return 'CF' + i + ' ' + fmt(c.v,2) + (c.n > 1 ? ' ×' + c.n : ''); }).join('<br>') : 'none';
+    cells.push('<div class="reg' + (S.hot === 'CF' ? ' hot' : '') + '" style="grid-column:1/-1"><small>Cash flows</small><span>' + cfText + '</span></div>');
+    $('regs').innerHTML = cells.join('');
+  }
+
+  function flash(id){
+    var b = btns[id]; if (!b) return;
+    b.classList.add('lit','down');
+    clearTimeout(b._t);
+    b._t = setTimeout(function(){ b.classList.remove('lit','down'); }, 160);
+  }
+
+  function handle(id){ press(id); render(); flash(id); }
+
+  // ---------- build keypad ----------
+  var pad = $('keys');
+  LAYOUT.forEach(function(row){
+    row.forEach(function(k){
+      var cell = document.createElement('div');
+      cell.className = 'cell' + (k.span ? ' span2' : '');
+      var sl = document.createElement('div'); sl.className = 'sl'; sl.textContent = k.s || '';
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'key' + (k.c ? ' ' + k.c : ''); b.textContent = k.t;
+      b.setAttribute('aria-label', k.t + (k.s ? ', shift: ' + k.s : ''));
+      b.addEventListener('click', function(){ handle(k.id); });
+      btns[k.id] = b;
+      cell.appendChild(sl); cell.appendChild(b); pad.appendChild(cell);
+    });
+  });
+
+  var KB = {'+':'ADD','-':'SUB','*':'MUL','x':'MUL','/':'DIV','^':'POW','=':'EQ','Enter':'EQ','.':'DOT',',':'DOT',
+            'Backspace':'BS','Escape':'C','Delete':'C','%':'PCT'};
+  document.addEventListener('keydown', function(e){
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var id = /^[0-9]$/.test(e.key) ? e.key : KB[e.key];
+    if (!id) return;
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.tagName === 'BUTTON') return;
+    e.preventDefault(); handle(id);
+  });
+
+
+  window.__calc = {press:press, S:S};
+  render();
+})();
+</script>
+</body>
+</html>

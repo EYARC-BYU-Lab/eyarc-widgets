@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compound Interest — $1,000 at 10%</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #002E5D;
+    --yellow: #FFD400;
+    --gold: #F2A900;
+    --light-blue: #DDEEFB;
+    --peach: #FBE7CB;
+    --border: #E4E9F0;
+    --orange-text: #C87F00;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #F7F9FC;
+    margin: 0;
+    padding: 20px 12px;
+    color: var(--navy);
+  }
+  .card {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 18px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .sw {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .axis-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .chart-row {
+    display: flex;
+    gap: 6px;
+  }
+  .axis-col {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 220px;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #8B95A5;
+    text-align: right;
+    padding-bottom: 1px;
+  }
+  .plot-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    height: 220px;
+    border-left: 2px solid #D8DEE8;
+    border-bottom: 2px solid #D8DEE8;
+  }
+  .gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed #EAEEF3;
+  }
+  .bars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding: 0 2%;
+    z-index: 2;
+  }
+  .bar-col {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .bar-total {
+    font-weight: 700;
+    font-size: clamp(11px, 3vw, 15px);
+    margin-bottom: 5px;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .bar-stack {
+    width: 84%;
+    max-width: 112px;
+    display: flex;
+    flex-direction: column-reverse;
+    border-radius: 2px 2px 0 0;
+    overflow: hidden;
+  }
+  .seg-principal { background: var(--navy); }
+  .seg-ip { background: var(--yellow); }
+  .seg-ii { background: var(--gold); }
+  .x-labels {
+    display: flex;
+    justify-content: space-around;
+    padding: 0 2%;
+    margin: 8px 0 0 46px;
+  }
+  .x-labels span {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 130px;
+    text-align: center;
+    font-size: clamp(9px, 2.6vw, 12px);
+    font-weight: 400;
+    color: #4A5568;
+    white-space: nowrap;
+  }
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .info-card {
+    flex: 1 1 200px;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  .info-card.wide {
+    flex-basis: 280px;
+    flex-grow: 1.6;
+  }
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .icon-circle {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .icon-circle.blue { background: var(--light-blue); }
+  .icon-circle.peach { background: var(--peach); }
+  .card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head h4 {
+    margin: 4px 0 6px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .info-card .line {
+    font-size: 13px;
+    color: #3D4A5C;
+    margin-bottom: 3px;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+  .info-card .line b {
+    color: var(--orange-text);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .body-spacer { flex: 1; min-height: 10px; }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0 10px;
+  }
+  .info-card .total {
+    font-size: 14px;
+    color: #3D4A5C;
+  }
+  .info-card .total b {
+    color: var(--navy);
+    font-weight: 700;
+  }
+  .note {
+    margin-top: 14px;
+    background: #E9F3FC;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: #1A3E5C;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .note b { color: var(--navy); }
+  .note svg { flex-shrink: 0; margin-top: 2px; }
+
+  @media (max-width: 420px) {
+    .info-card, .info-card.wide { flex-basis: 100%; }
+    .card { padding: 14px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="legend">
+    <span><span class="sw" style="background:var(--navy)"></span>Principal</span>
+    <span><span class="sw" style="background:var(--yellow)"></span>Interest on principal</span>
+    <span><span class="sw" style="background:var(--gold)"></span>Interest on interest</span>
+  </div>
+
+  <div class="axis-title">Dollars</div>
+  <div class="chart-row">
+    <div class="axis-col">
+      <span>$0</span>
+      <span>$200</span>
+      <span>$400</span>
+      <span>$600</span>
+      <span>$800</span>
+      <span>$1,000</span>
+      <span>$1,200</span>
+      <span>$1,400</span>
+    </div>
+    <div class="plot-col">
+      <div class="gridline" style="bottom:0%"></div>
+      <div class="gridline" style="bottom:14.28%"></div>
+      <div class="gridline" style="bottom:28.57%"></div>
+      <div class="gridline" style="bottom:42.85%"></div>
+      <div class="gridline" style="bottom:57.14%"></div>
+      <div class="gridline" style="bottom:71.42%"></div>
+      <div class="gridline" style="bottom:85.71%"></div>
+
+      <div class="bars">
+        <div class="bar-col">
+          <div class="bar-total">$1,000</div>
+          <div class="bar-stack" style="height:143px">
+            <div class="seg-principal" style="height:143px"></div>
+          </div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-total">$1,100</div>
+          <div class="bar-stack" style="height:157.3px">
+            <div class="seg-principal" style="height:143px"></div>
+            <div class="seg-ip" style="height:14.3px"></div>
+          </div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-total">$1,210</div>
+          <div class="bar-stack" style="height:173px">
+            <div class="seg-principal" style="height:143px"></div>
+            <div class="seg-ip" style="height:15px"></div>
+            <div class="seg-ii" style="height:15px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="x-labels">
+    <span>Year 0</span>
+    <span>Year 1</span>
+    <span>Year 2</span>
+  </div>
+
+  <div class="cards">
+    <div class="info-card">
+      <div class="card-head">
+        <div class="icon-circle blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#002E5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg>
+        </div>
+        <div class="card-body">
+          <h4>Year 0</h4>
+          <div class="line">Principal: $1,000</div>
+        </div>
+      </div>
+      <div class="body-spacer"></div>
+      <hr class="divider">
+      <div class="total">Total: <b>$1,000</b></div>
+    </div>
+    <div class="info-card">
+      <div class="card-head">
+        <div class="icon-circle peach">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C87F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 20v-6"/><path d="M12 20v-10"/><path d="M18 20v-4"/></svg>
+        </div>
+        <div class="card-body">
+          <h4>Year 1</h4>
+          <div class="line">Principal: $1,000</div>
+          <div class="line">Interest: <b>+$100</b></div>
+        </div>
+      </div>
+      <div class="body-spacer"></div>
+      <hr class="divider">
+      <div class="total">Total: <b>$1,100</b></div>
+    </div>
+    <div class="info-card wide">
+      <div class="card-head">
+        <div class="icon-circle peach">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C87F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+        </div>
+        <div class="card-body">
+          <h4>Year 2</h4>
+          <div class="line">Principal: $1,000</div>
+          <div class="line">Interest on principal (Yr 1): <b>+$100</b></div>
+          <div class="line">Interest on principal (Yr 2): <b>+$100</b></div>
+          <div class="line">Interest on interest: <b>+$10</b></div>
+        </div>
+      </div>
+      <div class="body-spacer"></div>
+      <hr class="divider">
+      <div class="total">Total: <b>$1,210</b></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A6FB0" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>That extra $10 in year 2 is <b>compound interest</b> — you earned interest on the $100 you already earned in year 1.</span>
+  </div>
+</div>
+</body>
+</html>

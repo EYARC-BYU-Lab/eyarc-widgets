@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perpetuity Practice — EYARC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #002E5D;
+    --navy-light: #0d65c7;
+    --sky: #B5E2FA;
+    --yellow: #FFE600;
+    --yellow-dark: #F2BA05;
+    --gray-light: #EAEAF1;
+    --gray-mid: #C2C2CE;
+    --gray-text: #747480;
+    --white: #ffffff;
+    --green: #6E9600;
+    --green-light: #f0fce8;
+    --red: #F84725;
+    --red-light: #fff4f2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', Arial, sans-serif;
+    background: #f7f8fc;
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  
+
+  /* MAIN */
+  .main { max-width: 860px; margin: 0 auto; padding: 40px 24px 60px; }
+
+  /* PROGRESS */
+  .progress-section { margin-bottom: 28px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .progress-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-text); font-weight: 600; }
+  .progress-count { font-size: 13px; color: var(--navy); font-weight: 600; }
+  .progress-track { height: 5px; background: var(--gray-light); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--navy-light), var(--navy)); border-radius: 3px; transition: width 0.5s ease; }
+  .dot-row { display: flex; gap: 7px; margin-top: 10px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gray-mid); transition: background 0.3s; }
+  .dot.active { background: var(--navy); box-shadow: 0 0 0 3px rgba(0,46,93,0.18); }
+  .dot.correct { background: var(--green); }
+  .dot.wrong { background: var(--red); }
+
+  /* QUESTION HEADER BAR */
+  .q-header {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    animation: slideUp 0.3s ease;
+  }
+  .q-header-left { display: flex; align-items: center; gap: 12px; }
+  .q-num { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sky); font-weight: 600; }
+  .q-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-pv { background: var(--yellow); color: var(--navy); }
+  .badge-rate { background: #B5E2FA; color: var(--navy); }
+  .badge-pmt { background: #6E9600; color: white; }
+  .badge-worth { background: #F2BA05; color: var(--navy); }
+
+  /* QUESTION TEXT */
+  .q-prompt {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--navy);
+    margin-bottom: 24px;
+    line-height: 1.5;
+    animation: slideUp 0.35s ease;
+  }
+
+  /* SCENARIO CARDS */
+  .scenarios {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+    animation: slideUp 0.4s ease;
+  }
+
+  .scenario-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-light);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+
+  .scenario-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    color: var(--gray-text);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid var(--gray-light);
+  }
+
+  .scenario-label.a { color: var(--navy-light); border-color: var(--navy-light); }
+  .scenario-label.b { color: #F2BA05; border-color: #F2BA05; }
+
+  .scenario-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--navy);
+    font-weight: 300;
+  }
+
+  .scenario-text strong {
+    font-weight: 600;
+    background: var(--yellow);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: var(--navy);
+  }
+
+  /* ANSWER OPTIONS */
+  .options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    animation: slideUp 0.45s ease;
+  }
+
+  .option-btn {
+    flex: 1;
+    min-width: 160px;
+    padding: 14px 18px;
+    border: 2px solid var(--gray-mid);
+    border-radius: 10px;
+    background: var(--white);
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--navy);
+    background: var(--gray-light);
+  }
+
+  .option-btn.selected {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: white;
+  }
+
+  .option-btn.correct {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: var(--red-light);
+    color: var(--red);
+  }
+
+  .option-btn.reveal-correct {
+    border-color: var(--green);
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-sub {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.75;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* FEEDBACK */
+  .feedback-box {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+  .feedback-correct { background: var(--green-light); border: 1.5px solid var(--green); }
+  .feedback-wrong { background: var(--red-light); border: 1.5px solid var(--red); }
+  .feedback-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .feedback-correct .feedback-title { color: var(--green); }
+  .feedback-wrong .feedback-title { color: var(--red); }
+  .feedback-body { font-size: 13px; color: #333; line-height: 1.65; }
+  .calc-line { font-family: 'DM Serif Display', serif; font-size: 13px; color: var(--navy); background: rgba(0,0,0,0.04); border-radius: 6px; padding: 8px 12px; margin-top: 8px; line-height: 1.9; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: 'DM Sans', Arial, sans-serif;
+  }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover { background: var(--navy-light); border-color: var(--navy-light); }
+  .btn-secondary { background: transparent; color: var(--navy); border-color: var(--gray-mid); }
+  .btn-secondary:hover { border-color: var(--navy); background: var(--gray-light); }
+  .btn-hint { background: transparent; color: var(--navy-light); border-color: var(--sky); font-size: 13px; }
+  .btn-hint:hover { background: var(--sky); }
+
+  /* HINT */
+  .hint-box {
+    background: #fffbe6;
+    border: 1.5px solid var(--yellow-dark);
+    border-radius: 10px;
+    padding: 13px 18px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* COMPLETION */
+  .completion {
+    text-align: center;
+    padding: 60px 24px;
+    display: none;
+    animation: slideUp 0.4s ease;
+  }
+  .completion-icon { font-size: 52px; margin-bottom: 18px; display: block; animation: pop 0.5s ease 0.15s both; }
+  @keyframes pop { 0% { transform: scale(0.4); opacity: 0; } 75% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+  .completion h2 { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--navy); margin-bottom: 8px; }
+  .completion p { color: var(--gray-text); font-size: 15px; margin-bottom: 24px; }
+  .score-cards { display: flex; justify-content: center; gap: 14px; margin: 20px 0 32px; flex-wrap: wrap; }
+  .score-card { background: white; border-radius: 12px; padding: 16px 24px; border: 1px solid var(--gray-light); min-width: 90px; }
+  .score-card-num { font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--navy); display: block; }
+  .score-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gray-text); font-weight: 600; }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  @media (max-width: 600px) {
+    .formula-bar { padding: 12px 20px; }
+    .main { padding: 20px 16px 40px; }
+    .scenarios { grid-template-columns: 1fr; }
+    .options { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="main">
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <div class="progress-label">Progress</div>
+      <div class="progress-count" id="progressCount">0 of 10 complete</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="dot-row" id="dotRow"></div>
+  </div>
+
+  <div id="questionArea">
+    <div class="q-header" id="qHeader">
+      <div class="q-header-left">
+        <div class="q-num" id="qNum">Question 1 of 10</div>
+        <div class="q-badge" id="qBadge">Higher PV?</div>
+      </div>
+    </div>
+
+    <div class="q-prompt" id="qPrompt"></div>
+
+    <div class="scenarios" id="scenariosGrid"></div>
+
+    <div class="hint-box" id="hintBox"></div>
+    <div class="feedback-box" id="feedbackBox"></div>
+
+    <div class="options" id="optionsRow"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-hint" onclick="showHint()">💡 Hint</button>
+      <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()" style="display:none">Next Question →</button>
+    </div>
+  </div>
+
+  <div class="completion" id="completionScreen">
+    <span class="completion-icon" id="compIcon">★</span>
+    <h2 id="compTitle">Practice Complete!</h2>
+    <p id="compMsg"></p>
+    <div class="score-cards">
+      <div class="score-card"><span class="score-card-num" id="finalScore">0</span><div class="score-card-label">Correct</div></div>
+      <div class="score-card"><span class="score-card-num" id="finalPct">0%</span><div class="score-card-label">Score</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="restart()">Try Again ↺</button>
+  </div>
+
+</div>
+
+<script>
+// ─── QUESTION BANK ────────────────────────────────────────────────────────────
+// type: 'pv' | 'rate' | 'pmt' | 'worth'
+// answer: 'A' | 'B' | 'same'
+// scenarioA / scenarioB: array of { label, val } rows
+// explanation: shown after answer — walks through the math
+
+const questions = [
+  {
+    type: 'pv',
+    badge: 'Higher Present Value?',
+    badgeClass: 'badge-pv',
+    prompt: 'Which perpetuity has a higher present value?',
+    scenarioA: 'A local arts foundation receives a donation that will pay <strong>$6,000 every year</strong> forever. The foundation earns an annual return of <strong>9%</strong> on its investments.',
+    scenarioB: 'A university scholarship fund is set up to pay <strong>$4,500 every year</strong> forever. The fund earns an annual return of <strong>6%</strong>.',
+    answer: 'B',
+    hint: 'Calculate PV = PMT ÷ r for each. A bigger payment with a higher rate does not automatically mean a bigger PV.',
+    explanation: 'Scenario A has both a larger payment and a higher rate. The rate effect wins here — B\'s lower rate means less discounting, giving it a higher PV despite the smaller payment.',
+    calc: 'A: PV = $6,000 ÷ 0.09 = <strong>$66,667</strong>\nB: PV = $4,500 ÷ 0.06 = <strong>$75,000</strong>\nScenario B has the higher present value.'
+  },
+  {
+    type: 'rate',
+    badge: 'Higher Rate of Return?',
+    badgeClass: 'badge-rate',
+    prompt: 'Which investment offers the higher annual rate of return?',
+    scenarioA: 'Marcus pays <strong>$320,000</strong> for a preferred stock that pays him <strong>$19,200 every year</strong> indefinitely.',
+    scenarioB: 'Priya pays <strong>$275,000</strong> for a similar preferred stock that pays <strong>$17,050 every year</strong> indefinitely.',
+    answer: 'B',
+    hint: 'r = PMT ÷ PV for each. Do not assume the higher price means a better deal.',
+    explanation: 'Marcus paid more and receives more — but relative to what he paid, his return is actually lower. Priya gets more per dollar invested.',
+    calc: 'A: r = $19,200 ÷ $320,000 = <strong>6.0%</strong>\nB: r = $17,050 ÷ $275,000 = <strong>6.2%</strong>\nScenario B has the higher rate of return.'
+  },
+  {
+    type: 'pv',
+    badge: 'Higher Present Value?',
+    badgeClass: 'badge-pv',
+    prompt: 'Which perpetuity has a higher present value?',
+    scenarioA: 'A city parks fund pays out <strong>$800 every month</strong> to maintain a community garden — forever. The fund earns <strong>8% per year</strong>.',
+    scenarioB: 'A neighborhood association fund pays out <strong>$9,600 every year</strong> for the same purpose — forever. The fund earns <strong>9% per year</strong>.',
+    answer: 'A',
+    hint: 'For A, use the monthly rate (8% ÷ 12). The annual totals look the same — but are the rates the same?',
+    explanation: '$800/month × 12 = $9,600/year — the same annual payout. But A uses a lower rate, so each dollar is discounted less, giving A a higher PV.',
+    calc: 'A: r = 8%÷12 = 0.667% = 0.00667 → PV = $800 ÷ 0.00667 = <strong>$120,000</strong>\nB: r = 9% = 0.09 → PV = $9,600 ÷ 0.09 = <strong>$106,667</strong>\nScenario A has the higher present value.'
+  },
+  {
+    type: 'pmt',
+    badge: 'Higher Annual Payout?',
+    badgeClass: 'badge-pmt',
+    prompt: 'Two endowment funds are set up. Which one pays out more money per year?',
+    scenarioA: 'Westfield University receives a <strong>$1,200,000 gift</strong> invested at an annual return of <strong>4.5%</strong>. The earnings are distributed as an annual scholarship.',
+    scenarioB: 'Eastridge University receives a <strong>$900,000 gift</strong> invested at an annual return of <strong>6.5%</strong>. The earnings are also distributed as an annual scholarship.',
+    answer: 'B',
+    hint: 'PMT = PV × r for each. A larger fund does not automatically generate more income.',
+    explanation: 'A higher rate on a smaller fund can generate more income than a lower rate on a larger one — you have to run the numbers.',
+    calc: 'A: PMT = $1,200,000 × 0.045 = <strong>$54,000/year</strong>\nB: PMT = $900,000 × 0.065 = <strong>$58,500/year</strong>\nScenario B pays out more each year.'
+  },
+  {
+    type: 'rate',
+    badge: 'Higher Annual Return?',
+    badgeClass: 'badge-rate',
+    prompt: 'Both perpetuities pay quarterly. Which offers the higher annual rate of return?',
+    scenarioA: 'An investor buys a fund for <strong>$480,000</strong> that pays <strong>$8,400 every quarter</strong>, forever.',
+    scenarioB: 'Another investor buys a fund for <strong>$350,000</strong> that pays <strong>$6,300 every quarter</strong>, forever.',
+    answer: 'B',
+    hint: 'Find quarterly r = PMT ÷ PV for each, then multiply by 4 to get the annual rate. The numbers look proportional but are they?',
+    explanation: 'Both funds look similar in size, but Scenario B generates a slightly higher return per dollar invested. You have to calculate both sides to see it.',
+    calc: 'A: r = $8,400 ÷ $480,000 = 1.75%/qtr × 4 = <strong>7.0%/year</strong>\nB: r = $6,300 ÷ $350,000 = 1.8%/qtr × 4 = <strong>7.2%/year</strong>\nScenario B has the higher annual return.'
+  },
+  {
+    type: 'pv',
+    badge: 'Which Loses More Value?',
+    badgeClass: 'badge-pv',
+    prompt: 'Interest rates just increased. Which perpetuity loses more dollar value?',
+    scenarioA: 'A bond fund pays <strong>$6,000 per year</strong> forever. The required annual return rises from <strong>4% to 5%</strong>.',
+    scenarioB: 'A second bond fund pays <strong>$10,000 per year</strong> forever. Its required annual return rises from <strong>8% to 10%</strong>.',
+    answer: 'A',
+    hint: 'Calculate PV before and after for each. Dollar loss = old PV − new PV. Watch out — a bigger payment does not mean a bigger loss.',
+    explanation: 'Scenario A has a lower rate, so its starting PV is very high. A small rate change causes a large dollar drop. Run the numbers — the result may surprise you.',
+    calc: 'A: was $6,000÷0.04=$150,000 → now $6,000÷0.05=$120,000 → <strong>loss of $30,000</strong>\nB: was $10,000÷0.08=$125,000 → now $10,000÷0.10=$100,000 → loss of $25,000\nScenario A loses more despite the smaller payment.'
+  },
+  {
+    type: 'pv',
+    badge: 'Higher Present Value?',
+    badgeClass: 'badge-pv',
+    prompt: 'Which perpetuity has a higher present value?',
+    scenarioA: 'A pension fund pays <strong>$1,500 every month</strong> to a retired employee — forever. The fund earns <strong>7.2% per year</strong>.',
+    scenarioB: 'A second pension fund pays <strong>$4,800 every quarter</strong> to a different retiree — forever. This fund earns <strong>8% per year</strong>.',
+    answer: 'A',
+    hint: 'Convert to the correct periodic rate for each — monthly for A, quarterly for B. Annual payouts are $18,000 vs $19,200, but the rates differ too.',
+    explanation: 'Even though B pays more per year in total, A uses a lower rate which raises its PV enough to come out ahead.',
+    calc: 'A: r = 7.2%÷12 = 0.6% = 0.006 → PV = $1,500 ÷ 0.006 = <strong>$250,000</strong>\nB: r = 8%÷4 = 2% = 0.02 → PV = $4,800 ÷ 0.02 = <strong>$240,000</strong>\nScenario A has the higher present value.'
+  },
+  {
+    type: 'pmt',
+    badge: 'Higher Monthly Income?',
+    badgeClass: 'badge-pmt',
+    prompt: 'Both investors put in the same amount. Whose monthly income is higher?',
+    scenarioA: 'Aaliya invests <strong>$360,000</strong> in a fund earning <strong>5% per year</strong>. The fund pays out earnings every month — forever.',
+    scenarioB: 'Ben invests <strong>$360,000</strong> in a fund earning <strong>5.4% per year</strong>. His fund pays out earnings every quarter — forever, but he wants to know his monthly equivalent.',
+    answer: 'B',
+    hint: 'For A: monthly PMT = PV × (annual rate ÷ 12). For B: quarterly PMT = PV × (annual rate ÷ 4), then divide by 3 for monthly equivalent.',
+    explanation: 'Same principal, but B earns a slightly higher rate — so B generates more income per month even after converting from quarterly.',
+    calc: 'A: monthly PMT = $360,000 × 0.004167 = <strong>$1,500/month</strong>\nB: quarterly PMT = $360,000 × 0.0135 = $4,860/qtr ÷ 3 = <strong>$1,620/month equivalent</strong>\nScenario B generates more monthly income.'
+  },
+  {
+    type: 'rate',
+    badge: 'Higher Annual Return?',
+    badgeClass: 'badge-rate',
+    prompt: 'One perpetuity pays monthly, one pays annually. Which offers the higher annual rate of return?',
+    scenarioA: 'Devon pays <strong>$240,000</strong> for an investment that pays <strong>$1,100 every month</strong>, indefinitely.',
+    scenarioB: 'Sam pays <strong>$195,000</strong> for an investment that pays <strong>$13,650 every year</strong>, indefinitely.',
+    answer: 'B',
+    hint: 'For A: find monthly r then × 12. For B: r = PMT ÷ PV gives you the annual rate directly. Do not assume the bigger investment wins.',
+    explanation: 'Devon paid more but earns a lower annual return. Always calculate — price alone tells you nothing about return.',
+    calc: 'A: r = $1,100 ÷ $240,000 = 0.458%/mo × 12 = <strong>5.5%/year</strong>\nB: r = $13,650 ÷ $195,000 = <strong>7%/year</strong>\nScenario B has the higher annual return.'
+  },
+  {
+    type: 'pv',
+    badge: 'Larger Donation Needed?',
+    badgeClass: 'badge-pv',
+    prompt: 'Two scholarships are being endowed forever. Which requires the larger initial donation?',
+    scenarioA: 'The Chen family wants to fund a scholarship paying <strong>$1,500 every month</strong> to a student — forever. The endowment earns <strong>9% per year</strong>.',
+    scenarioB: 'The Rivera family wants to fund a scholarship paying <strong>$5,500 every quarter</strong> to a student — forever. The endowment earns <strong>9% per year</strong>.',
+    answer: 'B',
+    hint: 'Use the matching periodic rate for each — monthly for A (9%÷12), quarterly for B (9%÷4). The annual totals are close but not the same.',
+    explanation: 'The Chen scholarship pays $18,000/year. The Rivera scholarship pays $22,000/year. Same rate, but a larger annual payout requires a larger endowment.',
+    calc: 'A: r = 9%÷12 = 0.75% = 0.0075 → PV = $1,500 ÷ 0.0075 = <strong>$200,000</strong>\nB: r = 9%÷4 = 2.25% = 0.0225 → PV = $5,500 ÷ 0.0225 = <strong>$244,444</strong>\nScenario B requires the larger donation.'
+  }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let current = 0, score = 0, answered = false, results = [];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  buildDots();
+  loadQuestion(0);
+}
+
+function buildDots() {
+  const row = document.getElementById('dotRow');
+  row.innerHTML = '';
+  questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.id = 'dot-' + i;
+    row.appendChild(d);
+  });
+}
+
+function loadQuestion(idx) {
+  const q = questions[idx];
+  answered = false;
+
+  // Header
+  document.getElementById('qNum').textContent = 'Question ' + (idx + 1) + ' of ' + questions.length;
+  const badge = document.getElementById('qBadge');
+  badge.textContent = q.badge;
+  badge.className = 'q-badge ' + q.badgeClass;
+
+  // Prompt
+  document.getElementById('qPrompt').textContent = q.prompt;
+
+  // Scenarios
+  const grid = document.getElementById('scenariosGrid');
+  grid.innerHTML = `
+    <div class="scenario-card">
+      <div class="scenario-label a">Scenario A</div>
+      <p class="scenario-text">${q.scenarioA}</p>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-label b">Scenario B</div>
+      <p class="scenario-text">${q.scenarioB}</p>
+    </div>`;
+
+  // Options
+  const opts = document.getElementById('optionsRow');
+  opts.innerHTML = `
+    <button class="option-btn" id="opt-A" onclick="selectAnswer('A')">
+      Scenario A
+      <span class="option-sub">A is higher</span>
+    </button>
+    <button class="option-btn" id="opt-same" onclick="selectAnswer('same')">
+      They're Equal
+      <span class="option-sub">Same value</span>
+    </button>
+    <button class="option-btn" id="opt-B" onclick="selectAnswer('B')">
+      Scenario B
+      <span class="option-sub">B is higher</span>
+    </button>`;
+
+  // Reset
+  document.getElementById('feedbackBox').style.display = 'none';
+  document.getElementById('hintBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  // Animate
+  ['qHeader','qPrompt','scenariosGrid','optionsRow'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'slideUp 0.35s ease';
+  });
+}
+
+function selectAnswer(choice) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const correct = choice === q.answer;
+
+  if (correct) { score++; results.push('correct'); }
+  else { results.push('wrong'); }
+
+
+  // Style buttons
+  ['A','same','B'].forEach(opt => {
+    const btn = document.getElementById('opt-' + opt);
+    btn.disabled = true;
+    if (opt === choice && correct) btn.className = 'option-btn correct';
+    else if (opt === choice && !correct) btn.className = 'option-btn wrong';
+    else if (opt === q.answer) btn.className = 'option-btn reveal-correct';
+    else btn.className = 'option-btn';
+  });
+
+  // Dot
+  document.getElementById('dot-' + current).className = 'dot ' + (correct ? 'correct' : 'wrong');
+
+  // Feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.style.display = 'block';
+  fb.className = 'feedback-box ' + (correct ? 'feedback-correct' : 'feedback-wrong');
+  fb.innerHTML = `
+    <div class="feedback-title">${correct ? '✅ Correct!' : '✗ Not quite'}</div>
+    <div class="feedback-body">
+      ${q.explanation}
+      <div class="calc-line">${q.calc}</div>
+    </div>`;
+
+  updateProgress();
+  document.getElementById('hintBox').style.display = 'none';
+
+  if (current < questions.length - 1) {
+    document.getElementById('nextBtn').style.display = '';
+  } else {
+    const fin = document.createElement('button');
+    fin.className = 'btn btn-primary';
+    fin.textContent = 'See Results →';
+    fin.onclick = showCompletion;
+    document.getElementById('nextBtn').after(fin);
+  }
+}
+
+function showHint() {
+  if (answered) return;
+  const hb = document.getElementById('hintBox');
+  hb.style.display = 'block';
+  hb.innerHTML = '<strong>Hint:</strong> ' + questions[current].hint;
+}
+
+function nextQuestion() {
+  document.getElementById('dot-' + current).classList.remove('active');
+  current++;
+  document.getElementById('dot-' + current).classList.add('active');
+  loadQuestion(current);
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+  const done = results.length;
+  document.getElementById('progressFill').style.width = (done / questions.length * 100) + '%';
+  document.getElementById('progressCount').textContent = done + ' of ' + questions.length + ' complete';
+}
+
+function showCompletion() {
+  document.getElementById('questionArea').style.display = 'none';
+  document.getElementById('completionScreen').style.display = 'block';
+  const pct = Math.round(score / questions.length * 100);
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalPct').textContent = pct + '%';
+  let icon = '★', title = '', msg = '';
+  if (pct >= 90) { icon = '★'; title = 'Outstanding!'; msg = 'You have a strong conceptual grasp of perpetuities. Excellent work.'; }
+  else if (pct >= 70) { icon = '✓'; title = 'Good Work!'; msg = 'Solid understanding. Review the questions you missed and pay attention to payment frequency.'; }
+  else if (pct >= 50) { icon = '↑'; title = 'Keep Practicing'; msg = 'Remember: the rate must match the payment frequency, and small rate differences can swing PV dramatically.'; }
+  else { icon = '→'; title = 'Keep Going!'; msg = 'Review the formula and focus on how rate and payment interact. Try again — you\'ll get it.'; }
+  document.getElementById('compIcon').textContent = icon;
+  document.getElementById('compTitle').textContent = title;
+  document.getElementById('compMsg').textContent = msg;
+}
+
+function restart() {
+  current = 0; score = 0; results = [];
+  document.getElementById('questionArea').style.display = 'block';
+  document.getElementById('completionScreen').style.display = 'none';
+  // Remove any dynamically added See Results button
+  document.querySelectorAll('#nextBtn ~ .btn-primary').forEach(b => b.remove());
+  updateProgress();
+  buildDots();
+  loadQuestion(0);
+}
+
+init();
+</script>
+</body>
+</html>

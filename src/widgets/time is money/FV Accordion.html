@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVM — Saving for a Down Payment</title>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #F5C518;
+    --yellow-dark: #c9a000;
+    --yellow-light: #FFFBEA;
+    --blue: #1A3A5C;
+    --blue-mid: #1e4976;
+    --blue-light: #EAF2FB;
+    --blue-accent: #2d6fa8;
+    --text: #1a1a1a;
+    --text-muted: #5f5f5f;
+    --text-faint: #aaa;
+    --bg: #f0f0ed;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.09);
+    --border-strong: rgba(0,0,0,0.15);
+    --radius: 10px;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: Arial, Helvetica, sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 0;
+  }
+
+  .intro-box {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-left: 4px solid var(--yellow);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .intro-box strong { font-weight: 700; color: var(--blue); }
+
+  .scenario-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    margin: 1rem 0 0.4rem;
+  }
+
+  .scenario-list { list-style: none; }
+  .scenario-list li {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 3px 0;
+    font-size: 14.5px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .bullet {
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .bullet svg { display: block; }
+  .scenario-list li strong { font-weight: 700; color: var(--blue); letter-spacing: normal; }
+  .scenario-list li span.text { display: inline; }
+
+  .accordion { display: flex; flex-direction: column; gap: 8px; }
+
+  .acc-item {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .acc-item.open {
+    border-color: var(--border-strong);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .acc-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 18px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--blue);
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    gap: 12px;
+    transition: background 0.15s;
+  }
+  .acc-header:hover { background: #f5f5f2; }
+
+  .acc-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--yellow);
+    color: #1a1a1a;
+    font-size: 20px; font-weight: 400;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    line-height: 1;
+    padding-bottom: 1px;
+  }
+  .acc-item.open .acc-icon { transform: rotate(45deg); }
+
+  .acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .acc-item.open .acc-body { max-height: 3000px; }
+
+  .acc-inner {
+    padding: 0 18px 18px;
+    border-top: 0.5px solid var(--border);
+  }
+
+  .section-note {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin: 12px 0 10px;
+    line-height: 1.6;
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0;
+  }
+  table.data-table th {
+    text-align: left;
+    padding: 9px 12px;
+    background: #eef0f4;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 13.5px;
+    border-bottom: 0.5px solid var(--border-strong);
+  }
+  table.data-table th:first-child { border-radius: 6px 0 0 0; }
+  table.data-table th:last-child { border-radius: 0 6px 0 0; }
+  table.data-table td {
+    padding: 9px 12px;
+    border-bottom: 0.5px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table td:last-child { color: var(--text-muted); font-size: 13px; }
+
+  code {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12.5px;
+    background: #eef2f7;
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: var(--blue-mid);
+    font-weight: 700;
+  }
+
+  .result-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--yellow-light);
+    border: 0.5px solid #e8d06a;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #7a6200;
+    margin: 10px 0;
+  }
+
+  .tip {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue-accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-top: 10px;
+  }
+  .tip + .tip { margin-top: 8px; }
+
+  .part-heading {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 16px 0 6px;
+  }
+  .part-heading:first-of-type { margin-top: 12px; }
+
+  .formula-block {
+    background: #f2f4f7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 2;
+    margin: 6px 0;
+  }
+  .formula-block .answer { color: var(--blue-mid); font-weight: 600; }
+
+  /* VIDEO SECTION */
+  .video-container { padding-top: 12px; }
+  .video-tabs {
+    display: flex; gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .vtab {
+    padding: 7px 18px;
+    border-radius: 999px;
+    border: 0.5px solid var(--border-strong);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #f0f2f5;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .vtab:hover { background: var(--yellow-light); color: #7a6200; border-color: #e8d06a; }
+  .vtab.active {
+    background: var(--yellow);
+    color: #1a1a1a;
+    border-color: var(--yellow-dark);
+    font-weight: 600;
+  }
+
+  .video-frame {
+    background: #eaecf0;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    aspect-ratio: 16/9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .video-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(0,0,0,0.015) 20px,
+      rgba(0,0,0,0.015) 40px
+    );
+  }
+  .play-circle {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(26,58,92,0.25);
+  }
+  .play-circle svg { margin-left: 5px; }
+  .video-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    position: relative;
+  }
+  .video-badge {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    position: relative;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 1.5rem 0.75rem 3rem; }
+    h1 { font-size: 22px; }
+    .intro-box { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="intro-box">
+    Buying a home is one of the most common long-term financial goals. You have money saved today, but will it be enough to reach your down payment goal if you simply invest it and let it grow? FV calculations provide you with a precise answer to that question.
+    <p class="scenario-label">Consider the following scenario:</p>
+    <ul class="scenario-list">
+      <li><span class="bullet"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M0 0.5L9 5.5L0 10.5V0.5Z" fill="#F5C518"/></svg></span><span>You have <strong>$12,000</strong> saved today and invest it in a high-yield account</span></li>
+      <li><span class="bullet"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M0 0.5L9 5.5L0 10.5V0.5Z" fill="#F5C518"/></svg></span><span>You make no additional contributions and let it grow on its own</span></li>
+      <li><span class="bullet"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M0 0.5L9 5.5L0 10.5V0.5Z" fill="#F5C518"/></svg></span><span>The account earns <strong>6.0% APR</strong></span></li>
+      <li><span class="bullet"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M0 0.5L9 5.5L0 10.5V0.5Z" fill="#F5C518"/></svg></span><span>You plan to purchase the home in <strong>5 years</strong> and need <strong>$15,000</strong> for a down payment</span></li>
+      <li><span class="bullet"><svg width="9" height="11" viewBox="0 0 9 11" fill="none"><path d="M0 0.5L9 5.5L0 10.5V0.5Z" fill="#F5C518"/></svg></span><span>Will you have enough for the <strong>$15,000 down payment?</strong></span></li>
+    </ul>
+  </div>
+
+  <div class="accordion">
+
+    <!-- CALCULATOR -->
+    <div class="acc-item" id="acc-calc">
+      <button class="acc-header" onclick="toggle('acc-calc')">
+        Financial calculator
+        <span class="acc-icon">+</span>
+      </button>
+      <div class="acc-body">
+        <div class="acc-inner">
+          <p class="section-note">Enter the following values into your calculator in any order, then solve for FV.</p>
+          <p class="section-note" style="margin-top:-4px;"><strong>Reminder:</strong> Clear your calculator before starting a new TVM problem to avoid using values left over from a previous calculation.</p>
+          <table class="data-table">
+            <thead><tr><th><strong>Input</strong></th><th><strong>Key</strong></th><th><strong>What it represents</strong></th></tr></thead>
+            <tbody>
+              <tr><td><code>5</code></td><td><code>N</code></td><td>Total periods (5 years)</td></tr>
+              <tr><td><code>6</code></td><td><code>I/YR</code></td><td>Annual interest rate (6% APR)</td></tr>
+              <tr><td><code>−12,000</code></td><td><code>PV</code></td><td>Lump sum invested today (cash out = negative)</td></tr>
+              <tr><td><code>0</code></td><td><code>PMT</code></td><td>No recurring contributions</td></tr>
+            </tbody>
+          </table>
+          <p class="section-note">Press <code>FV</code> to solve.</p>
+          <div class="result-line">FV = $16,058.71</div>
+          <div class="tip">PV is entered as negative because the money is leaving your pocket today. The calculator returns FV as a positive number because it represents money received by you in the future. Since the FV of $16,058.71 exceeds the $15,000 required for a down payment, you will have enough saved, with $1,058.71 to spare.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCEL -->
+    <div class="acc-item" id="acc-excel">
+      <button class="acc-header" onclick="toggle('acc-excel')">
+        Excel
+        <span class="acc-icon">+</span>
+      </button>
+      <div class="acc-body">
+        <div class="acc-inner">
+          <p class="section-note">Use Excel's built-in <code>=FV()</code> function which is structured as:<br><br>
+          <span style="display:block; text-align:center;"><code>=FV(rate, nper, pmt, PV, [type])</code></span><br>
+          We'll start by setting up your spreadsheet by entering labels in column A and values in column B, then write the formula in cell B6.</p>
+          <table class="data-table">
+            <thead><tr><th></th><th><strong>A</strong></th><th><strong>B</strong></th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>APR (rate)</td><td>6%</td></tr>
+              <tr><td>2</td><td>Periods (nper)</td><td>5</td></tr>
+              <tr><td>3</td><td>Payment (PMT)</td><td>0</td></tr>
+              <tr><td>4</td><td>Present value (PV)</td><td>−12,000</td></tr>
+              <tr><td>5</td><td></td><td></td></tr>
+              <tr><td>6</td><td>Future value (FV)</td><td><code>=FV(B1,B2,B3,B4)</code></td></tr>
+            </tbody>
+          </table>
+          <div class="result-line">FV = $16,058.71</div>
+          <div class="tip">PV is entered as a negative because the money is leaving your pocket today. Since there are no recurring payments, PMT is 0. Excel still requires a value for PMT, but because it is zero, it does not affect the calculation.</div>
+          <div class="tip">The FV is $16,058.71. Because this exceeds the $15,000 down payment goal, you will have enough saved in five years, with $1,058.71 to spare.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORMULA -->
+    <div class="acc-item" id="acc-formula">
+      <button class="acc-header" onclick="toggle('acc-formula')">
+        Formula
+        <span class="acc-icon">+</span>
+      </button>
+      <div class="acc-body">
+        <div class="acc-inner">
+          <p class="section-note">Because no additional money is being added to the account (recurring payments), the FV is determined entirely on how the original $12,000 investment grows over time.</p>
+
+          <div class="part-heading">Future value formula</div>
+          <div class="formula-block">
+            FV = PV × (1 + r)ⁿ
+          </div>
+
+          <div class="part-heading">Substitute the known values</div>
+          <div class="formula-block">
+            FV = 12,000 × (1 + 0.06)⁵<br>
+            FV = 12,000 × (1.06)⁵<br>
+            FV = 12,000 × 1.338226<br>
+            <span class="answer">FV = $16,058.71</span>
+          </div>
+
+          <div class="part-heading">Answer the question</div>
+          <div class="formula-block">
+            FV is $16,058.71<br>
+            Down payment goal is $15,000.00<br>
+            <span class="answer">Yes. Because the calculated FV exceeds the down payment goal, you will have enough saved in five years, with $1,058.71 to spare.</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="acc-item" id="acc-video">
+      <button class="acc-header" onclick="toggle('acc-video')">
+        Video walkthrough
+        <span class="acc-icon">+</span>
+      </button>
+      <div class="acc-body">
+        <div class="acc-inner">
+          <div class="video-container">
+            <div class="video-tabs">
+              <button class="vtab active" onclick="selectTab(this,'Calculator')">Calculator</button>
+              <button class="vtab" onclick="selectTab(this,'Excel')">Excel</button>
+              <button class="vtab" onclick="selectTab(this,'Formula')">Formula</button>
+            </div>
+            <div class="video-frame">
+              <div class="play-circle">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <path d="M7 4l13 7-13 7V4z" fill="white"/>
+                </svg>
+              </div>
+              <p class="video-title" id="video-title">Calculator walkthrough</p>
+              <p class="video-badge">Coming soon</p>
+            </div>
+            <p style="font-size:12px;color:var(--text-faint);margin-top:10px;text-align:center;">Select a method above to switch between video options</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function toggle(id) {
+    const item = document.getElementById(id);
+    item.classList.toggle('open');
+  }
+  function selectTab(btn, label) {
+    document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('video-title').textContent = label + ' walkthrough';
+  }
+</script>
+</body>
+</html>

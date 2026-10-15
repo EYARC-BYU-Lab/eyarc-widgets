@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Present value practice</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
+  :root {
+    --navy: #002E5D;
+    --navy-dark: #001E3F;
+    --gold: #F2BA05;
+    --yellow: #FFE600;
+    --light-blue: #B5E2FA;
+    --blue-accent: #2563EB;
+    --blue-accent-dark: #1D4ED8;
+    --text: #334155;
+    --track: #E2E8F0;
+    --border: #E2E8F0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background: #EEF1F5;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+  }
+
+  .wrap { max-width: 720px; width: 100%; }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--navy);
+    margin: 0;
+  }
+
+  .progress-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748B;
+  }
+
+  .track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--track);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px 40px;
+    margin-bottom: 24px;
+  }
+
+  .card h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0 0 20px;
+  }
+
+  .question {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0;
+  }
+
+  .question b {
+    color: var(--blue-accent);
+    font-weight: 700;
+  }
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .input-row:focus-within {
+    outline: 2px solid var(--blue-accent);
+    outline-offset: 0;
+  }
+
+  .dollar {
+    background: #F8FAFC;
+    border-right: 1px solid #CBD5E1;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    color: #64748B;
+    font-weight: 600;
+  }
+
+  input[type=text] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    background: #fff;
+  }
+
+  input[type=text]:disabled { background: #F8FAFC; color: #64748B; }
+
+  .feedback {
+    min-height: 20px;
+    margin-bottom: 20px;
+  }
+
+  .box {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .box.hint { background: #FFF9E0; border: 1px solid var(--gold); color: #7A5B00; }
+  .box.correct { background: #EAF6EE; border: 1px solid #22A559; color: #1B6B3A; font-weight: 600; }
+  .box.reveal { background: #F1F5F9; border: 1px solid #CBD5E1; color: #334155; }
+  .box.reveal .answer-line { font-weight: 700; margin-bottom: 4px; }
+  .box.reveal .formula-line { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #64748B; }
+
+  .retype-note { font-size: 13px; color: #64748B; margin: -8px 0 20px; }
+
+  button {
+    width: 100%;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s ease;
+  }
+
+  button.primary { background: var(--blue-accent); color: #fff; }
+  button.primary:hover { background: var(--blue-accent-dark); }
+  button.primary:disabled { background: #CBD5E1; color: #94A3B8; cursor: not-allowed; }
+
+  button.dark { background: var(--navy); color: #fff; }
+  button.dark:hover { background: var(--navy-dark); }
+
+  /* choice screen */
+  .choice-card { text-align: center; padding: 56px 40px; }
+  .choice-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--light-blue); color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 30px;
+  }
+  .choice-card h3 { font-size: 22px; color: #1E293B; margin: 0 0 10px; }
+  .choice-card p { color: #64748B; max-width: 420px; margin: 0 auto 32px; line-height: 1.6; }
+  .choice-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .choice-buttons button { width: auto; padding: 14px 28px; }
+  button.ghost { background: #fff; border: 1px solid #CBD5E1; color: #334155; }
+  button.ghost:hover { background: #F8FAFC; }
+
+  /* finish screen */
+  .finish-card { text-align: center; padding: 64px 40px; }
+  .finish-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #EAF6EE; color: #22A559;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 40px;
+  }
+  .finish-card h1 { font-size: 28px; margin: 0 0 12px; }
+  .finish-card p { color: #64748B; font-size: 16px; margin: 0 0 32px; }
+  .finish-card button { width: auto; padding: 14px 32px; margin: 0 auto; }
+
+  footer {
+    margin-top: 32px;
+    font-size: 12px;
+    color: #94A3B8;
+    text-align: center;
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="quizScreen">
+  <div class="header-row">
+    <h1>Present value practice</h1>
+    <span class="progress-label" id="progressLabel">Problem 1 of 5</span>
+  </div>
+  <div class="track"><div class="fill" id="progressFill" style="width:20%"></div></div>
+
+  <div class="card">
+    <h2 id="problemTitle">Problem 1</h2>
+    <p class="question" id="questionText"></p>
+  </div>
+
+  <label>Your Answer (enter amount in dollars):</label>
+  <div class="input-row">
+    <div class="dollar">$</div>
+    <input type="text" id="answerInput" placeholder="0.00" autocomplete="off">
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <button class="primary" id="submitBtn" onclick="handleSubmit()" disabled>Submit Answer</button>
+</div>
+
+<div class="wrap hidden" id="choiceScreen">
+  <div class="card choice-card">
+    <div class="choice-icon">&#10003;</div>
+    <h3>Required Section Finished!</h3>
+    <p>You've mastered the basics of Present Value. Would you like to finish, or tackle 3 more practice problems?</p>
+    <div class="choice-buttons">
+      <button class="ghost" onclick="finishModule()">Finish Now</button>
+      <button class="primary" onclick="continuePractice()">Continue Practice &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="finishScreen">
+  <div class="card finish-card">
+    <div class="finish-icon">&#10003;</div>
+    <h1>Module Complete!</h1>
+    <p>Excellent work! You've mastered Present Value — how to value future sums in today's dollars.</p>
+    <button class="dark" onclick="restart()">&#8634; Restart Module</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: 'You want to purchase a car that will cost <b>$25,000</b> in <b>5 years</b>. If you can earn <b>4% APR</b>, compounded annually, in a dedicated savings account, how much must you deposit today?',
+    answer: 20548.18,
+    hint1: "Use the Present Value formula: PV = FV / (1 + r)^n",
+    hint2: "Plug in the values: 25,000 / (1.04)^5"
+  },
+  {
+    text: 'You have a goal to have <b>$10,000</b> saved for a trip in <b>3 years</b>. If your account earns <b>6% annual interest</b>, how much do you need to put in the account today?',
+    answer: 8396.19,
+    hint1: "Divide the Future Value by (1 + r) raised to the power of the number of years.",
+    hint2: "Calculation: 10,000 / (1.06)^3"
+  },
+  {
+    text: 'Practice: An investment will pay out <b>$5,000</b> in <b>10 years</b>. If the discount rate is <b>8%</b>, what is the value of that payout today?',
+    answer: 2315.97,
+    hint1: "The exponent in your denominator should be 10.",
+    hint2: "Calculation: 5,000 / (1.08)^10"
+  },
+  {
+    text: "Practice: You want to provide <b>$100,000</b> for a child's college fund in <b>18 years</b>. If you can earn <b>7% annually</b>, what lump sum is required today?",
+    answer: 29586.39,
+    hint1: "Compounding over 18 years significantly reduces the amount needed today.",
+    hint2: "Calculation: 100,000 / (1.07)^18"
+  },
+  {
+    text: 'Practice: You expect to receive a <b>$1,500</b> bonus in <b>2 years</b>. At a <b>5% interest rate</b>, what is the present value of that bonus?',
+    answer: 1360.54,
+    hint1: "This is a simple 2-year discount calculation.",
+    hint2: "Calculation: 1,500 / (1.05)^2"
+  }
+];
+
+let currentIdx = 0;
+let attempts = 0;
+let status = 'idle';
+let awaitingRetype = false;
+
+const quizScreen = document.getElementById('quizScreen');
+const choiceScreen = document.getElementById('choiceScreen');
+const finishScreen = document.getElementById('finishScreen');
+const answerInput = document.getElementById('answerInput');
+const submitBtn = document.getElementById('submitBtn');
+const feedback = document.getElementById('feedback');
+
+answerInput.addEventListener('input', () => {
+  answerInput.value = answerInput.value.replace(/[^0-9.]/g, '');
+  submitBtn.disabled = answerInput.value.trim() === '';
+});
+
+answerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!submitBtn.disabled) submitBtn.click();
+  }
+});
+
+function renderQuestion() {
+  const q = questions[currentIdx];
+  document.getElementById('problemTitle').textContent = 'Problem ' + (currentIdx + 1);
+  document.getElementById('questionText').innerHTML = q.text;
+  document.getElementById('progressLabel').textContent = 'Problem ' + (currentIdx + 1) + ' of ' + questions.length;
+  document.getElementById('progressFill').style.width = (((currentIdx + 1) / questions.length) * 100) + '%';
+  answerInput.value = '';
+  answerInput.disabled = false;
+  answerInput.placeholder = '0.00';
+  submitBtn.disabled = true;
+  attempts = 0;
+  status = 'idle';
+  awaitingRetype = false;
+  feedback.innerHTML = '';
+  submitBtn.textContent = 'Submit Answer';
+  submitBtn.className = 'primary';
+  submitBtn.onclick = handleSubmit;
+  answerInput.focus();
+}
+
+function handleSubmit() {
+  const val = parseFloat(answerInput.value);
+  if (isNaN(val)) return;
+  const q = questions[currentIdx];
+
+  if (Math.abs(val - q.answer) <= 1.00) {
+    status = 'correct';
+    feedback.innerHTML = '<div class="box correct">&#10003; Correct! Your calculation is within the rounding margin.</div>';
+    answerInput.disabled = true;
+    submitBtn.textContent = (currentIdx === questions.length - 1) ? 'Finish Module' : 'Next Problem';
+    submitBtn.onclick = advance;
+    return;
+  }
+
+  attempts++;
+  if (attempts >= 3) {
+    status = 'failed';
+    feedback.innerHTML =
+      '<div class="box reveal">' +
+        '<div>' +
+          '<div class="answer-line">The answer is $' + q.answer.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '.</div>' +
+          '<div class="formula-line">Formula: PV = FV / (1 + r)^n</div>' +
+        '</div>' +
+      '</div>';
+    answerInput.value = '';
+    answerInput.disabled = false;
+    answerInput.placeholder = 'Retype the answer to continue';
+    submitBtn.textContent = 'Confirm & Continue';
+    submitBtn.disabled = true;
+    awaitingRetype = true;
+    submitBtn.onclick = handleRetype;
+  } else {
+    status = 'wrong';
+    const hintText = attempts === 1 ? q.hint1 : q.hint2;
+    feedback.innerHTML = '<div class="box hint">Hint: ' + hintText + '</div>';
+  }
+}
+
+function handleRetype() {
+  const q = questions[currentIdx];
+  const val = parseFloat(answerInput.value);
+  if (Math.abs(val - q.answer) <= 1.00) {
+    advance();
+  } else {
+    feedback.innerHTML =
+      '<div class="box reveal">' +
+        '<div>' +
+          '<div class="answer-line">The answer is $' + q.answer.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '.</div>' +
+          '<div class="formula-line">Type it exactly to continue.</div>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+function advance() {
+  // After problem 2 (idx 1), offer the choice screen once
+  if (currentIdx === 1) {
+    quizScreen.classList.add('hidden');
+    choiceScreen.classList.remove('hidden');
+    return;
+  }
+  if (currentIdx < questions.length - 1) {
+    currentIdx++;
+    renderQuestion();
+  } else {
+    finishModule();
+  }
+}
+
+function continuePractice() {
+  choiceScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  currentIdx = 2;
+  renderQuestion();
+}
+
+function finishModule() {
+  quizScreen.classList.add('hidden');
+  choiceScreen.classList.add('hidden');
+  finishScreen.classList.remove('hidden');
+}
+
+function restart() {
+  currentIdx = 0;
+  finishScreen.classList.add('hidden');
+  choiceScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+
+</body>
+</html>
