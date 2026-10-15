@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fraud Triangle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Open Sans', Arial, sans-serif;
+    background: #f7f8fc;
+    color: #002E5D;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 24px;
+  }
+
+  .wrapper {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1.5px solid #EAEAF1;
+    box-shadow: 0 4px 24px rgba(0,46,93,0.10);
+    padding: 36px 36px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #002E5D;
+    margin-bottom: 5px;
+  }
+  .header p {
+    font-size: 0.78rem;
+    color: #999;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .layout {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  /* LEFT: Triangle */
+  .tri-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .seg {
+    cursor: pointer;
+    transition: filter 0.2s, opacity 0.2s;
+  }
+  .seg { stroke: #ffffff; stroke-width: 2; stroke-linejoin: round; }
+  .seg-group { cursor: pointer; }
+  .seg-group:focus { outline: none; }
+  .seg-group:focus-visible { outline: 3px solid #1a1a24; outline-offset: 3px; }
+  .seg-group.dimmed .seg { fill: #E4E5EC; }
+  .seg-group.dimmed .tri-label { fill: #002E5D; }
+  .seg-group.active .seg { filter: drop-shadow(0 0 10px var(--glow-color)); }
+
+  /* Outline shimmer on hover instead of brightness */
+  .seg-hover-outline {
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  .seg:hover + .seg-hover-outline,
+  .seg-group:hover .seg-hover-outline {
+    opacity: 1;
+  }
+
+  .tri-label { pointer-events: none; user-select: none; }
+
+  /* Segment labels with cursor hint */
+  .seg-tab {
+    display: flex;
+    gap: 8px;
+    width: 360px;
+    justify-content: space-between;
+  }
+  .seg-tab-btn {
+    flex: 1;
+    padding: 7px 4px;
+    border-radius: 8px;
+    border: 1.5px solid #DDDDE8;
+    background: #fff;
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #aaa;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .seg-tab-btn:hover { border-color: #bbb; color: #666; }
+  .seg-tab-btn.pressure.active        { border-color: #002E5D; color: #002E5D; background: #eef2f8; }
+  .seg-tab-btn.opportunity.active     { border-color: #c49200; color: #c49200; background: #fdf8e8; }
+  .seg-tab-btn.rationalization.active { border-color: #0d65c7; color: #0d65c7; background: #eaf2fd; }
+
+  /* RIGHT: Card */
+  .card-side {
+    flex: 1;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 2px solid #EAEAF1;
+    padding: 26px 28px;
+    box-shadow: 0 2px 12px rgba(0,46,93,0.08);
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .card.pressure        { --cc: #002E5D; border-color: #002E5D; background: color-mix(in srgb, #002E5D 4%, #fff); }
+  .card.opportunity     { --cc: #3c5d84; border-color: #3c5d84; background: color-mix(in srgb, #3c5d84 4%, #fff); }
+  .card.rationalization { --cc: #0d65c7; border-color: #0d65c7; background: color-mix(in srgb, #0d65c7 4%, #fff); }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cc);
+    margin-bottom: 10px;
+  }
+  .card-desc {
+    font-size: 0.83rem;
+    line-height: 1.75;
+    color: #444;
+    margin-bottom: 16px;
+  }
+  .card-tag-label {
+    font-size: 0.67rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tag {
+    font-size: 0.72rem;
+    padding: 3px 11px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--cc) 8%, #EAEAF1);
+    border: 1px solid color-mix(in srgb, var(--cc) 28%, #C2C2CE);
+    color: color-mix(in srgb, var(--cc) 75%, #747480);
+  }
+  .card-insight {
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--cc) 18%, #EAEAF1);
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .empty-state {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 2px dashed #DDDDE8;
+    padding: 26px 28px;
+    box-shadow: 0 2px 12px rgba(0,46,93,0.06);
+    text-align: center;
+    color: #bbb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .empty-state .arrow {
+    font-size: 1.6rem;
+    display: block;
+    animation: nudge 1.5s ease-in-out infinite;
+  }
+  @keyframes nudge {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-6px); }
+  }
+  .empty-state p {
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .empty-state .arrow, .card { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+<div class="header">
+  <h1>The Fraud Triangle</h1>
+  <p>Three conditions often present when fraud occurs</p>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: Triangle + tab buttons -->
+  <div class="tri-side">
+    <svg width="360" height="326" viewBox="0 0 360 326">
+      <defs>
+        <filter id="glowF">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="gP" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0d4a8a"/>
+          <stop offset="100%" stop-color="#002E5D"/>
+        </linearGradient>
+        <linearGradient id="gO" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4f74a0"/>
+          <stop offset="100%" stop-color="#3c5d84"/>
+        </linearGradient>
+        <linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0d65c7"/>
+          <stop offset="100%" stop-color="#0a52a3"/>
+        </linearGradient>
+      </defs>
+
+      <g class="seg-group" data-key="pressure" tabindex="0" role="button" aria-pressed="false" aria-label="Pressure">
+        <polygon id="tri-pressure" class="seg" style="--glow-color:#002E5D"
+          points="180,18 103,158 180,204 257,158" fill="url(#gP)"/>
+        <text x="180" y="140" text-anchor="middle" font-family="'Open Sans',Arial,sans-serif" font-size="12"
+          font-weight="800" letter-spacing="1.5" fill="#ffffff" class="tri-label">PRESSURE</text>
+      </g>
+
+      <g class="seg-group" data-key="opportunity" tabindex="0" role="button" aria-pressed="false" aria-label="Opportunity">
+        <polygon id="tri-opportunity" class="seg" style="--glow-color:#4f74a0"
+          points="24,296 180,296 180,204 103,158" fill="url(#gO)"/>
+        <text x="112" y="264" text-anchor="middle" font-family="'Open Sans',Arial,sans-serif" font-size="12"
+          font-weight="800" letter-spacing="1" fill="#ffffff" class="tri-label">OPPORTUNITY</text>
+      </g>
+
+      <g class="seg-group" data-key="rationalization" tabindex="0" role="button" aria-pressed="false" aria-label="Rationalization">
+        <polygon id="tri-rationalization" class="seg" style="--glow-color:#0d65c7"
+          points="336,296 257,158 180,204 180,296" fill="url(#gR)"/>
+        <text x="249" y="264" text-anchor="middle" font-family="'Open Sans',Arial,sans-serif" font-size="11"
+          font-weight="800" letter-spacing="0.5" fill="#ffffff" class="tri-label">RATIONALIZATION</text>
+      </g>
+
+      <polygon points="180,18 24,296 336,296" pointer-events="none"
+        fill="none" stroke="#EAEAF1" stroke-width="2"/>
+
+      <circle cx="180" cy="204" r="26" fill="#002E5D" stroke="#FFE600" stroke-width="2" opacity="0.97" filter="url(#glowF)"/>
+      <text x="180" y="200" text-anchor="middle" font-family="'Open Sans',Arial,sans-serif"
+        font-size="7" letter-spacing="1.5" font-weight="700" fill="#FFE600" class="tri-label">FRAUD</text>
+      <text x="180" y="212" text-anchor="middle" font-family="'Open Sans',Arial,sans-serif"
+        font-size="6" letter-spacing="2" fill="#B5E2FA" opacity="0.9" class="tri-label">ZONE</text>
+    </svg>
+
+
+  </div>
+
+  <!-- RIGHT: Info panel -->
+  <div class="card-side" id="card-side" aria-live="polite">
+    <div class="empty-state">
+      <span class="arrow">←</span>
+      <p>Select a section of<br>the triangle to explore</p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  const data = {
+    pressure: {
+      cls: 'pressure', title: 'Pressure',
+      desc: 'The <em>motivating force</em> behind why someone feels they need to commit fraud. It is often rooted in financial stress, performance targets, or personal hardship.',
+      tagLabel: 'Common Examples',
+      tags: ['Debt','Job pressure to meet earnings goals','Bonuses tied to performance'],
+      insight: 'Without pressure, there’s usually no strong motivation to commit fraud.'
+    },
+    opportunity: {
+      cls: 'opportunity', title: 'Opportunity',
+      desc: 'The <em>ability to carry out</em> a fraudulent act, often because weak internal controls, inadequate oversight, or excessive access make it possible.',
+      tagLabel: 'Common Examples',
+      tags: ['Poor segregation of duties','Excessive system access','Lack of monitoring'],
+      insight: 'Opportunity is often the most manageable element of the fraud triangle because it can be reduced through effective controls and oversight.'
+    },
+    rationalization: {
+      cls: 'rationalization', title: 'Rationalization',
+      desc: 'This is how the person <em>justifies</em> fraudulent behavior to themselves.',
+      tagLabel: 'Common Thoughts',
+      tags: ['“I’ll pay it back”','“I deserve this”','“The company won’t notice”'],
+      insight: 'Rationalization can make it easier for someone to view their actions as acceptable or justified, reducing the psychological barriers that might otherwise discourage fraudulent behavior.'
+    }
+  };
+
+  let current = null;
+
+  function activate(key) {
+    const side = document.getElementById('card-side');
+
+    if (current === key) {
+      current = null;
+      document.querySelectorAll('.seg-group').forEach(el => {
+        el.classList.remove('active','dimmed');
+        el.setAttribute('aria-pressed','false');
+      });
+      document.querySelectorAll('.seg-tab-btn').forEach(el => el.classList.remove('active'));
+      side.innerHTML = `<div class="empty-state"><span class="arrow">←</span><p>Select a section of<br>the triangle to explore</p></div>`;
+      return;
+    }
+
+    current = key;
+
+    document.querySelectorAll('.seg-group').forEach(el => {
+      const on = el.dataset.key === key;
+      el.classList.remove('active','dimmed');
+      el.classList.add(on ? 'active' : 'dimmed');
+      el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    document.querySelectorAll('.seg-tab-btn').forEach(el => {
+      el.classList.remove('active');
+      if (el.classList.contains(key)) el.classList.add('active');
+    });
+
+    const d = data[key];
+    side.innerHTML = `
+      <div class="card ${d.cls}">
+        <div class="card-title">${d.title}</div>
+        <div class="card-desc">${d.desc}</div>
+        <div class="card-tag-label">${d.tagLabel}</div>
+        <div class="tags">${d.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-insight">${d.insight}</div>
+      </div>`;
+  }
+
+  document.querySelectorAll('.seg-group').forEach(g => {
+    g.addEventListener('click', () => activate(g.dataset.key));
+    g.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(g.dataset.key); }
+    });
+  });
+</script>
+</body>
+</html>
