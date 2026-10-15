@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typical Fraud Investigation Process</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+  :root {
+    --navy:   #002E5D;
+    --blue:   #0D65C7;
+    --yellow: #FFE600;
+    --gray1:  #EAEAF1;
+    --gray2:  #C2C2CE;
+    --gray3:  #747480;
+    --white:  #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gray1);
+    font-family: 'Open Sans', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 20px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  header .eyebar {
+    display: inline-block;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 5px 18px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-size: clamp(1.25rem, 3vw, 1.8rem);
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+  }
+  header p {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--gray3);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+  .yellow-rule {
+    width: 52px; height: 4px;
+    background: var(--yellow);
+    margin: 6px auto 0;
+    border-radius: 2px;
+  }
+
+  #wheel-wrap {
+    position: relative;
+    width: min(640px, 96vw);
+    height: min(640px, 96vw);
+    margin: 0 auto 12px;
+  }
+  #wheel-svg { width: 100%; height: 100%; overflow: visible; }
+
+  #detail {
+    width: min(680px, 96vw);
+    background: var(--white);
+    border-radius: 4px;
+    padding: 26px 30px;
+    box-shadow: 0 2px 18px rgba(0,46,93,0.10);
+    border-top: 5px solid var(--yellow);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    min-height: 120px;
+  }
+  #detail.show { opacity: 1; transform: translateY(0); }
+
+  #detail .d-step {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  #detail .d-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+  #detail .d-desc {
+    font-size: 0.84rem;
+    color: #444;
+    line-height: 1.8;
+  }
+
+  .hint {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.74rem;
+    color: var(--gray3);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Typical fraud investigation process</h1>
+  <div class="yellow-rule"></div>
+</header>
+
+<div id="wheel-wrap">
+  <svg id="wheel-svg" viewBox="34 -14 612 612" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div id="detail">
+  <div class="d-step"  id="dStep"></div>
+  <div class="d-title" id="dTitle"></div>
+  <div class="d-desc"  id="dDesc"></div>
+</div>
+
+<p class="hint">Click any step to explore · The process is iterative — steps may loop back as new evidence emerges</p>
+
+<script>
+const STEPS = [
+  {
+    title: "Planning and initial assessment",
+    color: "#002E5D",
+    text: "At the outset, the forensic accountant defines the scope, objectives, and key risks of the investigation. This includes understanding the allegation, identifying relevant accounts or transactions, and developing a strategy for gathering evidence. This step may also include developing and evaluating potential hypotheses. A strong plan helps keep the investigation focused, legally compliant, and well documented."
+  },
+  {
+    title: "Gathering evidence and data collection",
+    color: "#0D65C7",
+    text: "In this phase, the investigator collects relevant financial records, documents, and digital data from internal and external sources. This may include bank statements, invoices, emails, contracts, system logs, and even initial interviews, all while maintaining a clear chain of custody. Proper handling of evidence is critical to preserving its reliability and, when necessary, its admissibility."
+  },
+  {
+    title: "Data analysis and forensic techniques",
+    color: "#002E5D",
+    text: "The collected data is analyzed using forensic tools and techniques to identify patterns, anomalies, or potential red flags. This may involve ratio analysis, trend analysis, Benford's Law, or data analytics software to detect unusual transactions. The goal is to identify suspicious activity, generate additional investigative leads, and develop evidence-based conclusions."
+  },
+  {
+    title: "Interviews",
+    color: "#0D65C7",
+    text: "Investigators conduct structured interviews with relevant individuals, including employees, management, and third parties. These interviews are designed to gather information, clarify inconsistencies, and assess credibility. Effective interviewing requires strong communication skills, active listening, and strategic questioning."
+  },
+  {
+    title: "Reporting and documentation",
+    color: "#002E5D",
+    text: "Findings are compiled into a clear, objective report that summarizes the procedures performed, evidence obtained, and conclusions reached. The report should be well-organized, fact-based, and understandable to audiences such as attorneys, executives, regulators, or other stakeholders. Thorough documentation supports the credibility of the investigation."
+  },
+  {
+    title: "Court testimony",
+    color: "#0D65C7",
+    text: "If a matter proceeds to legal action, the forensic accountant may serve as an expert witness in court or otherwise support the legal team. They may explain findings, describe investigative procedures, and defend their conclusions. Clear communication and professional credibility are essential when presenting complex financial matters to non-experts."
+  }
+];
+
+const N = 6;
+const CX = 340, CY = 340;
+const R_NODE  = 80;   // bigger circles to fit text
+const R_ORBIT = 220;
+const YELLOW  = '#FFE600';
+const NS = 'http://www.w3.org/2000/svg';
+
+const svg = document.getElementById('wheel-svg');
+
+function el(tag, attrs, txt) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+}
+function rad(d) { return d * Math.PI / 180; }
+function pos(i) {
+  const a = rad(-90 + i * 60);
+  return { x: CX + R_ORBIT * Math.cos(a), y: CY + R_ORBIT * Math.sin(a) };
+}
+function trimPt(from, toward, offset) {
+  const dx = toward.x - from.x, dy = toward.y - from.y;
+  const d = Math.sqrt(dx*dx + dy*dy);
+  return { x: from.x + (dx/d)*offset, y: from.y + (dy/d)*offset };
+}
+
+// Word-wrap text into lines given a max char width
+function wrapWords(title, maxChars) {
+  const words = title.split(' ');
+  const lines = [];
+  let line = '';
+  words.forEach(w => {
+    const test = line ? line + ' ' + w : w;
+    if (test.length > maxChars && line) { lines.push(line); line = w; }
+    else line = test;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+// ── Defs ─────────────────────────────────────────────────────
+const defs = el('defs', {});
+
+STEPS.forEach((s, i) => {
+  const m = el('marker', { id:`arr${i}`, markerWidth:'8', markerHeight:'8', refX:'5', refY:'4', orient:'auto' });
+  m.appendChild(el('path', { d:'M1,1 L7,4 L1,7 Z', fill:s.color, opacity:'0.85' }));
+  defs.appendChild(m);
+});
+
+const filt = el('filter', { id:'shadow', x:'-25%', y:'-25%', width:'150%', height:'150%' });
+filt.appendChild(el('feDropShadow', { dx:'0', dy:'2', stdDeviation:'5', 'flood-color':'#002E5D', 'flood-opacity':'0.18' }));
+defs.appendChild(filt);
+
+svg.appendChild(defs);
+
+// ── Orbit ring ────────────────────────────────────────────────
+svg.appendChild(el('circle', {
+  cx:CX, cy:CY, r:R_ORBIT,
+  fill:'none', stroke:'#C2C2CE', 'stroke-width':'1.5', 'stroke-dasharray':'5 7'
+}));
+
+// ── Curved arrows ─────────────────────────────────────────────
+STEPS.forEach((s, i) => {
+  const j = (i + 1) % N;
+  const p1 = pos(i), p2 = pos(j);
+
+  const a1 = rad(-90 + i * 60);
+  const a2 = rad(-90 + j * 60);
+  let am = (a1 + a2) / 2;
+  if (i === N - 1) am = rad(-90 + (i * 60 + 30));
+
+  const CPR = R_ORBIT + 58;
+  const cpx = CX + CPR * Math.cos(am);
+  const cpy = CY + CPR * Math.sin(am);
+
+  const start = trimPt(p1, {x:cpx,y:cpy}, R_NODE + 10);
+  const end   = trimPt(p2, {x:cpx,y:cpy}, R_NODE + 22);
+
+  svg.appendChild(el('path', {
+    d:`M ${start.x} ${start.y} Q ${cpx} ${cpy} ${end.x} ${end.y}`,
+    fill:'none', stroke:s.color,
+    'stroke-width':'2.2', opacity:'0.65',
+    'stroke-linecap':'round',
+    'marker-end':`url(#arr${i})`
+  }));
+});
+
+// ── Nodes ─────────────────────────────────────────────────────
+let activeIdx = -1, prevCirc = null, prevRing = null;
+
+STEPS.forEach((s, i) => {
+  const { x, y } = pos(i);
+  const g = el('g', { style:'cursor:pointer' });
+
+  const halo = el('circle', { cx:x, cy:y, r:R_NODE+6, fill:'#fff', opacity:'0.92', filter:'url(#shadow)' });
+  const ring = el('circle', { cx:x, cy:y, r:R_NODE+4, fill:'none', stroke:YELLOW, 'stroke-width':'3.5' });
+  const circ = el('circle', { cx:x, cy:y, r:R_NODE, fill:s.color });
+
+  g.appendChild(halo);
+  g.appendChild(ring);
+  g.appendChild(circ);
+
+  // Step number at top of circle
+  g.appendChild(el('text', {
+    x, y: y - 52,
+    'text-anchor':'middle', 'dominant-baseline':'middle',
+    fill: YELLOW, 'font-size':'13', 'font-weight':'700',
+    'font-family':'Open Sans, Arial, sans-serif',
+    style:'pointer-events:none'
+  }, String(i + 1)));
+
+  // Thin divider line under number
+  g.appendChild(el('line', {
+    x1: x - 28, y1: y - 42, x2: x + 28, y2: y - 42,
+    stroke: 'rgba(255,230,0,0.4)', 'stroke-width':'1'
+  }));
+
+  // Title lines inside circle
+  const lines = wrapWords(s.title, 9);
+  const lineH = 18;
+  const totalH = lines.length * lineH;
+  const startY = y - totalH / 2 + lineH / 2 + 4;
+
+  lines.forEach((ln, li) => {
+    g.appendChild(el('text', {
+      x, y: startY + li * lineH,
+      'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'#ffffff', 'font-size':'13', 'font-weight':'700',
+      'font-family':'Open Sans, Arial, sans-serif',
+      style:'pointer-events:none'
+    }, ln));
+  });
+
+  // Hover & click
+  g.addEventListener('mouseenter', () => {
+    if (i !== activeIdx) {
+      circ.setAttribute('r', R_NODE + 4);
+      ring.setAttribute('r', R_NODE + 8);
+    }
+  });
+  g.addEventListener('mouseleave', () => {
+    if (i !== activeIdx) {
+      circ.setAttribute('r', R_NODE);
+      ring.setAttribute('r', R_NODE + 4);
+    }
+  });
+  g.addEventListener('click', () => {
+    if (prevCirc && activeIdx !== i) {
+      prevCirc.setAttribute('r', R_NODE);
+      prevRing.setAttribute('r', R_NODE + 4);
+      prevRing.setAttribute('stroke-width', '3.5');
+    }
+    activeIdx = i; prevCirc = circ; prevRing = ring;
+    circ.setAttribute('r', R_NODE + 5);
+    ring.setAttribute('r', R_NODE + 9);
+    ring.setAttribute('stroke-width', '4.5');
+
+    document.getElementById('dStep').textContent  = `Step ${i+1} of 6`;
+    document.getElementById('dTitle').textContent = s.title;
+    document.getElementById('dDesc').textContent  = s.text;
+    document.getElementById('detail').classList.add('show');
+  });
+
+  svg.appendChild(g);
+});
+</script>
+</body>
+</html>
