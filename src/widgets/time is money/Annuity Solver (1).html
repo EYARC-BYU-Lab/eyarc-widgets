@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EYARC Annuity Problem Solver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #002E5D;
+    --yellow: #FFE600;
+    --blue: #0d65c7;
+    --gold: #F2BA05;
+    --g1: #EAEAF1;
+    --g2: #C2C2CE;
+    --g3: #747480;
+  }
+
+  body {
+    font-family: 'Open Sans', Arial, sans-serif;
+    color: var(--navy);
+    background: #f4f5f7;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .hdr {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .hdr-title { color: #fff; font-size: 18px; font-weight: 700; }
+  .hdr-sub { color: var(--yellow); font-size: 11px; font-weight: 600; margin-top: 2px; }
+  .badge {
+    background: var(--yellow);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.5px;
+  }
+
+  /* Toggles */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pill-group {
+    display: flex;
+    background: var(--g1);
+    border-radius: 50px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .pill {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--g3);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.22s ease;
+    white-space: nowrap;
+    outline: none;
+  }
+  .pill i { font-size: 14px; }
+  .pill.active {
+    background: var(--navy);
+    color: #fff;
+    box-shadow: 0 0 0 3px #FFE60055, 0 0 14px 3px #FFE60044;
+  }
+
+  /* Word problem card */
+  .problem-card {
+    background: #fff;
+    border: 1.5px solid var(--g2);
+    border-radius: 11px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .problem-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--g3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .problem-text {
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.7;
+  }
+  .problem-text mark {
+    background: #fffde7;
+    border-radius: 3px;
+    padding: 0 2px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  /* inputs bottom margin */
+
+  /* Main layout */
+  .main-area {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
+    gap: 14px;
+  }
+  @media (max-width: 640px) {
+    .main-area { grid-template-columns: 1fr; }
+  }
+
+  /* Step panel */
+  .step-panel { display: flex; flex-direction: column; }
+  .step-card {
+    background: var(--g1);
+    border-radius: 11px;
+    padding: 20px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 230px;
+  }
+  .step-counter {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--g3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .step-desc {
+    font-size: 12px;
+    color: var(--g3);
+    line-height: 1.65;
+    margin-bottom: 12px;
+    flex: 1;
+  }
+  .step-val {
+    background: #fff;
+    border-radius: 7px;
+    padding: 11px 13px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue);
+    border-left: 3px solid var(--yellow);
+  }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 11px;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--g2);
+    transition: background 0.2s;
+  }
+  .dot.active { background: var(--navy); }
+  .dot.done { background: var(--blue); }
+
+  /* Nav buttons */
+  .nav-row { display: flex; gap: 8px; margin-top: 12px; }
+  .nav-btn {
+    flex: 1;
+    padding: 9px;
+    border: 1.5px solid var(--navy);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--navy);
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .nav-btn:hover:not(:disabled) { background: var(--navy); color: #fff; }
+  .nav-btn:disabled { opacity: 0.28; cursor: default; }
+
+  /* Right panel */
+  .right-panel {
+    border-radius: 11px;
+    border: 1.5px solid var(--g2);
+    overflow: hidden;
+    background: #fff;
+  }
+  .rp-header {
+    background: var(--navy);
+    padding: 10px 15px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--yellow);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Excel */
+  .excel-toolbar {
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+    padding: 3px 9px;
+    font-size: 10px;
+    color: #888;
+    font-family: Arial, sans-serif;
+    display: flex;
+    gap: 12px;
+  }
+  .excel-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+  .excel-grid th {
+    background: #e8e8e8;
+    border: 1px solid #ccc;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #555;
+    text-align: center;
+  }
+  .excel-grid th:first-child { width: 28px; }
+  .excel-grid th:nth-child(2) { width: 42%; }
+  .excel-grid th:nth-child(3) { width: 22%; }
+  .excel-grid th:nth-child(4) { width: 32%; }
+  .excel-grid td {
+    border: 1px solid #ddd;
+    padding: 5px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .excel-grid td.rh { background: #f5f5f5; font-size: 10px; color: #888; text-align: center; font-weight: 700; }
+  .excel-grid td.lc { color: #222; }
+  .excel-grid td.vc { color: var(--blue); font-weight: 600; }
+  .excel-grid td.fc { color: #0a6b0a; font-style: italic; font-size: 11px; }
+  .excel-grid td.rc { background: var(--navy); color: var(--yellow); font-weight: 700; }
+  .excel-grid td.empty { color: #fff; background: #fff; }
+  .excel-grid tr.hl td:not(.rh) { background: #fffde7; }
+
+  /* Calculator */
+  .calc-body { padding: 13px; display: flex; flex-direction: column; gap: 11px; }
+  .calc-screen {
+    background: var(--navy);
+    border-radius: 7px;
+    padding: 11px 15px;
+    font-family: 'Courier New', monospace;
+    color: #aaeeff;
+    font-size: 14px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--g3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+  .calc-keys { display: flex; flex-direction: column; gap: 5px; }
+  .calc-key-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 11px;
+    background: var(--g1);
+    border-radius: 7px;
+  }
+  .calc-key {
+    background: var(--navy);
+    color: #fff;
+    border-radius: 5px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .calc-key.yellow { background: var(--yellow); color: var(--navy); }
+  .calc-key-desc { font-size: 11px; color: var(--g3); }
+
+  /* Register grid */
+  .reg-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    padding: 11px 13px;
+  }
+  .reg-cell {
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+    background: var(--g1);
+    transition: background 0.2s;
+  }
+  .reg-cell.filled { background: var(--blue); }
+  .reg-name { font-size: 9px; font-weight: 700; color: var(--g3); text-transform: uppercase; letter-spacing: 0.3px; }
+  .reg-cell.filled .reg-name { color: #aaeeff; }
+  .reg-val { font-size: 11px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+  .reg-cell.filled .reg-val { color: #fff; }
+
+  /* Answer banner */
+  .answer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--yellow);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-top: 14px;
+  }
+  .ans-label { font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
+  .ans-val { font-size: 26px; font-weight: 700; color: var(--navy); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Annuity Problem: A Step-by-Step Walkthrough</div>
+    </div>
+  </div>
+
+  <!-- Mode + Type toggles -->
+  <div class="controls-row">
+    <div class="pill-group">
+      <button class="pill active" id="pill-calc" onclick="setMode('calc')"><i class="ti ti-calculator"></i>HP 10bII+</button>
+      <button class="pill" id="pill-excel" onclick="setMode('excel')"><i class="ti ti-table"></i>Excel</button>
+    </div>
+    <div class="pill-group">
+      <button class="pill active" id="pill-fv" onclick="setSF('FV')">Future Value</button>
+      <button class="pill" id="pill-pv" onclick="setSF('PV')">Present Value</button>
+    </div>
+    <div class="pill-group">
+      <button class="pill active" id="pill-ord" onclick="setType('ordinary')">Ordinary</button>
+      <button class="pill" id="pill-due" onclick="setType('due')">Annuity Due</button>
+    </div>
+  </div>
+
+  <!-- Word problem -->
+  <div class="problem-card">
+    <div class="problem-label">Problem</div>
+    <div class="problem-text" id="problem-text"></div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-area">
+
+    <!-- Step panel -->
+    <div class="step-panel">
+      <div class="step-card">
+        <div class="step-counter" id="step-counter">—</div>
+        <div class="step-title" id="step-title">—</div>
+        <div class="step-desc" id="step-desc">Use the controls above to set your values, then click through the steps below.</div>
+        <div class="step-val" id="step-val" style="display:none"></div>
+      </div>
+      <div class="progress-dots" id="dots"></div>
+      <div class="nav-row">
+        <button class="nav-btn" id="prev-btn" onclick="prevStep()" disabled>← Back</button>
+        <button class="nav-btn" id="next-btn" onclick="nextStep()" disabled>Next →</button>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right-panel">
+      <div class="rp-header" id="rp-header">HP 10bII+ calculator</div>
+      <div id="rp-body"></div>
+    </div>
+
+  </div>
+
+  <!-- Answer banner -->
+  <div class="answer-row" id="answer-row" style="display:none">
+    <div class="ans-label" id="ans-label">Future Value</div>
+    <div class="ans-val" id="ans-val">$0.00</div>
+  </div>
+
+</div>
+
+<script>
+  let mode = 'calc', atype = 'ordinary', sfChoice = 'FV', cur = 0, steps = [], D = {};
+
+  /* ── Four word problem scenarios — same numbers, only payment timing changes ── */
+  const BASE = { pmt: 1000, r: 0.05, n: 10 };
+  const SCENARIOS = {
+    'FV-ordinary': {
+      text: 'You deposit <mark>$1,000</mark> into a savings account at the <mark>end of each year</mark> for <mark>10 years</mark>. The account earns <mark>5% annual interest</mark>. How much will you have at the end of 10 years?',
+      pmt: BASE.pmt, r: BASE.r, n: BASE.n, sf: 'FV', due: false
+    },
+    'FV-due': {
+      text: 'You deposit <mark>$1,000</mark> into a savings account at the <mark>beginning of each year</mark> for <mark>10 years</mark>. The account earns <mark>5% annual interest</mark>. How much will you have at the end of 10 years?',
+      pmt: BASE.pmt, r: BASE.r, n: BASE.n, sf: 'FV', due: true
+    },
+    'PV-ordinary': {
+      text: 'An investment pays <mark>$1,000</mark> at the <mark>end of each year</mark> for <mark>10 years</mark>. If the discount rate is <mark>5% per year</mark>, what is the investment worth in today\'s dollars?',
+      pmt: BASE.pmt, r: BASE.r, n: BASE.n, sf: 'PV', due: false
+    },
+    'PV-due': {
+      text: 'An investment pays <mark>$1,000</mark> at the <mark>beginning of each year</mark> for <mark>10 years</mark>. If the discount rate is <mark>5% per year</mark>, what is the investment worth in today\'s dollars?',
+      pmt: BASE.pmt, r: BASE.r, n: BASE.n, sf: 'PV', due: true
+    }
+  };
+
+  function currentSF() { return sfChoice; }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('pill-calc').classList.toggle('active', m === 'calc');
+    document.getElementById('pill-excel').classList.toggle('active', m === 'excel');
+    document.getElementById('rp-header').textContent = m === 'calc' ? 'HP 10bII+ calculator' : 'Excel sheet';
+    if (steps.length) renderRight();
+  }
+
+  function setType(t) {
+    atype = t;
+    document.getElementById('pill-ord').classList.toggle('active', t === 'ordinary');
+    document.getElementById('pill-due').classList.toggle('active', t === 'due');
+    solve();
+  }
+
+  function setSF(sf) {
+    sfChoice = sf;
+    document.getElementById('pill-fv').classList.toggle('active', sf === 'FV');
+    document.getElementById('pill-pv').classList.toggle('active', sf === 'PV');
+    solve();
+  }
+
+  function fmt(n) {
+    return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function solve() {
+    const sfKey = `${currentSF()}-${atype}`;
+    const sc = SCENARIOS[sfKey] || SCENARIOS['FV-ordinary'];
+    const { pmt, r, n, sf, due } = sc;
+
+    // Render word problem
+    document.getElementById('problem-text').innerHTML = sc.text;
+
+    let final;
+    if (sf === 'FV') { const f = (Math.pow(1 + r, n) - 1) / r; final = due ? pmt * f * (1 + r) : pmt * f; }
+    else             { const f = (1 - Math.pow(1 + r, -n)) / r; final = due ? pmt * f * (1 + r) : pmt * f; }
+
+    const typeArg = due ? 1 : 0;
+    const excelFormula = sf === 'FV'
+      ? `=FV(${(r * 100).toFixed(2)}%,${n},${-pmt},0,${typeArg})`
+      : `=PV(${(r * 100).toFixed(2)}%,${n},${-pmt},0,${typeArg})`;
+
+    D = { pmt, r, n, sf, due, final, excelFormula, typeArg };
+
+    steps = [
+      {
+        excelTitle: 'Identify Knowns',
+        excelDesc: sf === 'FV'
+          ? 'Read the problem carefully and extract every variable before opening your spreadsheet. You are solving for Future Value — the total amount accumulated after all payments.'
+          : 'Read the problem carefully and extract every variable before opening your spreadsheet. You are solving for Present Value — what all future payments are worth in today\'s dollars.',
+        excelVal: `PMT = ${fmt(pmt)} · r = ${(r * 100).toFixed(2)}% · N = ${n} · Solve for: ${sf}`,
+        calcTitle: 'Identify Knowns',
+        calcDesc: sf === 'FV'
+          ? 'Read the problem carefully and write down every variable before touching the calculator. You are solving for Future Value — the total amount accumulated after all payments.'
+          : 'Read the problem carefully and write down every variable before touching the calculator. You are solving for Present Value — what all future payments are worth in today\'s dollars.',
+        calcVal: `PMT = ${fmt(pmt)} · r = ${(r * 100).toFixed(2)}% · N = ${n} · Solve for: ${sf}`,
+        excelRevealedRows: [], excelHL: null,
+        calcKeys: [{ k: '—', d: 'No keys yet — identify your variables first' }],
+        calcFilled: { n: false, iyr: false, pmt: false }
+      },
+      {
+        excelTitle: 'Enter the Interest Rate',
+        excelDesc: sf === 'FV'
+          ? `The problem states a ${(r * 100).toFixed(0)}% annual rate. Type this into cell B2 as a percentage — it is the rate at which your money grows each period.`
+          : `The problem states a ${(r * 100).toFixed(0)}% discount rate. Type this into cell B2 as a percentage — it is used to bring future payments back to today's dollars.`,
+        excelVal: `r = ${(r * 100).toFixed(2)}% entered in cell B2`,
+        calcTitle: 'Enter the Interest Rate',
+        calcDesc: sf === 'FV'
+          ? `The problem states a ${(r * 100).toFixed(0)}% annual rate — the rate at which your money grows each period. Type it and press I/YR to store it.`
+          : `The problem states a ${(r * 100).toFixed(0)}% discount rate — used to bring future payments back to today's dollars. Type it and press I/YR to store it.`,
+        calcVal: `Type ${(r * 100).toFixed(4)}, then press I/YR`,
+        excelRevealedRows: [2], excelHL: 2,
+        calcKeys: [{ k: `${(r * 100).toFixed(4)}`, d: 'type the rate value' }, { k: 'I/YR', y: true, d: 'press to store rate' }],
+        calcFilled: { n: false, iyr: true, pmt: false }
+      },
+      {
+        excelTitle: 'Enter Number of Periods',
+        excelDesc: sf === 'FV'
+          ? `The problem states ${n} years of payments. Type ${n} into cell B3. This is the total number of payments going forward.`
+          : `The problem states ${n} years of payments. Type ${n} into cell B3. This is the total number of payments you will receive.`,
+        excelVal: `N = ${n} entered in cell B3`,
+        calcTitle: 'Enter Number of Periods',
+        calcDesc: sf === 'FV'
+          ? `The problem states ${n} years of payments — the total number of payments going forward. Type ${n} and press N to store it.`
+          : `The problem states ${n} years of payments — the total number of payments you will receive. Type ${n} and press N to store it.`,
+        calcVal: `Type ${n}, then press N`,
+        excelRevealedRows: [2, 3], excelHL: 3,
+        calcKeys: [{ k: `${n}`, d: 'type the number of periods' }, { k: 'N', y: true, d: 'press to store N' }],
+        calcFilled: { n: true, iyr: true, pmt: false }
+      },
+      {
+        excelTitle: 'Enter the Payment Amount',
+        excelDesc: sf === 'FV'
+          ? `The problem states a ${fmt(pmt)} deposit each period. Type it as a negative number in cell B4 — it's cash leaving your hands, and =FV() requires outflows to be negative.`
+          : `The problem states a ${fmt(pmt)} payment each period. Type it as a negative number in cell B4 — it's cash going out, and =PV() requires outflows to be negative.`,
+        excelVal: `PMT = −${fmt(pmt)} entered in cell B4`,
+        calcTitle: 'Enter the Payment Amount',
+        calcDesc: sf === 'FV'
+          ? `The problem states a ${fmt(pmt)} deposit each period — cash leaving your hands. Type it, press +/− to make it negative, then press PMT to store it.`
+          : `The problem states a ${fmt(pmt)} payment each period — cash going out. Type it, press +/− to make it negative, then press PMT to store it.`,
+        calcVal: `Type ${pmt}, press +/−, then press PMT`,
+        excelRevealedRows: [2, 3, 4], excelHL: 4,
+        calcKeys: [{ k: `${pmt}`, d: 'type the payment amount' }, { k: '+/−', d: 'flip sign to negative' }, { k: 'PMT', y: true, d: 'press to store PMT' }],
+        calcFilled: { n: true, iyr: true, pmt: true }
+      },
+      {
+        excelTitle: due ? 'Set Type = 1 (Annuity Due)' : 'Set Type = 0 (Ordinary)',
+        excelDesc: due
+          ? (sf === 'FV'
+            ? 'The problem says payments are at the BEGINNING of each period. Type = 1 tells Excel this is an Annuity Due — each payment earns one extra period of interest, increasing the future value.'
+            : 'The problem says payments are at the BEGINNING of each period. Type = 1 tells Excel this is an Annuity Due — each payment is discounted one fewer period, increasing the present value.')
+          : (sf === 'FV'
+            ? 'The problem says payments are at the END of each period. Type = 0 tells Excel this is an Ordinary Annuity — the standard assumption for most savings and loan problems.'
+            : 'The problem says payments are at the END of each period. Type = 0 tells Excel this is an Ordinary Annuity — each payment is discounted by one full period from when it is received.'),
+        excelVal: due ? 'Type = 1 entered in cell B5' : 'Type = 0 entered in cell B5',
+        calcTitle: due ? 'Switch to BEGIN Mode' : 'Confirm END Mode',
+        calcDesc: due
+          ? (sf === 'FV'
+            ? 'The problem says payments are at the BEGINNING of each period — Annuity Due. Press 2ND then BEG/END to activate BEGIN mode. Each payment earns one extra period of interest.'
+            : 'The problem says payments are at the BEGINNING of each period — Annuity Due. Press 2ND then BEG/END to activate BEGIN mode. Each payment is discounted one fewer period.')
+          : (sf === 'FV'
+            ? 'The problem says payments are at the END of each period — Ordinary Annuity. The HP 10bII+ defaults to END mode. Confirm no BEGIN indicator appears on the display.'
+            : 'The problem says payments are at the END of each period — Ordinary Annuity. The HP 10bII+ defaults to END mode. Confirm no BEGIN indicator appears on the display.'),
+        calcVal: due ? 'Press 2ND → BEG/END to activate BEGIN mode' : 'END mode is default — confirm no BGN shown',
+        excelRevealedRows: [2, 3, 4, 5], excelHL: 5,
+        calcKeys: due
+          ? [{ k: '2ND', y: true, d: 'access second function' }, { k: 'BEG/END', d: 'toggle to BEGIN mode' }]
+          : [{ k: '—', d: 'END is default — verify no BGN on display' }],
+        calcFilled: { n: true, iyr: true, pmt: true }
+      },
+      {
+        excelTitle: sf === 'FV' ? 'Enter the =FV() Formula' : 'Enter the =PV() Formula',
+        excelDesc: sf === 'FV'
+          ? `Type the =FV() formula into cell B6. Excel uses your rate, N, PMT, and type to calculate the total value of all deposits at the end of ${n} years.`
+          : `Type the =PV() formula into cell B6. Excel uses your rate, N, PMT, and type to calculate what all ${n} payments are worth in today's dollars.`,
+        excelVal: `${sf} = ${fmt(final)}`,
+        calcTitle: sf === 'FV' ? 'Press FV to Compute' : 'Press PV to Compute',
+        calcDesc: sf === 'FV'
+          ? `Press the FV key. The calculator uses all stored registers to compute the total value of all deposits at the end of ${n} years.`
+          : `Press the PV key. The calculator uses all stored registers to compute what all ${n} payments are worth in today's dollars.`,
+        calcVal: `Press ${sf} → result: ${fmt(final)}`,
+        excelRevealedRows: [2, 3, 4, 5, 6], excelHL: 6,
+        calcKeys: [{ k: sf, y: true, d: `press to compute and display ${sf}` }],
+        calcFilled: { n: true, iyr: true, pmt: true }
+      }
+    ];
+
+    cur = 0;
+    document.getElementById('answer-row').style.display = 'none';
+    document.getElementById('next-btn').disabled = false;
+    document.getElementById('prev-btn').disabled = true;
+    renderDots();
+    renderStep();
+  }
+
+  function renderDots() {
+    document.getElementById('dots').innerHTML = steps.map((_, i) =>
+      `<div class="dot" id="d${i}"></div>`
+    ).join('');
+    updateDots();
+  }
+
+  function updateDots() {
+    steps.forEach((_, i) => {
+      const d = document.getElementById('d' + i);
+      if (d) d.className = 'dot' + (i < cur ? ' done' : i === cur ? ' active' : '');
+    });
+  }
+
+  function renderStep() {
+    const s = steps[cur];
+    const isExcel = mode === 'excel';
+    document.getElementById('step-counter').textContent = `Step ${cur + 1} of ${steps.length}`;
+    document.getElementById('step-title').textContent = isExcel ? s.excelTitle : s.calcTitle;
+    document.getElementById('step-desc').textContent = isExcel ? s.excelDesc : s.calcDesc;
+    const sv = document.getElementById('step-val');
+    sv.textContent = isExcel ? s.excelVal : s.calcVal;
+    sv.style.display = 'block';
+    document.getElementById('prev-btn').disabled = cur === 0;
+    document.getElementById('next-btn').disabled = cur >= steps.length - 1;
+    updateDots();
+
+    const isLast = cur === steps.length - 1;
+    document.getElementById('answer-row').style.display = isLast ? 'flex' : 'none';
+    if (isLast) {
+      document.getElementById('ans-label').textContent = D.sf === 'FV' ? 'Future Value (FV)' : 'Present Value (PV)';
+      document.getElementById('ans-val').textContent = fmt(D.final);
+    }
+    renderRight();
+  }
+
+  function renderRight() {
+    const s = steps[cur];
+    const isExcel = mode === 'excel';
+    document.getElementById('step-title').textContent = isExcel ? s.excelTitle : s.calcTitle;
+    document.getElementById('step-desc').textContent = isExcel ? s.excelDesc : s.calcDesc;
+    document.getElementById('step-val').textContent = isExcel ? s.excelVal : s.calcVal;
+    if (mode === 'excel') renderExcel(); else renderCalc();
+  }
+
+  function renderExcel() {
+    const s = steps[cur], d = D;
+    const revealed = s.excelRevealedRows, hl = s.excelHL, isLast = cur === steps.length - 1;
+
+    const allRows = [
+      { r: 2, lbl: 'Rate per period (r)',             v: (d.r * 100).toFixed(2) + '%',  f: '' },
+      { r: 3, lbl: 'Periods (N)',                     v: d.n,                            f: '' },
+      { r: 4, lbl: 'PMT (payment)',                   v: '−' + fmt(d.pmt),              f: '' },
+      { r: 5, lbl: 'Annuity type (0=end, 1=begin)',   v: d.typeArg,                      f: '' },
+      { r: 6, lbl: d.sf + ' — answer',                v: fmt(d.final),                   f: d.excelFormula },
+    ];
+
+    document.getElementById('rp-body').innerHTML = `
+      <div class="excel-toolbar"><span>File</span><span>Edit</span><span style="color:#002E5D;font-weight:700">Annuity.xlsx</span></div>
+      <table class="excel-grid">
+        <thead>
+          <tr><th></th><th>A — description</th><th>B — value</th><th>C — formula</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rh">1</td>
+            <td colspan="3" style="background:#002E5D;color:#FFE600;font-size:11px;font-weight:700;padding:6px 9px">
+              ${atype === 'due' ? 'Annuity Due' : 'Ordinary Annuity'} solver
+            </td>
+          </tr>
+          ${allRows.map(row => {
+            const show = revealed.includes(row.r);
+            const isHL = hl === row.r;
+            const isFin = row.r === 6 && isLast;
+            return `<tr class="${isHL ? 'hl' : ''}">
+              <td class="rh">${row.r}</td>
+              <td class="${show ? 'lc' : 'empty'}" style="${isHL ? 'font-weight:700' : ''}">${show ? row.lbl : ''}</td>
+              <td class="${show ? (isFin ? 'rc' : 'vc') : 'empty'}">${show ? row.v : ''}</td>
+              <td class="${show && row.f ? 'fc' : 'empty'}">${show && row.f ? row.f : ''}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function renderCalc() {
+    const s = steps[cur], d = D, f = s.calcFilled, isLast = cur === steps.length - 1;
+    const keys = s.calcKeys || [];
+
+    const regs = [
+      { name: 'N',    val: d.n,                                              filled: f.n },
+      { name: 'I/YR', val: (d.r * 100).toFixed(2) + '%',                    filled: f.iyr },
+      { name: 'PV',   val: d.sf === 'PV' && isLast ? fmt(d.final) : '0',    filled: d.sf === 'PV' && isLast },
+      { name: 'PMT',  val: '−' + fmt(d.pmt),                                filled: f.pmt },
+      { name: 'FV',   val: d.sf === 'FV' && isLast ? fmt(d.final) : '0',    filled: d.sf === 'FV' && isLast },
+    ];
+
+    const screenTxt = isLast ? fmt(d.final) : keys.length ? keys[keys.length - 1].k : '…';
+
+    document.getElementById('rp-body').innerHTML = `
+      <div class="calc-body">
+        <div>
+          <div class="section-label">Display</div>
+          <div class="calc-screen">${screenTxt}</div>
+        </div>
+        <div>
+          <div class="section-label">Keys to press</div>
+          <div class="calc-keys">
+            ${keys.map(k => `
+              <div class="calc-key-row">
+                <span class="calc-key${k.y ? ' yellow' : ''}">${k.k}</span>
+                <span class="calc-key-desc">${k.d}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="section-label" style="padding: 0 13px 4px">Register status</div>
+          <div class="reg-grid">
+            ${regs.map(r => `
+              <div class="reg-cell${r.filled ? ' filled' : ''}">
+                <div class="reg-name">${r.name}</div>
+                <div class="reg-val">${r.filled ? r.val : '—'}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function nextStep() { if (cur < steps.length - 1) { cur++; renderStep(); } }
+  function prevStep() { if (cur > 0) { cur--; renderStep(); } }
+
+  solve();
+</script>
+</body>
+</html>
