@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraud Triangle – Drag & Drop Activity</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    color: #1a2535;
+    min-height: 100vh;
+    padding: 16px 16px 32px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a2535;
+    margin-bottom: 3px;
+  }
+  header p {
+    font-size: 0.8rem;
+    color: #4a5568;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* Bank */
+  .bank {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .chip {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: grab;
+    user-select: none;
+    border: 2px solid transparent;
+    white-space: nowrap;
+    transition: transform .12s;
+  }
+  .chip:active { cursor: grabbing; transform: scale(1.05); }
+
+  .chip-pressure        { background: #1a3a6b; color: #fff;    border-color: #1a3a6b; }
+  .chip-opportunity     { background: #f5c000; color: #1a2535; border-color: #d4a800; }
+  .chip-rationalization { background: #5b9bd5; color: #fff;    border-color: #4a87c0; }
+
+  /* Scenarios — 2 columns, tight */
+  .scenarios {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    max-width: 820px;
+    margin: 0 auto 16px;
+  }
+  @media (max-width: 540px) {
+    .scenarios { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.07);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border: 2px solid transparent;
+  }
+
+  .card-num {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #a0aec0;
+  }
+  .card-text {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #2d3748;
+    flex: 1;
+  }
+
+  .drop-zone {
+    border: 2px dashed #cbd5e0;
+    border-radius: 6px;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    color: #a0aec0;
+    transition: border-color .2s, background .2s;
+  }
+  .drop-zone.drag-over { border-color: #4299e1; background: #ebf8ff; }
+  .drop-zone.has-chip  { border-style: solid; border-color: #cbd5e0; }
+  .drop-zone .chip     { margin: 0; cursor: default; }
+
+  .feedback {
+    font-size: 0.72rem;
+    font-weight: 600;
+    min-height: 16px;
+  }
+  .feedback.correct { color: #276749; }
+  .feedback.wrong   { color: #c53030; }
+
+  .detail-box {
+    display: none;
+    background: #f7fafc;
+    border-left: 3px solid #68d391;
+    border-radius: 0 4px 4px 0;
+    padding: 6px 9px;
+    font-size: 0.71rem;
+    line-height: 1.45;
+    color: #2d3748;
+  }
+  .detail-box a { color: #2b6cb0; font-size: 0.68rem; }
+  .detail-box.show { display: block; }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .btn {
+    padding: 7px 20px;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: background .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-check { background: #2b6cb0; color: #fff; }
+  .btn-check:hover { background: #2c5282; }
+  .btn-reset { background: #e2e8f0; color: #2d3748; }
+  .btn-reset:hover { background: #cbd5e0; }
+
+  #score-area {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2d3748;
+    min-height: 22px;
+  }
+  #score-area span { color: #276749; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Fraud Triangle</h1>
+  <p>Drag the correct label into each scenario's drop box, then click <em>Check Answers</em>.</p>
+</header>
+
+<div class="bank" id="bank">
+  <div class="chip chip-pressure"        draggable="true" data-value="Pressure">Pressure</div>
+  <div class="chip chip-opportunity"     draggable="true" data-value="Opportunity">Opportunity</div>
+  <div class="chip chip-rationalization" draggable="true" data-value="Rationalization">Rationalization</div>
+</div>
+
+<div class="scenarios" id="scenarios"></div>
+
+<div class="controls">
+  <button class="btn btn-check" onclick="checkAll()">Check Answers</button>
+  <button class="btn btn-reset" onclick="resetAll()">Reset</button>
+</div>
+<div id="score-area"></div>
+
+<script>
+const SCENARIOS = [
+  {
+    num: 1,
+    text: "Employees at a major US bank were assigned aggressive sales goals and risked disciplinary action or termination if they failed to meet them. To meet those goals, many began opening accounts and financial products without customer consent.",
+    answer: "Pressure",
+    caseName: "Wells Fargo",
+    detail: "Employees faced extreme pressure to meet unrealistic sales goals, which led them to open unauthorized accounts.",
+    link: "https://www.sec.gov/newsroom/press-releases/2020-38"
+  },
+  {
+    num: 2,
+    text: "Executives at a large energy company used a network of separate entities to keep billions of dollars of debt off the company’s financial statements, making the company appear far more financially healthy and profitable than it actually was.",
+    answer: "Opportunity",
+    caseName: "Enron",
+    detail: "Complex accounting structures, weak transparency, and a lack of oversight allowed executives to hide debt through off-the-books entities.",
+    link: "https://www.sec.gov/news/press/2004-18.htm"
+  },
+  {
+    num: 3,
+    text: "Executives at a large telecommunications company began improperly capitalizing operating expenses to inflate profits. They justified violating accounting rules by convincing themselves that the adjustments were necessary to meet earnings expectations and avoid reporting poor financial results.",
+    answer: "Rationalization",
+    caseName: "WorldCom",
+    detail: "Executives justified improper accounting as necessary to meet investor expectations.",
+    link: "https://www.sec.gov/litigation/litreleases/lr17588.htm"
+  },
+  {
+    num: 4,
+    text: "Executives at a large telecommunications company used company funds for personal expenses and concealed billions of dollars of debt from investors. Family members who controlled the company were able to override oversight controls and conceal the fraud for years.",
+    answer: "Opportunity",
+    caseName: "Adelphia Communications",
+    detail: "Weak oversight, concentrated authority, and poor internal controls created the opportunity for executives to hide debt and misuse company funds.",
+    link: "https://www.sec.gov/litigation/litreleases/lr17627.htm"
+  },
+  {
+    num: 5,
+    text: "Executives at a healthcare technology startup misled investors and business partners about the company’s technology capabilities. They justified continued misrepresentations as necessary to maintain investor confidence and secure funding while working to improve the technology.",
+    answer: "Rationalization",
+    caseName: "Theranos",
+    detail: "Executives justified misleading investors and business partners as necessary to keep the company operating and maintain confidence in the business.",
+    link: "https://www.sec.gov/newsroom/press-releases/2018-41"
+  },
+  {
+    num: 6,
+    text: "A financial coordinator at a dental office had responsibility for recording transactions, writing checks, and reconciling bank accounts with little oversight. Over time, they used this access to create a shell company to divert checks to themselves and conceal the payments in the accounting records.",
+    answer: "Opportunity",
+    caseName: "Dental office employee embezzled funds by creating a shell company, diverting checks, and concealing them in the accounting records.",
+    detail: "Lack of segregation of duties allowed the employee to control recording and reconciliation, creating an opportunity for fraud.",
+    link: "https://www.justice.gov/usao-sdtx/pr/local-woman-sentenced-embezzling-funds-dental-office"
+  }
+];
+
+const CHIPS = [
+  { value: "Pressure",        cls: "chip-pressure" },
+  { value: "Opportunity",     cls: "chip-opportunity" },
+  { value: "Rationalization", cls: "chip-rationalization" }
+];
+
+let draggedValue = null;
+let checked = false;
+
+function initBank() {
+  document.querySelectorAll('#bank .chip').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      draggedValue = chip.dataset.value;
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    chip.addEventListener('dragend', () => { draggedValue = null; });
+  });
+}
+
+function makeDisplayChip(value, cls) {
+  const el = document.createElement('div');
+  el.className = `chip ${cls}`;
+  el.dataset.value = value;
+  el.textContent = value;
+  return el;
+}
+
+function buildScenarios() {
+  const container = document.getElementById('scenarios');
+  container.innerHTML = '';
+
+  SCENARIOS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const num = document.createElement('div');
+    num.className = 'card-num';
+    num.textContent = `Scenario ${s.num}`;
+
+    const text = document.createElement('div');
+    text.className = 'card-text';
+    text.textContent = s.text;
+
+    const zone = document.createElement('div');
+    zone.className = 'drop-zone';
+    zone.id = `drop-${s.num}`;
+    zone.dataset.scenario = s.num;
+    const placeholder = document.createElement('span');
+    placeholder.style.pointerEvents = 'none';
+    placeholder.textContent = 'Drop answer here';
+    zone.appendChild(placeholder);
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (!draggedValue) return;
+      const chipDef = CHIPS.find(c => c.value === draggedValue);
+      if (!chipDef) return;
+      zone.innerHTML = '';
+      zone.appendChild(makeDisplayChip(chipDef.value, chipDef.cls));
+      zone.classList.add('has-chip');
+      if (checked) {
+        document.getElementById(`fb-${s.num}`).textContent = '';
+        document.getElementById(`fb-${s.num}`).className = 'feedback';
+        document.getElementById(`detail-${s.num}`).classList.remove('show');
+        checked = false;
+        document.getElementById('score-area').textContent = '';
+      }
+    });
+
+    const fb = document.createElement('div');
+    fb.className = 'feedback';
+    fb.id = `fb-${s.num}`;
+
+    const detail = document.createElement('div');
+    detail.className = 'detail-box';
+    detail.id = `detail-${s.num}`;
+    detail.innerHTML = `<strong>Real case: ${s.caseName}</strong><br>${s.detail}<br><a href="${s.link}" target="_blank">📎 Read more →</a>`;
+
+    card.appendChild(num);
+    card.appendChild(text);
+    card.appendChild(zone);
+    card.appendChild(fb);
+    card.appendChild(detail);
+    container.appendChild(card);
+  });
+}
+
+function checkAll() {
+  checked = true;
+  let correct = 0;
+  SCENARIOS.forEach(s => {
+    const zone   = document.getElementById(`drop-${s.num}`);
+    const chip   = zone.querySelector('.chip');
+    const fb     = document.getElementById(`fb-${s.num}`);
+    const detail = document.getElementById(`detail-${s.num}`);
+    if (!chip) {
+      fb.textContent = '⚠️ No answer placed.';
+      fb.className = 'feedback wrong';
+      detail.classList.remove('show');
+      return;
+    }
+    if (chip.dataset.value === s.answer) {
+      correct++;
+      fb.textContent = '✅ Correct!';
+      fb.className = 'feedback correct';
+      detail.classList.add('show');
+    } else {
+      fb.textContent = '❌ Not quite — try again!';
+      fb.className = 'feedback wrong';
+      detail.classList.remove('show');
+    }
+  });
+  document.getElementById('score-area').innerHTML =
+    `Score: <span>${correct} / ${SCENARIOS.length}</span> correct`;
+}
+
+function resetAll() {
+  checked = false;
+  buildScenarios();
+  document.getElementById('score-area').textContent = '';
+}
+
+buildScenarios();
+initBank();
+</script>
+</body>
+</html>
