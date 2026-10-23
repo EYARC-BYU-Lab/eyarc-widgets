@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EYARC | Prime Multiplication Challenge</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:clamp(16px,5vw,54px);background:#fff;font-family:system-ui,-apple-system,sans-serif;color:#253349}
+#eyarc-factor{max-width:690px;margin:0 auto;background:#f7f8fa;border:1px solid #e1e5eb;border-radius:16px;padding:clamp(18px,4vw,30px)}
+.ey-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.ey-kicker{font-size:11px;font-weight:750;letter-spacing:1.2px;text-transform:uppercase;color:#758399}.ey-state{font-size:11px;font-weight:650;color:#607087;display:flex;align-items:center;gap:7px}.ey-state-dot{height:7px;width:7px;background:#9da9b6;border-radius:50%}
+h1{font-size:clamp(21px,4vw,26px);font-weight:750;letter-spacing:-.7px;margin:12px 0 6px;color:#172d4b}.ey-desc{font-size:13px;line-height:1.65;color:#66768b;max-width:500px;margin:0}.ey-problem{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 0;padding:18px 20px;background:#fff;border-radius:11px;border:1px solid #e8ecf0;flex-wrap:wrap}
+.ey-number{font-weight:750;font-size:clamp(33px,7vw,48px);letter-spacing:-1.5px;color:#1f426a;font-variant-numeric:tabular-nums;line-height:1.3}.ey-time{text-align:right}.ey-clock{font-size:23px;font-weight:720;letter-spacing:-.6px;color:#23466c;font-variant-numeric:tabular-nums}.ey-progress{height:4px;background:#e5eaf0;border-radius:6px;overflow:hidden;margin:16px 0 0}.ey-progress-fill{height:100%;width:100%;background:#49769e;transition:width .1s linear;border-radius:6px}
+.ey-factor-row{display:flex;align-items:center;gap:12px;margin-top:13px;flex-wrap:wrap}.ey-factor-row input{min-width:0;width:110px;max-width:36%;height:54px;border:1px solid #d6dee6;background:white;border-radius:9px;text-align:center;font-size:22px;color:#1f426a;font-weight:700;outline:0}.ey-factor-row input:focus{border-color:#3b719d;box-shadow:0 0 0 3px #3b719d1a}.ey-factor-row input:disabled{background:#eff2f5;color:#8492a0}.ey-factor-row input::placeholder{color:#b0bac5}.ey-times{font-size:24px;color:#99a7b5}button{min-height:44px;padding:11px 21px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}.ey-primary{background:#264b70;color:white;border:1px solid #264b70}.ey-primary:hover:not(:disabled){background:#34628e}.ey-secondary{background:#fff;border:1px solid #cdd7e1;color:#284e72}.ey-secondary:hover{background:#edf2f7}button:disabled{opacity:.45;cursor:not-allowed}.ey-feedback{font-size:12px;color:#687a8e;line-height:1.55;min-height:18px;margin-top:11px}.ey-answer{margin-top:20px;padding:16px 18px;border:1px solid #d7e4dc;background:#edf6f1;border-radius:11px}.ey-answer-head{font-size:12px;font-weight:750;color:#30624a}.ey-answer-number{font-size:24px;font-weight:760;letter-spacing:-.5px;color:#224d3d;margin:7px 0}.ey-note{font-size:12px;color:#748295;line-height:1.55;margin:19px 0 0}
+@media(max-width:370px){.ey-problem{padding:14px}.ey-factor-row input{width:85px}.ey-factor-row{gap:8px}}@media(prefers-reduced-motion:reduce){.ey-progress-fill{transition:none}}
+</style>
+</head>
+<body>
+<main id="eyarc-factor">
+  <div class="ey-top"><span class="ey-kicker">Try it yourself <span style="color:#c1a16a;margin-left:5px">✦</span></span><span class="ey-state"><span id="ef-dot" class="ey-state-dot"></span><span id="ef-status">Ready to begin</span></span></div>
+  <h1>Can you multiply the primes?</h1>
+  <p class="ey-desc">You know the two prime numbers. Can you find their product in 30 seconds?</p>
+  <div class="ey-problem"><div><div class="ey-kicker" style="margin-bottom:4px">Your prime numbers</div><div class="ey-number" id="ef-product" style="font-size:clamp(30px,6vw,43px)">— — — —</div></div><div class="ey-time"><div class="ey-kicker" style="margin-bottom:5px">Time left</div><div id="ef-clock" class="ey-clock">0:30</div></div></div>
+  <div class="ey-progress"><div class="ey-progress-fill" id="ef-bar"></div></div>
+  <div class="ey-kicker" style="margin-top:21px">What is their product?</div>
+  <div class="ey-factor-row"><input id="ef-answer" type="number" min="1000" max="9999" step="1" inputmode="numeric" placeholder="Your answer" disabled aria-label="Product of the two primes" style="width:205px;max-width:100%;font-size:20px"><span style="font-size:13px;color:#748295">Enter the product</span></div>
+  <div style="margin-top:21px"><button type="button" class="ey-primary" id="ef-start">Start challenge <span style="margin-left:7px">→</span></button><button type="button" class="ey-primary" id="ef-submit" hidden>Submit answer <span style="margin-left:7px">→</span></button></div>
+  <div id="ef-feedback" class="ey-feedback" aria-live="polite">The timer starts as soon as you click Start.</div>
+  <div id="ef-result" class="ey-answer" hidden aria-live="polite"><div class="ey-answer-head" id="ef-result-title"></div><div class="ey-answer-number" id="ef-result-factors"></div><div style="font-size:12px;color:#5f786a;line-height:1.6" id="ef-result-text"></div></div>
+  <button id="ef-restart" type="button" class="ey-secondary" hidden style="margin-top:15px">Try another number ↻</button>
+  <p class="ey-note">Multiplying two primes is straightforward. RSA security relies on how much harder it can be to reverse this process when the primes are enormous.</p>
+</main>
+<script>
+(function(){
+  const el=id=>document.getElementById(id);
+  const primes=Array.from({length:90},(_,i)=>i+10).filter(n=>{for(let j=2;j*j<=n;j++)if(n%j===0)return false;return true});
+  const pairs=[];
+  for(let i=0;i<primes.length;i++)for(let j=i;j<primes.length;j++)if(primes[i]*primes[j]>=1000)pairs.push([primes[i],primes[j]]);
+  let pair=[],last=-1,deadline=0,interval=null,running=false,submitted=null;
+  function show(id,visible){el(id).hidden=!visible;}
+  function status(s,color){el('ef-status').textContent=s;el('ef-dot').style.background=color;}
+  function tick(){if(!running)return;const ms=Math.max(0,deadline-Date.now());el('ef-clock').textContent='0:'+String(Math.ceil(ms/1000)).padStart(2,'0');el('ef-bar').style.width=(ms/30000*100)+'%';if(ms<=0)finish();}
+  function finish(earlySuccess=false){
+    if(!running)return;
+    running=false;clearInterval(interval);interval=null;
+    el('ef-answer').disabled=true;if(!earlySuccess){el('ef-clock').textContent='0:00';el('ef-bar').style.width='0%';}
+    show('ef-submit',false);show('ef-restart',true);
+    const product=pair[0]*pair[1];
+    const success=submitted===product;
+    status(success?'Completed':'Time is up',success?'#539676':'#bd975c');
+    show('ef-result',true);
+    el('ef-result').style.background=success?'#edf6f1':'#f8f2e8';
+    el('ef-result').style.borderColor=success?'#d7e4dc':'#e9dfcd';
+    el('ef-result-title').textContent=success?'✓ You found the product!':'Time is up — here is the answer';
+    el('ef-result-title').style.color=success?'#30624a':'#856029';
+    el('ef-result-factors').textContent=pair[0]+' × '+pair[1]+' = '+product.toLocaleString();
+    el('ef-result-factors').style.color=success?'#224d3d':'#73551f';
+    el('ef-result-text').textContent=success?'You successfully multiplied the two primes before time ran out.':'Multiplying two known primes is much easier than finding them from their product.';
+    el('ef-feedback').textContent=success?'Your submitted answer was correct.':submitted===null?'No answer was submitted before the timer ended.':'Your submitted answer was not correct.';
+  }
+  function start(){
+    clearInterval(interval);
+    let idx=Math.floor(Math.random()*pairs.length);
+    if(pairs.length>1&&idx===last)idx=(idx+1)%pairs.length;
+    last=idx;pair=pairs[idx];running=true;submitted=null;
+    el('ef-product').textContent=pair[0]+' × '+pair[1];
+    el('ef-answer').value='';el('ef-answer').disabled=false;
+    show('ef-start',false);show('ef-submit',true);el('ef-submit').disabled=false;
+    show('ef-restart',false);show('ef-result',false);
+    el('ef-feedback').textContent='Calculate the product and submit. A correct answer stops the clock.';
+    status('Challenge in progress','#517c9c');
+    deadline=Date.now()+30000;tick();interval=setInterval(tick,100);el('ef-answer').focus();
+  }
+  function submit(){
+    if(!running)return;
+    if(Date.now()>=deadline){finish();return;}
+    const raw=el('ef-answer').value.trim();const n=Number(raw);
+    if(!raw||!Number.isInteger(n)||n<1000||n>9999){el('ef-feedback').textContent='Enter a four-digit whole number.';return;}
+    submitted=n;
+    if(n===pair[0]*pair[1]){
+      tick();
+      if(!running)return;
+      finish(true);
+      el('ef-feedback').textContent='Correct! You finished with '+el('ef-clock').textContent+' remaining.';
+    }else{
+      el('ef-feedback').textContent='Not quite. Try again before time runs out.';
+    }
+  }
+  el('ef-start').addEventListener('click',start);
+  el('ef-submit').addEventListener('click',submit);
+  el('ef-restart').addEventListener('click',start);
+  el('ef-answer').addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+  document.addEventListener('visibilitychange',()=>{if(running)tick();});
+})();
+</script>
+</body>
+</html>
