@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fraud Risk Heat Map — EYARC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --brand:   #002E5D;
+    --brand-blue: #0D65C7;
+    --navy:    #002E5D;
+    --blue:    #0D65C7;
+    --ltblue:  #B5E2FA;
+    --yellow:  #FFE600;
+    --gold:    #F2BA05;
+    --gray1:   #EAEAF1;
+    --gray2:   #C2C2CE;
+    --gray3:   #747480;
+    --white:   #ffffff;
+    --nudge-bg: #f0f7ff;
+    --high:    #cc2200;
+    --high-bg: #ffecea;
+    --med:     #b86b00;
+    --med-bg:  #fff8e6;
+    --med-border: #f5a623;
+    --low:     #1a7a3c;
+    --low-bg:  #eaf7ef;
+    --shadow:  rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --navy:    #E4EBF5;
+      --blue:    #6AAEF5;
+      --ltblue:  #17324F;
+      --gray1:   #10161F;
+      --gray2:   #354153;
+      --gray3:   #9AA4B5;
+      --white:   #1A2230;
+      --nudge-bg: #142A44;
+      --high:    #FF8270;
+      --high-bg: #3A1814;
+      --med:     #F2B04A;
+      --med-bg:  #36280F;
+      --low:     #52D68A;
+      --low-bg:  #13301F;
+      --shadow:  rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --navy:    #E4EBF5;
+    --blue:    #6AAEF5;
+    --ltblue:  #17324F;
+    --gray1:   #10161F;
+    --gray2:   #354153;
+    --gray3:   #9AA4B5;
+    --white:   #1A2230;
+    --nudge-bg: #142A44;
+    --high:    #FF8270;
+    --high-bg: #3A1814;
+    --med:     #F2B04A;
+    --med-bg:  #36280F;
+    --low:     #52D68A;
+    --low-bg:  #13301F;
+    --shadow:  rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--gray1); }
+
+  body {
+    font-family: 'Open Sans', 'Segoe UI', Arial, Helvetica, sans-serif;
+    background: var(--gray1);
+    color: var(--navy);
+    min-height: 100%;
+  }
+
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 32px 20px 48px; }
+
+  .page-title { margin-bottom: 6px; font-size: 1.7rem; font-weight: 800; color: var(--navy); }
+  .page-sub   { color: var(--gray3); font-size: 0.88rem; margin-bottom: 28px; }
+
+  .score-bar {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    background: var(--white);
+    border: 1.5px solid var(--gray2);
+    border-radius: 10px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+  }
+  .score-item { text-align: center; min-width: 80px; }
+  .score-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray3); font-weight: 700; margin-bottom: 3px; }
+  .score-val   { font-size: 1.55rem; font-weight: 800; color: var(--navy); font-family: Arial, Helvetica, sans-serif; }
+  .score-val.danger { color: var(--high); }
+  .score-val.warn   { color: var(--med);  }
+  .score-val.safe   { color: var(--low);  }
+  .score-val.info   { color: var(--blue); }
+  .risk-bar-wrap { flex: 1; min-width: 140px; }
+  .risk-bar-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray3); font-weight: 700; margin-bottom: 6px; }
+  .risk-bar-track { background: var(--gray1); border-radius: 4px; height: 10px; overflow: hidden; border: 1px solid var(--gray2); }
+  .risk-bar-fill  { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1a7a3c, #F2BA05, #cc2200); transition: width 0.8s ease; }
+
+  @keyframes popIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+
+  .hints-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .hint-card {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--white); border: 1.5px solid var(--gold);
+    border-left: 5px solid var(--gold);
+    border-radius: 10px; padding: 14px 16px;
+    animation: popIn 0.4s ease;
+    transition: opacity 0.5s, max-height 0.5s ease, padding 0.5s, margin 0.5s;
+    max-height: 240px; overflow: hidden;
+  }
+  .hint-card.nudge { border-color: var(--blue); border-left-color: var(--blue); background: var(--nudge-bg); }
+  .hint-card.disappear { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; }
+  .hint-card.bonus { border-color: var(--low); border-left-color: var(--low); background: var(--low-bg); }
+  .hint-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+  .hint-body { flex: 1; }
+  .hint-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 800; color: var(--gold); margin-bottom: 3px; }
+  .hint-card.nudge .hint-label { color: var(--blue); }
+  .hint-card.bonus .hint-label { color: var(--low); }
+  .hint-text  { font-size: 0.88rem; font-weight: 600; color: var(--navy); line-height: 1.5; }
+  .hint-card.bonus .hint-text { color: var(--low); }
+
+  .heatmap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 28px; }
+
+  .dept-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 22px 20px;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.2s;
+    border-left: 5px solid transparent;
+    box-shadow: 0 1px 4px var(--shadow);
+    position: relative;
+  }
+  .dept-card:hover:not(.completed) { transform: translateY(-3px); box-shadow: 0 6px 18px var(--shadow); }
+  .dept-card:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .dept-card.risk-high { border-left-color: var(--high); }
+  .dept-card.risk-med  { border-left-color: var(--med-border); }
+  .dept-card.risk-low  { border-left-color: var(--low); }
+  .dept-card.completed { opacity: 0.65; cursor: default; }
+
+  .risk-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 20px; padding: 3px 11px;
+    font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 10px;
+  }
+  .badge-high { background: var(--high-bg); color: var(--high); }
+  .badge-med  { background: var(--med-bg);  color: var(--med);  }
+  .badge-low  { background: var(--low-bg);  color: var(--low);  }
+
+  .dept-name    { font-size: 1.05rem; font-weight: 800; color: var(--navy); margin-bottom: 5px; }
+  .dept-tagline { font-size: 0.8rem; color: var(--gray3); line-height: 1.5; }
+  .dept-check   { position: absolute; top: 14px; right: 16px; font-size: 1.1rem; }
+  .dept-progress { font-size: 0.72rem; font-weight: 700; color: var(--blue); margin-top: 8px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,46,93,0.45);
+    backdrop-filter: blur(4px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .modal {
+    background: var(--white); border-radius: 14px;
+    max-width: 600px; width: 100%; max-height: 100%; overflow-y: auto;
+    padding: 30px; box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    animation: slideUp 0.28s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .modal-title  { font-size: 1.3rem; font-weight: 800; color: var(--navy); margin-top: 6px; }
+  .modal-close  {
+    background: var(--gray1); border: 1px solid var(--gray2); color: var(--gray3);
+    border-radius: 7px; padding: 5px 11px; cursor: pointer; font-size: 0.95rem; flex-shrink: 0;
+    font-family: inherit;
+  }
+  .modal-close:hover { background: var(--gray2); }
+
+  .scenario-box {
+    background: var(--ltblue); border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 22px;
+    font-size: 0.88rem; line-height: 1.65; color: var(--navy);
+  }
+
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gray2); transition: background 0.25s; }
+  .dot.active { background: var(--blue); }
+  .dot.done   { background: var(--low);  }
+
+  .q-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--blue); font-weight: 800; margin-bottom: 7px; }
+  .q-text   { font-size: 0.97rem; font-weight: 700; color: var(--navy); margin-bottom: 14px; line-height: 1.5; }
+
+  .choices { display: flex; flex-direction: column; gap: 9px; }
+  .choice-btn {
+    background: var(--gray1); border: 1.5px solid var(--gray2); color: var(--navy);
+    border-radius: 8px; padding: 11px 14px; cursor: pointer; text-align: left;
+    font-family: inherit; font-size: 0.88rem; font-weight: 600;
+    display: flex; align-items: center; gap: 10px; transition: border-color 0.18s, background 0.18s;
+  }
+  .choice-btn:hover:not(:disabled) { border-color: var(--blue); background: var(--ltblue); }
+  .choice-btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct { border-color: var(--low); background: var(--low-bg); color: var(--low); }
+  .choice-btn.wrong   { border-color: var(--high); background: var(--high-bg); color: var(--high); }
+  .choice-icon { flex-shrink: 0; font-size: 0.9rem; }
+
+  .feedback-msg {
+    margin-top: 11px; padding: 10px 14px; border-radius: 8px;
+    font-size: 0.86rem; font-weight: 600; line-height: 1.5;
+  }
+  .fb-correct { background: var(--low-bg); color: var(--low); border: 1px solid var(--low); }
+  .fb-wrong   { background: var(--high-bg); color: var(--high); border: 1px solid var(--high); }
+
+  .next-btn, .finish-btn {
+    width: 100%; margin-top: 14px; padding: 13px;
+    border-radius: 8px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    transition: opacity 0.18s, transform 0.15s;
+  }
+  .next-btn   { background: var(--brand-blue); color: #fff; }
+  .finish-btn { background: var(--brand); color: var(--yellow); }
+  .next-btn:hover, .finish-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .reflection {
+    background: var(--white); border-radius: 12px; padding: 28px;
+    border-top: 4px solid var(--yellow); box-shadow: 0 1px 4px var(--shadow);
+  }
+  .reflection h2 { font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .reflection p  { font-size: 0.86rem; color: var(--gray3); margin-bottom: 14px; }
+  .reflection textarea {
+    width: 100%; background: var(--gray1); border: 1.5px solid var(--gray2);
+    border-radius: 8px; color: var(--navy); font-family: inherit;
+    font-size: 0.88rem; padding: 11px; resize: vertical; min-height: 90px; outline: none;
+  }
+  .reflection textarea:focus { border-color: var(--blue); }
+  .reflection-submit {
+    margin-top: 10px; padding: 11px 26px; border-radius: 8px; border: none;
+    background: var(--brand); color: var(--yellow);
+    font-family: inherit; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  }
+  .reflection-error { margin-top: 8px; font-size: 0.82rem; font-weight: 600; color: var(--high); display: none; }
+  .reflection-done {
+    margin-top: 12px; padding: 13px; border-radius: 8px;
+    background: var(--low-bg); border: 1px solid var(--low);
+    color: var(--low); font-size: 0.88rem; font-weight: 700; text-align: center;
+  }
+
+  .results-modal {
+    background: var(--white); border-radius: 14px;
+    max-width: 520px; width: 100%; max-height: 100%; overflow-y: auto;
+    padding: 36px; box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    animation: slideUp 0.28s ease; text-align: center;
+  }
+  .results-score-ring {
+    width: 110px; height: 110px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    border: 6px solid var(--gray2);
+  }
+  .results-score-ring.danger { border-color: var(--high); background: var(--high-bg); }
+  .results-score-ring.warn   { border-color: var(--med-border); background: var(--med-bg); }
+  .results-score-ring.safe   { border-color: var(--low); background: var(--low-bg); }
+  .results-score-num { font-size: 2.4rem; font-weight: 800; font-family: Arial, Helvetica, sans-serif; }
+  .results-score-ring.danger .results-score-num { color: var(--high); }
+  .results-score-ring.warn   .results-score-num { color: var(--med);  }
+  .results-score-ring.safe   .results-score-num { color: var(--low);  }
+  .results-title { font-size: 1.3rem; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .results-subtitle { font-size: 0.85rem; color: var(--gray3); margin-bottom: 24px; }
+  .results-divider { border: none; border-top: 1px solid var(--gray2); margin: 20px 0; }
+  .results-feedback-block { text-align: left; margin-bottom: 14px; }
+  .results-feedback-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 800; margin-bottom: 5px; }
+  .results-feedback-label.positive { color: var(--low); }
+  .results-feedback-label.improve  { color: var(--blue); }
+  .results-feedback-text {
+    font-size: 0.9rem; font-weight: 600; color: var(--navy);
+    background: var(--gray1); border-radius: 8px; padding: 11px 14px; line-height: 1.55;
+  }
+  .results-continue-btn {
+    width: 100%; margin-top: 22px; padding: 13px;
+    border-radius: 8px; border: none; cursor: pointer;
+    background: var(--brand); color: var(--yellow);
+    font-family: inherit; font-size: 0.95rem; font-weight: 700;
+  }
+  .results-continue-btn:hover { opacity: 0.88; }
+
+  @media (max-width: 580px) {
+    .heatmap-grid { grid-template-columns: 1fr; }
+    .modal { padding: 18px; }
+    .results-modal { padding: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="page-title">🔥 Fraud Risk Heat Map</div>
+  <div class="page-sub">Forensic Accounting Simulation — Identify risk, evaluate controls, think like a fraudster.</div>
+
+  <div class="score-bar">
+    <div class="score-item">
+      <div class="score-label">Fraud Risk Score</div>
+      <div class="score-val danger" id="riskScoreVal">92</div>
+    </div>
+    <div class="risk-bar-wrap">
+      <div class="risk-bar-label">Current Risk Level</div>
+      <div class="risk-bar-track"><div class="risk-bar-fill" id="riskFill" style="width:92%"></div></div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Departments Cleared</div>
+      <div class="score-val info" id="clearedVal">0 / 4</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Correct Answers</div>
+      <div class="score-val safe" id="correctVal">0</div>
+    </div>
+  </div>
+
+  <div class="hints-area" id="hintsArea" aria-live="polite"></div>
+  <div class="heatmap-grid" id="heatmapGrid"></div>
+  <div class="reflection" id="reflectionPanel" style="display:none;">
+    <h2>🧠 End-of-Activity Reflection</h2>
+    <p>You’ve investigated all departments. Reflect on your findings below.</p>
+    <label for="reflectionText" style="display:block;font-size:0.8rem;color:var(--gray3);margin-bottom:6px;font-weight:600;">
+      Which department presented the greatest fraud risk, and which control was most effective across multiple departments?
+    </label>
+    <textarea id="reflectionText" placeholder="Write your reflection here…"></textarea>
+    <button class="reflection-submit" onclick="submitReflection()">Submit Reflection</button>
+    <div class="reflection-error" id="reflectionError">Write a brief reflection before submitting.</div>
+    <div id="reflectionDone" class="reflection-done" style="display:none;">
+      ✅ Well done! You’ve completed the Fraud Risk Heat Map simulation. Your analysis demonstrates forensic-accounting-level thinking about internal controls and fraud prevention.
+    </div>
+  </div>
+</div>
+
+<!-- Results Modal -->
+<div class="modal-overlay" id="resultsOverlay" style="display:none;">
+  <div class="results-modal" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsTitle">
+    <div class="results-score-ring" id="resultsRing">
+      <div class="results-score-num" id="resultsScoreNum"></div>
+    </div>
+    <div class="results-title" id="resultsTitle"></div>
+    <div class="results-subtitle">Final Fraud Risk Score</div>
+    <hr class="results-divider">
+    <div class="results-feedback-block">
+      <div class="results-feedback-label positive">✅ You did well…</div>
+      <div class="results-feedback-text" id="resultsDid"></div>
+    </div>
+    <div class="results-feedback-block">
+      <div class="results-feedback-label improve">🎯 To eliminate fraud risk further…</div>
+      <div class="results-feedback-text" id="resultsFocus"></div>
+    </div>
+    <button class="results-continue-btn" onclick="closeResults()">Continue to Reflection</button>
+  </div>
+</div>
+
+<!-- Department Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="bgClose(event)">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div>
+        <div id="modalBadge"></div>
+        <div class="modal-title" id="modalTitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="scenario-box" id="scenarioBox"></div>
+    <div id="questionArea"></div>
+  </div>
+</div>
+
+<script>
+const DEPTS = [
+  {
+    id: 'payroll',
+    name: 'Payroll',
+    risk: 'med',
+    tagline: 'One employee processes payroll; management reviews it only monthly.',
+    scenario: '<strong>Scenario:</strong> Payroll is processed by a single employee each pay period. Managers review high-level payroll summaries monthly but do not approve individual changes. HR and payroll functions are not fully separated.',
+    questions: [
+      {
+        label: 'Task 1 — Risk Identification',
+        text: 'What fraud risk exists despite the monthly management review?',
+        choices: [
+          { text: 'Ghost employees or unauthorized pay rate changes could go undetected for up to a month', correct: true },
+          { text: 'There is no meaningful risk because managers review the payroll summary', correct: false },
+          { text: 'The biggest risk is employees voluntarily leaving the company', correct: false },
+        ],
+        feedback: {
+          correct: 'Monthly reviews create a one-month window where fraudulent additions or changes can occur before detection.',
+          wrong: 'Monthly summaries show totals, not individual changes. A ghost employee added mid-month could slip through until the next review cycle.'
+        }
+      },
+      {
+        label: 'Task 2 — Existing Controls',
+        text: 'Which existing element is currently HELPING reduce risk in this department?',
+        choices: [
+          { text: 'Single-employee processing guarantees consistency and reduces errors', correct: false },
+          { text: 'Monthly management review of payroll summaries provides some oversight', correct: true },
+          { text: 'The overlap between HR and payroll makes coordination easier', correct: false },
+        ],
+        feedback: {
+          correct: 'The monthly review is a detective control. It doesn’t prevent fraud but creates an opportunity to catch it.',
+          wrong: 'Having one person process payroll without authorization checks is a weakness. The monthly review is the one existing control providing oversight.'
+        }
+      },
+      {
+        label: 'Task 3 — Improvement',
+        text: 'Which additional control would best strengthen payroll?',
+        choices: [
+          { text: 'Remove the management summary review to simplify the process', correct: false },
+          { text: 'Process payroll twice a month to catch errors more quickly', correct: false },
+          { text: 'Require HR and a supervisor to authorize any employee adds or rate changes before payroll processes', correct: true },
+        ],
+        feedback: {
+          correct: 'A required second approval from HR before changes are processed is a preventive control that addresses the root weakness.',
+          wrong: 'Removing oversight or changing frequency doesn’t fix the authorization gap. A required approval from a separate party before changes are processed is the right fix.'
+        }
+      }
+    ],
+    riskReduction: 12
+  },
+  {
+    id: 'ap',
+    name: 'Accounts Payable',
+    risk: 'high',
+    tagline: 'One employee creates vendors, approves payments, and reconciles accounts.',
+    scenario: '<strong>Scenario:</strong> A single employee can create new vendors, approve payments, and reconcile accounts. Management rarely reviews vendor activity and no approval thresholds exist for new vendor setup.',
+    questions: [
+      {
+        label: 'Task 1 — Risk Identification',
+        text: 'Why is this area HIGH risk?',
+        choices: [
+          { text: 'Strong monitoring controls are already in place', correct: false },
+          { text: 'Weak segregation of duties — one person controls the full payment cycle', correct: true },
+          { text: 'Too many inventory counts slow down operations', correct: false },
+        ],
+        feedback: {
+          correct: 'When one employee controls create → approve → reconcile, a ghost vendor scheme is easy to execute and hard to detect.',
+          wrong: 'The core risk is that one person controls all three stages of the payment process with no independent review.'
+        }
+      },
+      {
+        label: 'Task 2 — Control Selection',
+        text: 'Which control would MOST reduce fraud risk in Accounts Payable?',
+        choices: [
+          { text: 'Mandatory vacations for all staff', correct: false },
+          { text: 'Physical safeguards like locks and cameras in the office', correct: false },
+          { text: 'Segregation of duties — separate vendor creation, payment approval, and reconciliation', correct: true },
+        ],
+        feedback: {
+          correct: 'Segregation of duties directly attacks the root cause — no single person should control all steps of a transaction.',
+          wrong: 'Physical safeguards and vacations don’t address the authorization problem. Segregation of duties is the targeted control here.'
+        }
+      },
+      {
+        label: 'Task 3 — Fraud Scenario',
+        text: 'What type of fraud is most likely in this scenario?',
+        choices: [
+          { text: 'Fake (ghost) vendor scheme — create a fictitious vendor and approve payments to it', correct: true },
+          { text: 'Payroll padding — adding fictitious employees to payroll', correct: false },
+          { text: 'Inventory shrinkage — stealing physical goods from the warehouse', correct: false },
+        ],
+        feedback: {
+          correct: 'A ghost vendor scheme is the classic risk when one employee controls vendor setup AND payment approval.',
+          wrong: 'Inventory and payroll fraud happen elsewhere. Vendor creation + payment approval = ghost vendor risk.'
+        }
+      }
+    ],
+    riskReduction: 18
+  },
+  {
+    id: 'inventory',
+    name: 'Inventory / Warehouse',
+    risk: 'low',
+    tagline: 'Cameras, restricted access, regular counts — well controlled.',
+    scenario: '<strong>Scenario:</strong> The warehouse uses keycard-restricted entry, security cameras, and performs quarterly inventory counts. Count results are reviewed independently by both the warehouse manager and a separate accounting team.',
+    questions: [
+      {
+        label: 'Task 1 — Control Recognition',
+        text: 'Which of the following is a PREVENTIVE control in this department?',
+        choices: [
+          { text: 'Quarterly inventory counts — detects missing inventory after the fact', correct: false },
+          { text: 'Keycard-restricted access — stops unauthorized personnel from entering', correct: true },
+          { text: 'Camera footage review — identifies theft after it occurs', correct: false },
+        ],
+        feedback: {
+          correct: 'Restricted access prevents unauthorized people from ever reaching the inventory — that’s preventive, not detective.',
+          wrong: 'Counts and camera review are detective controls — they catch problems after the fact. Restricted access stops them before they happen.'
+        }
+      },
+      {
+        label: 'Task 2 — Control Type',
+        text: 'The independent review of the inventory count results by accounting is an example of:',
+        choices: [
+          { text: 'IT application controls — automated system checks', correct: false },
+          { text: 'Physical safeguards — physical barriers protecting inventory', correct: false },
+          { text: 'Segregation of duties — a separate party verifies what the warehouse reported', correct: true },
+        ],
+        feedback: {
+          correct: 'When a separate department verifies the count, no single group can manipulate results unchallenged.',
+          wrong: 'Segregation of duties applies anywhere a second set of eyes adds independence — not just in financial transactions.'
+        }
+      },
+      {
+        label: 'Task 3 — Residual Risk',
+        text: 'Even with these strong controls, what residual risk remains?',
+        choices: [
+          { text: 'Cameras guarantee that fraud is impossible in this department', correct: false },
+          { text: 'There is zero residual risk — these controls cover everything', correct: false },
+          { text: 'Collusion between warehouse staff and a vendor could still circumvent the controls', correct: true },
+        ],
+        feedback: {
+          correct: 'Controls reduce risk, but collusion and management override can defeat even strong controls. No control is perfect.',
+          wrong: 'No set of controls eliminates all risk. Collusion, management override, and human error always leave some residual risk — even in well-controlled areas.'
+        }
+      }
+    ],
+    riskReduction: 6
+  },
+  {
+    id: 'it',
+    name: 'IT Systems',
+    risk: 'high',
+    tagline: 'Shared credentials, no log reviews, terminated employees still active.',
+    scenario: '<strong>Scenario:</strong> Multiple employees share a single admin login for the accounting system. No one reviews system access logs. Terminated employees are not promptly removed from the system. There are no automated alerts for unusual transactions.',
+    questions: [
+      {
+        label: 'Task 1 — Control Gap',
+        text: 'Shared login credentials represent a failure of which control type?',
+        choices: [
+          { text: 'Application controls — automated checks within the accounting software', correct: false },
+          { text: 'Physical access controls — locks and keycards on server rooms', correct: false },
+          { text: 'General IT controls — specifically, user access and authentication controls', correct: true },
+        ],
+        feedback: {
+          correct: 'General IT controls govern who can access systems. Shared credentials destroy accountability — you can’t trace an action to one person.',
+          wrong: 'Application controls are automated checks within software. The credential problem is a general IT control issue affecting accountability and traceability.'
+        }
+      },
+      {
+        label: 'Task 2 — Fraud Risk',
+        text: 'What fraud risk is created when terminated employees retain system access?',
+        choices: [
+          { text: 'It slows down the system and increases IT support costs', correct: false },
+          { text: 'A former employee can access the system, make unauthorized changes, and it cannot be traced back to them', correct: true },
+          { text: 'It creates a GDPR compliance issue with no fraud risk', correct: false },
+        ],
+        feedback: {
+          correct: 'Terminated employees with grievances and active credentials represent a significant insider threat.',
+          wrong: 'The fraud risk is real: undetected unauthorized access by someone no longer with the company — potentially with a motive to harm or steal.'
+        }
+      },
+      {
+        label: 'Task 3 — Recommended Controls',
+        text: 'Which combination of controls would MOST reduce IT fraud risk?',
+        choices: [
+          { text: 'More frequent software updates and data backups', correct: false },
+          { text: 'Unique user IDs for every employee + automated alerts for unusual system activity', correct: true },
+          { text: 'Antivirus software and firewall upgrades', correct: false },
+        ],
+        feedback: {
+          correct: 'Unique IDs create accountability; automated alerts create real-time detective capability. Together they address both access and detection.',
+          wrong: 'Updates and antivirus address external threats. The risk here is internal — unique IDs and monitoring target insider threat directly.'
+        }
+      }
+    ],
+    riskReduction: 20
+  }
+];
+
+const HINTS = [
+  {
+    id: 'hint-ap',
+    targetDept: 'ap',
+    text: 'A manager noticed that a new vendor started receiving regular payments last quarter — but nobody on the team seems to know who approved the relationship. Investigate this before the next payment cycle runs.',
+  },
+  {
+    id: 'hint-it',
+    targetDept: 'it',
+    text: 'A former employee was spotted at a local coffee shop bragging that he “still has the keys to the kingdom.” Leadership isn’t sure what he means — but they’re worried. Find out if there’s real exposure here.',
+  },
+  {
+    id: 'hint-payroll',
+    targetDept: 'payroll',
+    text: 'An anonymous tip came in through the ethics hotline: “Check the headcount. Not everyone getting a check shows up on Monday morning.” This needs a closer look before the end of the month.',
+  },
+  {
+    id: 'hint-inventory',
+    targetDept: 'inventory',
+    text: 'Your supervisor stopped by: “Hey, would you mind taking a look at the warehouse before you wrap up? I know it’s probably fine, but we like to make sure everything checks out across the board.”',
+  },
+];
+
+const state = {
+  riskScore: 92, cleared: 0, correct: 0,
+  done: new Set(), dept: null, qIdx: 0, deptCorrect: 0, answered: false,
+  partial: {}, // saved progress for departments closed mid-way: { id: { qIdx, correct } }
+  activeHint: null, hintBonuses: 0, deptScores: {}
+};
+
+function riskClass(r)  { return r==='high'?'risk-high':r==='med'?'risk-med':'risk-low'; }
+function badgeClass(r) { return r==='high'?'badge-high':r==='med'?'badge-med':'badge-low'; }
+function riskLabel(r)  { return r==='high'?'🔴 HIGH RISK':r==='med'?'🟡 MEDIUM RISK':'🟢 LOW RISK'; }
+
+function checkAndShowHint() {
+  const hint = HINTS.find(h => !state.done.has(h.targetDept) && !document.getElementById(h.id));
+  if (!hint) return;
+  state.activeHint = hint;
+  const area = document.getElementById('hintsArea');
+  const card = document.createElement('div');
+  const isNudge = hint.targetDept === 'inventory';
+  card.className = 'hint-card' + (isNudge ? ' nudge' : '');
+  card.id = hint.id;
+  card.innerHTML = `
+    <div class="hint-icon">${isNudge ? '📋' : '💡'}</div>
+    <div class="hint-body">
+      <div class="hint-label">${isNudge ? 'Supervisor Note — Complete Your Review' : 'Control Alert — Where should you investigate?'}</div>
+      <div class="hint-text">${hint.text}</div>
+    </div>`;
+  area.appendChild(card);
+}
+
+function resolveHint(clickedDeptId) {
+  if (!state.activeHint) return;
+  const hint = state.activeHint;
+  const card = document.getElementById(hint.id);
+  if (!card) return;
+  state.activeHint = null;
+
+  if (clickedDeptId === hint.targetDept) {
+    state.riskScore = Math.max(0, state.riskScore - 2);
+    state.hintBonuses++;
+    card.className = 'hint-card bonus';
+    card.innerHTML = `
+      <div class="hint-icon">✅</div>
+      <div class="hint-body">
+        <div class="hint-label">Correct Department Identified — Bonus: −2 pts</div>
+        <div class="hint-text">Good instinct! You correctly identified the area of concern. Your fraud risk score has been reduced by an additional 2 points.</div>
+      </div>`;
+    updateScores();
+    setTimeout(() => {
+      card.classList.add('disappear');
+      setTimeout(() => card.remove(), 500);
+    }, 2500);
+  } else {
+    setTimeout(() => {
+      card.classList.add('disappear');
+      setTimeout(() => card.remove(), 500);
+    }, 400);
+  }
+}
+
+function renderGrid() {
+  const g = document.getElementById('heatmapGrid');
+  g.innerHTML = '';
+  DEPTS.forEach(d => {
+    const done = state.done.has(d.id);
+    const partial = state.partial[d.id];
+    const el = document.createElement('div');
+    el.className = `dept-card ${riskClass(d.risk)}${done?' completed':''}`;
+    el.innerHTML = `
+      <div class="dept-check">${done?'✅':'🔍'}</div>
+      <div class="risk-badge ${badgeClass(d.risk)}">${riskLabel(d.risk)}</div>
+      <div class="dept-name">${d.name}</div>
+      <div class="dept-tagline">${d.tagline}</div>
+      ${!done && partial ? `<div class="dept-progress">In progress — ${partial.qIdx} of ${d.questions.length} answered</div>` : ''}`;
+    if (!done) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-label', `Investigate ${d.name}`);
+      el.onclick = () => openDept(d.id);
+      el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDept(d.id); } };
+    }
+    g.appendChild(el);
+  });
+}
+
+function updateScores() {
+  const v = document.getElementById('riskScoreVal');
+  v.textContent = state.riskScore;
+  v.className = 'score-val ' + (state.riskScore > 65 ? 'danger' : state.riskScore > 35 ? 'warn' : 'safe');
+  document.getElementById('riskFill').style.width = state.riskScore + '%';
+  document.getElementById('clearedVal').textContent = state.cleared + ' / 4';
+  document.getElementById('correctVal').textContent = state.correct;
+}
+
+function openDept(id) {
+  resolveHint(id);
+  state.dept = DEPTS.find(d => d.id === id);
+  // Resume where the student left off; answered questions stay answered.
+  const saved = state.partial[id];
+  state.qIdx = saved ? saved.qIdx : 0;
+  state.deptCorrect = saved ? saved.correct : 0;
+  state.answered = false;
+  renderModal();
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function renderModal() {
+  const d = state.dept;
+  document.getElementById('modalBadge').innerHTML = `<div class="risk-badge ${badgeClass(d.risk)}" style="display:inline-flex;margin-bottom:6px">${riskLabel(d.risk)}</div>`;
+  document.getElementById('modalTitle').textContent = d.name;
+  document.getElementById('scenarioBox').innerHTML = d.scenario;
+  const dots = document.getElementById('progressDots');
+  dots.innerHTML = '';
+  d.questions.forEach((_,i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot'+(i===state.qIdx?' active':i<state.qIdx?' done':'');
+    dots.appendChild(dot);
+  });
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.dept.questions[state.qIdx];
+  const area = document.getElementById('questionArea');
+  area.innerHTML = '';
+  const block = document.createElement('div');
+  block.innerHTML = `<div class="q-label">${q.label}</div><div class="q-text">${q.text}</div>`;
+  const choices = document.createElement('div');
+  choices.className = 'choices';
+  q.choices.forEach((c) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-icon">○</span>${c.text}`;
+    btn.onclick = () => answer(btn, c, q, choices);
+    choices.appendChild(btn);
+  });
+  block.appendChild(choices);
+  const fb = document.createElement('div');
+  fb.id = 'fbMsg';
+  fb.setAttribute('aria-live', 'polite');
+  block.appendChild(fb);
+  area.appendChild(block);
+}
+
+function answer(btn, choice, q, choicesEl) {
+  if (state.answered) return;
+  state.answered = true;
+  Array.from(choicesEl.children).forEach((b, i) => {
+    b.disabled = true;
+    if (q.choices[i].correct) { b.classList.add('correct'); b.querySelector('.choice-icon').textContent = '✓'; }
+  });
+  if (!choice.correct) { btn.classList.add('wrong'); btn.querySelector('.choice-icon').textContent = '✗'; }
+  if (choice.correct) { state.correct++; state.deptCorrect++; }
+  const fb = document.getElementById('fbMsg');
+  fb.className = 'feedback-msg ' + (choice.correct ? 'fb-correct' : 'fb-wrong');
+  fb.innerHTML = choice.correct
+    ? '<strong>Correct!</strong> ' + q.feedback.correct
+    : '<strong>Incorrect.</strong> ' + q.feedback.wrong;
+  updateScores();
+  const isLast = state.qIdx === state.dept.questions.length - 1;
+  const nb = document.createElement('button');
+  nb.className = isLast ? 'finish-btn' : 'next-btn';
+  nb.textContent = isLast ? '✅ Complete Department' : 'Next Question';
+  nb.onclick = isLast ? finishDept : nextQ;
+  document.getElementById('questionArea').appendChild(nb);
+  nb.focus();
+}
+
+function nextQ() { state.qIdx++; state.answered = false; renderModal(); }
+
+function finishDept() {
+  const d = state.dept;
+  const totalQ = d.questions.length;
+  const baseReduction = Math.round(d.riskReduction * 0.4);
+  const perCorrect = Math.round((d.riskReduction * 0.6) / totalQ);
+  const reduction = baseReduction + (state.deptCorrect * perCorrect);
+  state.deptScores[d.id] = { correct: state.deptCorrect, total: totalQ };
+  state.done.add(d.id);
+  delete state.partial[d.id];
+  state.cleared++;
+  state.riskScore = Math.max(0, state.riskScore - reduction);
+  state.dept = null;
+  document.getElementById('modalOverlay').style.display = 'none';
+  renderGrid();
+  updateScores();
+  checkAndShowHint();
+  if (state.cleared === 4) {
+    setTimeout(() => showResults(), 500);
+  }
+}
+
+function buildFeedback() {
+  const score = state.riskScore;
+  const total = state.correct;
+  const bonusHints = state.hintBonuses || 0;
+  const scores = state.deptScores || {};
+  const deptNames = { ap: 'Accounts Payable', it: 'IT Systems', payroll: 'Payroll', inventory: 'Inventory' };
+
+  let bestDept = null, bestRatio = -1, worstDept = null, worstRatio = 2;
+  Object.entries(scores).forEach(([id, s]) => {
+    const ratio = s.correct / s.total;
+    if (ratio > bestRatio) { bestRatio = ratio; bestDept = id; }
+    if (ratio < worstRatio) { worstRatio = ratio; worstDept = id; }
+  });
+
+  let didWell;
+  if (bonusHints >= HINTS.length) {
+    didWell = 'You followed every alert to the right department — demonstrating strong analytical instincts and the ability to connect red flags to specific risk areas.';
+  } else if (bestRatio === 1 && bestDept) {
+    didWell = `You answered every question correctly in ${deptNames[bestDept]}, showing a strong understanding of the risks and controls in that area.`;
+  } else if (total >= 10) {
+    didWell = `You answered ${total} out of 12 questions correctly — a strong overall performance that shows solid command of fraud risks and internal controls.`;
+  } else if (bonusHints > 0) {
+    didWell = `You correctly followed ${bonusHints} alert${bonusHints > 1 ? 's' : ''} to the right department, showing good professional skepticism and the ability to read between the lines.`;
+  } else {
+    didWell = 'You completed a full review of all four departments — covering both high-risk and low-risk areas, which is exactly what a thorough forensic accountant would do.';
+  }
+
+  let focus;
+  if (score > 65) {
+    focus = 'Spend more time with the concept of segregation of duties — specifically how separating authorization, custody, and recordkeeping functions makes it nearly impossible for one person to commit and conceal fraud. This single control addresses the root cause in most high-risk departments.';
+  } else if (total <= 4) {
+    focus = 'Review the fraud triangle — pressure, opportunity, and rationalization. Understanding what creates the opportunity for fraud, and which controls directly remove that opportunity, is the foundation of everything else in forensic accounting.';
+  } else if (worstRatio < 0.5 && worstDept === 'ap') {
+    focus = 'Focus on how ghost vendor schemes work and what makes them so hard to detect. Pay particular attention to how vendor master file controls, dual authorization on new vendors, and independent payment reconciliation work together to close that gap.';
+  } else if (worstRatio < 0.5 && worstDept === 'it') {
+    focus = 'Dig deeper into general IT controls — specifically user access management, unique user authentication, and system activity logging. These are foundational controls that affect every other department, since most financial systems rely on them to maintain an accurate trail of who did what.';
+  } else if (worstRatio < 0.5 && worstDept === 'payroll') {
+    focus = 'Review how ghost employee schemes are executed and detected. Focus on the role of HR authorization in the hiring and termination process, and how independent payroll reconciliation — comparing headcount to physical employees — serves as a key detective control.';
+  } else if (worstRatio < 0.5 && worstDept === 'inventory') {
+    focus = 'Revisit the difference between preventive and detective controls in a physical asset environment. Understanding why restricted access and segregation of count duties are preventive — while cameras and reconciliations are detective — will sharpen your ability to recommend the right control for the right risk.';
+  } else if (score > 35) {
+    focus = 'Focus on the distinction between preventive and detective controls, and when each is most appropriate. Preventive controls stop fraud before it occurs; detective controls catch it after the fact. The strongest control environments use both in layers — especially in high-risk areas.';
+  } else {
+    focus = 'To get even closer to zero risk, study how collusion and management override can defeat well-designed controls, and consider what compensating controls — such as mandatory dual approvals, independent audits, or automated exception reporting — could address those remaining gaps.';
+  }
+
+  return { didWell, focus };
+}
+
+function showResults() {
+  const score = state.riskScore;
+  const tier = score > 65 ? 'danger' : score > 35 ? 'warn' : 'safe';
+  const titles = { danger: 'Fraud Risk Remains High', warn: 'Good Progress — Room to Improve', safe: 'Strong Performance!' };
+
+  document.getElementById('resultsScoreNum').textContent = score;
+  document.getElementById('resultsRing').className = `results-score-ring ${tier}`;
+  document.getElementById('resultsTitle').textContent = titles[tier];
+
+  const { didWell, focus } = buildFeedback();
+  document.getElementById('resultsDid').textContent = didWell;
+  document.getElementById('resultsFocus').textContent = focus;
+  document.getElementById('resultsOverlay').style.display = 'flex';
+}
+
+// Closing mid-department saves progress instead of discarding it,
+// so answers can't be counted twice or retried after seeing the key.
+function closeModal() {
+  const d = state.dept;
+  if (d && !state.done.has(d.id)) {
+    const nextIdx = state.answered ? state.qIdx + 1 : state.qIdx;
+    if (nextIdx >= d.questions.length) { finishDept(); return; }
+    if (nextIdx > 0) state.partial[d.id] = { qIdx: nextIdx, correct: state.deptCorrect };
+  }
+  state.dept = null;
+  document.getElementById('modalOverlay').style.display = 'none';
+  renderGrid();
+}
+function closeResults() {
+  document.getElementById('resultsOverlay').style.display = 'none';
+  const rp = document.getElementById('reflectionPanel');
+  rp.style.display = 'block';
+  rp.scrollIntoView({ behavior: 'smooth' });
+}
+function bgClose(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+function submitReflection() {
+  const err = document.getElementById('reflectionError');
+  if (!document.getElementById('reflectionText').value.trim()) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  document.getElementById('reflectionDone').style.display = 'block';
+  document.querySelector('.reflection-submit').style.display = 'none';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('modalOverlay').style.display === 'flex') closeModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderGrid();
+  updateScores();
+  checkAndShowHint();
+});
+</script>
+</body>
+</html>
