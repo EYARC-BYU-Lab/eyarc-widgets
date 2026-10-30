@@ -1,0 +1,207 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Narrative to Audit Tests</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: an evergreen Cascade banner (mark, title, progress peaks), then six flip cards in a grid on warm stone.
+   Fronts are paper cards keyed to the process area they come from; backs are evergreen with a mountain ridge.
+   One deliberate light look in Cascade Components' colors, so it matches the dashboard and the course page. */
+:root {
+  --stone: #F5F4F0;
+  --paper: #FFFFFF;
+  --line: #DEDCD5;
+  --evergreen: #22352D;
+  --evergreen-2: #2B4237;
+  --ink: #1E2622;
+  --muted: #5E5A52;
+  --cedar: #C9843A;
+  --cedar-light: #E9C08F;
+  --cedar-soft: #F4E6D4;
+  --glacier: #CFE3EA;
+  --req: #2F6F8F; --po: #4E7A47; --recv: #9A6235; --pay: #22352D;
+  --display: "Montserrat", "Segoe UI", Arial, sans-serif;
+  --body: "Open Sans", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--stone); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.band { background: linear-gradient(100deg, #1B2B24 0%, var(--evergreen) 55%, var(--evergreen-2) 100%); color: #fff;
+  border-bottom: 3px solid var(--cedar); position: relative; overflow: hidden; }
+.band .ridge { position: absolute; right: 0; bottom: -2px; width: min(520px, 70%); height: 80px; opacity: .16; pointer-events: none; }
+.band-in, .main { max-width: 1060px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.band-in { padding-block: 18px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; position: relative; }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 420px; }
+.brand svg { width: 52px; height: 47px; flex: none; }
+.kicker { font: 700 11px var(--display); letter-spacing: 1.6px; text-transform: uppercase; color: var(--cedar-light); }
+h1 { font: 800 24px/1.2 var(--display); margin: 2px 0 0; text-wrap: balance; }
+.lede { margin: 6px 0 0; color: #D7E2DC; max-width: 64ch; font-size: 14.5px; }
+.progress { display: flex; align-items: center; gap: 12px; flex: none; }
+.peaks { display: flex; gap: 4px; }
+.peak { width: 18px; height: 14px; }
+.peak path { fill: rgba(255,255,255,.22); transition: fill .3s; }
+.peak.on path { fill: var(--cedar); }
+.count { font: 600 13px var(--display); color: #D7E2DC; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.btn { font: 700 13px var(--display); letter-spacing: .2px; color: var(--evergreen); background: var(--cedar-light);
+  border: 0; border-radius: 8px; padding: 9px 15px; cursor: pointer; }
+.btn:hover { background: #F1D2AA; }
+.btn:focus-visible, .card:focus-visible { outline: 3px solid var(--cedar); outline-offset: 3px; }
+
+.main { padding-block: 20px 26px; display: grid; gap: 16px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 880px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 580px) { .grid { grid-template-columns: 1fr; } .band .ridge { width: 90%; } }
+
+.card { appearance: none; border: 0; padding: 0; background: none; text-align: left; font: inherit; color: inherit;
+  cursor: pointer; perspective: 1200px; border-radius: 14px; min-width: 0; }
+.inner { display: grid; height: 100%; transition: transform .6s cubic-bezier(.2,.7,.2,1); transform-style: preserve-3d; }
+.card.flipped .inner { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 14px;
+  padding: 16px 18px 15px; display: flex; flex-direction: column; gap: 10px; min-height: 186px; position: relative; overflow: hidden; }
+.front { background: var(--paper); border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(34,53,45,.06), 0 4px 14px rgba(34,53,45,.05);
+  transition: transform .2s, box-shadow .2s; }
+.card:hover .front { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(34,53,45,.08), 0 10px 22px rgba(34,53,45,.10); }
+.front .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.area { display: inline-flex; align-items: center; gap: 7px; font: 700 11px var(--display); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.area i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.num { font: 800 13px var(--display); color: var(--c); background: color-mix(in srgb, var(--c) 12%, white); border-radius: 999px; padding: 2px 9px; }
+.quote { font-size: 16px; line-height: 1.45; color: var(--ink); flex: 1; }
+.quote::before { content: "\201C"; font: 800 30px/0 var(--display); color: var(--cedar); vertical-align: -11px; margin-right: 3px; }
+.hint { font: 600 12.5px var(--display); color: var(--evergreen); display: flex; align-items: center; gap: 6px; }
+.front .ridge { position: absolute; right: -6px; bottom: -4px; width: 120px; height: 40px; opacity: .07; pointer-events: none; }
+.front .ridge path { fill: var(--evergreen); }
+
+.back { background: radial-gradient(120% 90% at 100% 0%, var(--evergreen-2) 0%, var(--evergreen) 60%); color: #fff; transform: rotateY(180deg); }
+.back .ridge { position: absolute; left: 0; right: 0; bottom: -2px; width: 100%; height: 46px; opacity: .14; pointer-events: none; }
+.back .ridge path { fill: #fff; }
+.back .eyebrow { font: 700 11px var(--display); letter-spacing: 1.4px; text-transform: uppercase; color: var(--cedar-light); }
+.test { font: 700 16px/1.42 var(--display); flex: 1; text-wrap: pretty; position: relative; }
+.foot { display: flex; flex-wrap: wrap; gap: 6px; position: relative; }
+.chip { font: 600 12px var(--body); padding: 3px 10px; border-radius: 999px; background: var(--glacier); color: var(--evergreen); }
+.chip.risk { background: var(--cedar-light); color: #4A2E0C; }
+
+.note { display: flex; gap: 12px; align-items: flex-start; background: var(--cedar-soft); border-radius: 12px; padding: 12px 16px; }
+.note svg { flex: none; margin-top: 2px; }
+.note p { margin: 0; font-size: 14px; color: #4A3A26; max-width: 90ch; }
+.note b { color: #3A2A14; }
+@media (prefers-reduced-motion: reduce) {
+  .inner, .front, .peak path { transition: none; }
+  .card.flipped .inner { transform: none; }
+  .back { transform: none; visibility: hidden; }
+  .card.flipped .back { visibility: visible; }
+  .card.flipped .front { visibility: hidden; }
+}
+</style>
+</head><body>
+
+<header class="band">
+  <svg class="ridge" viewBox="0 0 520 80" preserveAspectRatio="none" aria-hidden="true"><path fill="#fff" d="M0,80 L60,44 L96,60 L160,18 L214,52 L262,30 L318,62 L372,14 L430,50 L470,34 L520,58 L520,80 Z"/></svg>
+  <div class="band-in">
+    <div class="brand">
+      <svg viewBox="0 0 124 112" role="img" aria-label="Cascade Components">
+        <defs>
+          <mask id="mSnow"><rect width="124" height="124" fill="#fff"/><path d="M40,46 L49,60 L44,57 L40,63 L35,57 L31,61 Z M80,30 L93,52 L86,48 L80,55 L74,48 L67,52 Z" fill="#000"/></mask>
+          <mask id="mGear"><rect width="124" height="124" fill="#fff"/><path d="M4,104 L40,46 L56,68 L80,30 L120,104 Z" fill="#000" stroke="#000" stroke-width="7" stroke-linejoin="round"/></mask>
+        </defs>
+        <path fill="#fff" fill-rule="evenodd" mask="url(#mGear)" d="M78.0,16.0 L82.7,10.4 L87.3,11.5 L88.9,18.6 L92.1,20.6 L99.2,18.8 L102.3,22.4 L99.4,29.1 L100.8,32.6 L107.6,35.3 L108.0,40.0 L101.7,43.8 L100.8,47.4 L104.7,53.6 L102.3,57.6 L95.0,57.0 L92.1,59.4 L91.6,66.7 L87.3,68.5 L81.8,63.7 L78.0,64.0 L73.3,69.6 L68.7,68.5 L67.1,61.4 L63.9,59.4 L56.8,61.2 L53.7,57.6 L56.6,50.9 L55.2,47.4 L48.4,44.7 L48.0,40.0 L54.3,36.2 L55.2,32.6 L51.3,26.4 L53.7,22.4 L61.0,23.0 L63.9,20.6 L64.4,13.3 L68.7,11.5 L74.2,16.3 Z M89.0,40.0 A11,11 0 1 0 67.0,40.0 A11,11 0 1 0 89.0,40.0 Z"/>
+        <path fill="#fff" mask="url(#mSnow)" d="M4,104 L40,46 L56,68 L80,30 L120,104 Z"/>
+      </svg>
+      <div>
+        <div class="kicker">Cascade Components · Audit program</div>
+        <h1>From narrative to audit tests</h1>
+        <p class="lede">Each card holds one statement from the controller’s narrative. Decide how you would test it, then flip the card to see the audit test and the workpaper tab where you’ll record it.</p>
+      </div>
+    </div>
+    <div class="progress">
+      <div class="peaks" id="peaks" aria-hidden="true"></div>
+      <span class="count" id="count" aria-live="polite">0 of 6</span>
+      <button class="btn" id="flipAll" type="button">Flip all</button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const CARDS = [
+  { n: 1, wp: 'WP-1', risk: true, area: 'Event log', c: 'var(--req)',
+    say: 'Approvals, receipts, invoices and payments are logged as employees do their jobs.',
+    test: 'Identify activity recorded outside normal working hours, and who recorded it.' },
+  { n: 2, wp: 'WP-2', risk: true, area: 'Approvals', c: 'var(--req)',
+    say: 'Every requisition and purchase order requires approval.',
+    test: 'Determine whether approvals received the same level of review during the busiest month as during the rest of the period.' },
+  { n: 3, wp: 'WP-3', risk: false, area: 'Purchase orders', c: 'var(--po)',
+    say: 'Every purchase order requires approval before goods are received.',
+    test: 'Identify any purchase order that reached Goods Received without a purchase order approval.' },
+  { n: 4, wp: 'WP-4', risk: false, area: 'Accounts payable', c: 'var(--recv)',
+    say: 'The person who posts a supplier invoice may not also approve its payment.',
+    test: 'Identify any purchase order where the same person posted the supplier invoice and approved its payment.' },
+  { n: 5, wp: 'WP-5', risk: false, area: 'Payments', c: 'var(--pay)',
+    say: 'Invoices go through a three-way match before they are paid.',
+    test: 'Identify any purchase order whose payments add up to more than its invoice total.' },
+  { n: 6, wp: 'WP-6', risk: false, area: 'Purchase orders', c: 'var(--po)',
+    say: 'Any purchase of $25,000 or more requires CFO approval.',
+    test: 'Identify purchases that may have been split to stay under $25,000, and confirm whether CFO approval was obtained.' }
+];
+const RIDGE = 'M0,40 L14,26 L24,32 L44,10 L62,28 L76,18 L96,34 L120,22 L120,40 Z';
+const BACK_RIDGE = 'M0,46 L40,24 L70,34 L120,6 L170,30 L210,18 L260,36 L300,12 L350,32 L400,40 L400,46 Z';
+const turn = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/></svg>';
+const grid = document.getElementById('grid');
+const count = document.getElementById('count');
+const flipAll = document.getElementById('flipAll');
+const peaks = document.getElementById('peaks');
+
+peaks.innerHTML = CARDS.map(() => '<svg class="peak" viewBox="0 0 18 14"><path d="M0,14 L6,4 L9,8 L13,1 L18,14 Z"/></svg>').join('');
+grid.innerHTML = CARDS.map(c => `
+  <button class="card" type="button" style="--c:${c.c}" aria-pressed="false">
+    <span class="inner">
+      <span class="face front">
+        <span class="head"><span class="area"><i></i>${c.area}</span><span class="num">${c.wp}</span></span>
+        <span class="quote">${c.say}</span>
+        <span class="hint">${turn} Flip for the audit test</span>
+        <svg class="ridge" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true"><path d="${RIDGE}"/></svg>
+      </span>
+      <span class="face back" aria-hidden="true">
+        <span class="eyebrow">${c.wp}</span>
+        <span class="test">${c.test}</span>
+        <span class="foot"><span class="chip">Record on the ${c.wp} tab</span>${c.risk ? '<span class="chip risk">Risk indicator</span>' : ''}</span>
+        <svg class="ridge" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true"><path d="${BACK_RIDGE}"/></svg>
+      </span>
+    </span>
+  </button>`).join('');
+
+const cards = [...grid.querySelectorAll('.card')];
+const peakEls = [...peaks.querySelectorAll('.peak')];
+function label(card, on) {
+  const c = CARDS[cards.indexOf(card)];
+  card.setAttribute('aria-label', on
+    ? c.wp + '. ' + c.test + ' Record on the ' + c.wp + ' tab. Press to see the narrative statement.'
+    : 'Narrative statement for ' + c.wp + '. ' + c.say + ' Press to see the audit test.');
+}
+function setFlip(card, on) {
+  card.classList.toggle('flipped', on);
+  card.setAttribute('aria-pressed', String(on));
+  card.querySelector('.front').setAttribute('aria-hidden', String(on));
+  card.querySelector('.back').setAttribute('aria-hidden', String(!on));
+  label(card, on);
+}
+function refresh() {
+  const n = cards.filter(c => c.classList.contains('flipped')).length;
+  peakEls.forEach((p, i) => p.classList.toggle('on', i < n));
+  count.textContent = n + ' of ' + cards.length;
+  flipAll.textContent = n === cards.length ? 'Reset cards' : 'Flip all';
+}
+cards.forEach(card => {
+  label(card, false);
+  card.addEventListener('click', () => { setFlip(card, !card.classList.contains('flipped')); refresh(); });
+});
+flipAll.addEventListener('click', () => {
+  const all = cards.every(c => c.classList.contains('flipped'));
+  cards.forEach(c => setFlip(c, !all)); refresh();
+});
+refresh();
+</script>
+</body></html>
