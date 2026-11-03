@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Internal Controls Classifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    color-scheme: light;
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e0ddd6;
+    --border-dark: #c8c4bc;
+    --text: #1a1916;
+    --text-muted: #6b6860;
+    --text-hint: #8a8882;
+    --tip-bg: #1a1916;
+    --tip-text: #f5f4f0;
+    --green-bg: #e8f5e2;
+    --green-border: #5a9e3a;
+    --green-text: #2d5c18;
+    --red-bg: #fceaea;
+    --red-border: #c94040;
+    --red-text: #7a1f1f;
+    --prev-accent: #5548c8;
+    --prev-light: #eeedfb;
+    --det-accent: #1a7fbf;
+    --det-light: #e5f3fb;
+    --corr-accent: #b06a10;
+    --corr-light: #fdf0e0;
+    --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1b1a18;
+      --surface: #252421;
+      --border: #3a3834;
+      --border-dark: #4d4a45;
+      --text: #ecebe6;
+      --text-muted: #a9a69e;
+      --text-hint: #8a877f;
+      --tip-bg: #ecebe6;
+      --tip-text: #1b1a18;
+      --green-bg: #1f3318;
+      --green-border: #6cb548;
+      --green-text: #b9e3a2;
+      --red-bg: #3a1c1c;
+      --red-border: #e06363;
+      --red-text: #f3b5b5;
+      --prev-accent: #9d94f0;
+      --prev-light: #2a2747;
+      --det-accent: #5db4ea;
+      --det-light: #18303f;
+      --corr-accent: #e3a252;
+      --corr-light: #3a2a14;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1b1a18;
+    --surface: #252421;
+    --border: #3a3834;
+    --border-dark: #4d4a45;
+    --text: #ecebe6;
+    --text-muted: #a9a69e;
+    --text-hint: #8a877f;
+    --tip-bg: #ecebe6;
+    --tip-text: #1b1a18;
+    --green-bg: #1f3318;
+    --green-border: #6cb548;
+    --green-text: #b9e3a2;
+    --red-bg: #3a1c1c;
+    --red-border: #e06363;
+    --red-text: #f3b5b5;
+    --prev-accent: #9d94f0;
+    --prev-light: #2a2747;
+    --det-accent: #5db4ea;
+    --det-light: #18303f;
+    --corr-accent: #e3a252;
+    --corr-light: #3a2a14;
+  }
+
+  html { background: var(--bg); }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .page-header {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .title-block h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .title-block p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .header-controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  .score-pill {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--surface);
+    border: 0.5px solid var(--border-dark);
+    border-radius: 20px;
+    padding: 6px 16px;
+    white-space: nowrap;
+  }
+  .score-pill span { color: var(--prev-accent); }
+
+  .reset-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--surface);
+    border: 0.5px solid var(--border-dark);
+    border-radius: 20px;
+    padding: 6px 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .reset-btn:hover { background: var(--bg); border-color: var(--text); }
+
+  :focus-visible { outline: 2px solid var(--prev-accent); outline-offset: 2px; }
+
+  .main { max-width: 900px; margin: 0 auto; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-hint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: -4px 0 10px;
+    min-height: 1.4em;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 1.75rem;
+    min-height: 70px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    position: relative;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    line-height: 1.35;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card:hover:not(.locked) { border-color: var(--text); transform: translateY(-1px); }
+  .card:active:not(.locked) { transform: translateY(0); cursor: grabbing; }
+  .card.dragging { opacity: 0.35; transform: scale(0.97); }
+  .card.selected { border: 1.5px solid var(--prev-accent); background: var(--prev-light); }
+
+  .card.locked {
+    cursor: default;
+    border-color: var(--green-border);
+    background: var(--green-bg);
+    color: var(--green-text);
+    transform: none;
+  }
+
+  .card.wrong {
+    animation: shake 0.42s ease;
+    border-color: var(--red-border);
+    background: var(--red-bg);
+    color: var(--red-text);
+  }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    15%{transform:translateX(-7px)}
+    35%{transform:translateX(7px)}
+    55%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+
+  .tooltip-wrap { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; }
+
+  .tooltip {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    background: var(--tip-bg);
+    color: var(--tip-text);
+    border-radius: 6px;
+    padding: 8px 11px;
+    font-size: 11px;
+    font-weight: 400;
+    width: 170px;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1.55;
+    pointer-events: none;
+  }
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--tip-bg);
+  }
+  @media (hover: hover) {
+    .card:hover .tooltip { display: block; }
+  }
+  .card.selected .tooltip, .card:focus-visible .tooltip { display: block; }
+
+  .zones-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .zone {
+    border: 1.5px dashed var(--border-dark);
+    border-radius: 12px;
+    padding: 14px 12px;
+    min-height: 240px;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--surface);
+    cursor: default;
+  }
+  .zone.targetable { cursor: pointer; }
+
+  .zone[data-cat="Preventative"].drag-over { border-color: var(--prev-accent); background: var(--prev-light); }
+  .zone[data-cat="Detective"].drag-over { border-color: var(--det-accent); background: var(--det-light); }
+  .zone[data-cat="Corrective"].drag-over { border-color: var(--corr-accent); background: var(--corr-light); }
+
+  .zone-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .zone-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .zone[data-cat="Preventative"] .zone-dot { background: var(--prev-accent); }
+  .zone[data-cat="Detective"] .zone-dot { background: var(--det-accent); }
+  .zone[data-cat="Corrective"] .zone-dot { background: var(--corr-accent); }
+
+  .zone-label { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+  .zone[data-cat="Preventative"] .zone-label { color: var(--prev-accent); }
+  .zone[data-cat="Detective"] .zone-label { color: var(--det-accent); }
+  .zone[data-cat="Corrective"] .zone-label { color: var(--corr-accent); }
+
+  .zone-sub { font-family: var(--mono); font-size: 10px; color: var(--text-hint); margin-left: auto; }
+
+  .zone-cards { display: flex; flex-direction: column; gap: 6px; }
+
+  .completion-banner {
+    display: none;
+    max-width: 900px;
+    margin: 1.5rem auto 0;
+    background: var(--green-bg);
+    border: 0.5px solid var(--green-border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    color: var(--green-text);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .completion-banner .mono { font-family: var(--mono); font-size: 12px; font-weight: 400; margin-top: 4px; opacity: 0.75; }
+
+  @media (max-width: 760px) {
+    .cards-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 560px) {
+    body { padding: 1.25rem 1rem 2.5rem; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .zones-row { grid-template-columns: 1fr; }
+    .zone { min-height: 120px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .zone, .reset-btn { transition: none; }
+    .card.wrong { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="title-block">
+    <h1>Internal Controls Classifier</h1>
+    <p>Drag each control to the correct category</p>
+  </div>
+  <div class="header-controls">
+    <div class="score-pill" aria-live="polite">Score: <span id="score">0</span> / 15</div>
+    <button class="reset-btn" type="button" id="reset-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      Shuffle &amp; Reset
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="section-label">Controls — drag to classify</div>
+  <p class="hint" id="hint" aria-live="polite">Hover a control to see its definition. On a phone, tap a control, then tap a category.</p>
+  <div class="cards-grid" id="cards-grid"></div>
+
+  <div class="section-label">Drop zones</div>
+  <div class="zones-row">
+    <div class="zone" data-cat="Preventative" role="button" tabindex="0" aria-label="Preventative">
+      <div class="zone-header">
+        <div class="zone-dot"></div>
+        <div class="zone-label">Preventative</div>
+        <div class="zone-sub" id="count-Preventative">0/5</div>
+      </div>
+      <div class="zone-cards" id="zc-Preventative"></div>
+    </div>
+    <div class="zone" data-cat="Detective" role="button" tabindex="0" aria-label="Detective">
+      <div class="zone-header">
+        <div class="zone-dot"></div>
+        <div class="zone-label">Detective</div>
+        <div class="zone-sub" id="count-Detective">0/5</div>
+      </div>
+      <div class="zone-cards" id="zc-Detective"></div>
+    </div>
+    <div class="zone" data-cat="Corrective" role="button" tabindex="0" aria-label="Corrective">
+      <div class="zone-header">
+        <div class="zone-dot"></div>
+        <div class="zone-label">Corrective</div>
+        <div class="zone-sub" id="count-Corrective">0/5</div>
+      </div>
+      <div class="zone-cards" id="zc-Corrective"></div>
+    </div>
+  </div>
+</div>
+
+<div class="completion-banner" id="completion-banner" role="status">
+  🎉 All 15 controls correctly classified!
+  <div class="mono">Perfect score — you know your internal controls.</div>
+</div>
+
+<script>
+const CONTROLS = [
+  { id:'c1',  name:'Segregation of duties',      cat:'Preventative', def:'Divides responsibilities among multiple employees so no single person can complete a high-risk transaction alone.' },
+  { id:'c2',  name:'Access controls',             cat:'Preventative', def:'Restricts system and data access to authorized personnel only.' },
+  { id:'c3',  name:'Authorization requirements',  cat:'Preventative', def:'Requires approval from a supervisor or manager before a transaction can be processed.' },
+  { id:'c4',  name:'Physical security',           cat:'Preventative', def:'Locks, badges, and surveillance that prevent unauthorized access to assets or facilities.' },
+  { id:'c5',  name:'Pre-employment screening',    cat:'Preventative', def:'Background checks that reduce the risk of hiring dishonest or unqualified staff.' },
+  { id:'c6',  name:'Bank reconciliations',        cat:'Detective',    def:'Compares internal records against bank statements to catch discrepancies.' },
+  { id:'c7',  name:'Periodic compliance reviews', cat:'Detective',    def:'Periodic reviews of processes and records to identify errors or policy violations.' },
+  { id:'c8',  name:'Variance analysis',           cat:'Detective',    def:'Compares actual financial results against budgets or forecasts to flag unusual activity.' },
+  { id:'c9',  name:'Inventory counts',            cat:'Detective',    def:'Physical counts compared against recorded quantities to detect shrinkage or theft.' },
+  { id:'c10', name:'Exception reports',           cat:'Detective',    def:'Automated system reports that flag transactions outside normal parameters.' },
+  { id:'c11', name:'Backup & recovery',           cat:'Corrective',   def:'Restores lost or corrupted data after a system failure.' },
+  { id:'c12', name:'Disciplinary procedures',     cat:'Corrective',   def:'Formal processes for addressing employee misconduct once identified.' },
+  { id:'c13', name:'Insurance',                   cat:'Corrective',   def:'Transfers financial risk so losses can be recovered after an incident.' },
+  { id:'c14', name:'Incident response plans',     cat:'Corrective',   def:'Documented procedures for containing and resolving a problem once detected.' },
+  { id:'c15', name:'Error correction procedures', cat:'Corrective',   def:'Formal processes for identifying, reversing, and reposting incorrect journal entries.' },
+];
+const CATS = ['Preventative', 'Detective', 'Corrective'];
+const DEFAULT_HINT = 'Hover a control to see its definition. On a phone, tap a control, then tap a category.';
+
+let score = 0;
+let draggingId = null;
+let selectedId = null;
+let locked = new Set();
+let zoneCounts = { Preventative: 0, Detective: 0, Corrective: 0 };
+
+const hintEl = document.getElementById('hint');
+const zones = document.querySelectorAll('.zone');
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function makeCard(ctrl) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'card-' + ctrl.id;
+  div.dataset.id = ctrl.id;
+  div.setAttribute('draggable', 'true');
+  div.setAttribute('tabindex', '0');
+  div.setAttribute('role', 'button');
+  div.setAttribute('aria-label', ctrl.name + '. ' + ctrl.def);
+  div.addEventListener('dragstart', onDragStart);
+  div.addEventListener('dragend', onDragEnd);
+  div.addEventListener('click', onCardClick);
+  div.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick(e); }
+  });
+  const wrap = document.createElement('div');
+  wrap.className = 'tooltip-wrap';
+  wrap.textContent = ctrl.name;
+  const tip = document.createElement('span');
+  tip.className = 'tooltip';
+  tip.textContent = ctrl.def;
+  wrap.appendChild(tip);
+  div.appendChild(wrap);
+  return div;
+}
+
+function renderGrid(order) {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+  order.forEach(ctrl => { if (!locked.has(ctrl.id)) grid.appendChild(makeCard(ctrl)); });
+}
+
+function updateCount(cat) {
+  document.getElementById('count-' + cat).textContent = zoneCounts[cat] + '/5';
+}
+
+function clearSelection() {
+  if (selectedId) {
+    const el = document.getElementById('card-' + selectedId);
+    if (el) el.classList.remove('selected');
+  }
+  selectedId = null;
+  zones.forEach(z => z.classList.remove('targetable'));
+  hintEl.textContent = DEFAULT_HINT;
+}
+
+function resetGame() {
+  score = 0;
+  locked.clear();
+  selectedId = null;
+  zoneCounts = { Preventative: 0, Detective: 0, Corrective: 0 };
+  document.getElementById('score').textContent = '0';
+  document.getElementById('completion-banner').style.display = 'none';
+  CATS.forEach(cat => {
+    document.getElementById('zc-' + cat).innerHTML = '';
+    updateCount(cat);
+  });
+  zones.forEach(z => z.classList.remove('targetable', 'drag-over'));
+  hintEl.textContent = DEFAULT_HINT;
+  renderGrid(shuffle(CONTROLS));
+}
+
+function onCardClick(e) {
+  const id = e.currentTarget.dataset.id;
+  if (locked.has(id)) return;
+  if (selectedId === id) { clearSelection(); return; }
+  clearSelection();
+  selectedId = id;
+  e.currentTarget.classList.add('selected');
+  zones.forEach(z => z.classList.add('targetable'));
+  const ctrl = CONTROLS.find(c => c.id === id);
+  hintEl.textContent = '“' + ctrl.name + '” selected. Now choose a category.';
+}
+
+function onDragStart(e) {
+  draggingId = e.currentTarget.dataset.id;
+  clearSelection();
+  const el = e.currentTarget;
+  setTimeout(() => el.classList.add('dragging'), 0);
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', draggingId); } catch (_) {}
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  zones.forEach(z => z.classList.remove('drag-over'));
+}
+
+function attempt(id, cat) {
+  const ctrl = CONTROLS.find(c => c.id === id);
+  if (!ctrl || locked.has(ctrl.id)) return;
+  const cardEl = document.getElementById('card-' + ctrl.id);
+  if (!cardEl) return;
+
+  if (ctrl.cat === cat) {
+    locked.add(ctrl.id);
+    score++;
+    zoneCounts[ctrl.cat]++;
+    document.getElementById('score').textContent = score;
+    updateCount(ctrl.cat);
+    cardEl.classList.remove('wrong', 'dragging', 'selected');
+    cardEl.classList.add('locked');
+    cardEl.setAttribute('draggable', 'false');
+    cardEl.removeAttribute('tabindex');
+    cardEl.removeAttribute('role');
+    cardEl.removeEventListener('dragstart', onDragStart);
+    cardEl.removeEventListener('dragend', onDragEnd);
+    cardEl.removeEventListener('click', onCardClick);
+    document.getElementById('zc-' + ctrl.cat).appendChild(cardEl);
+    hintEl.textContent = 'Correct: ' + ctrl.name + ' is ' + ctrl.cat.toLowerCase() + '.';
+    if (score === CONTROLS.length) document.getElementById('completion-banner').style.display = 'block';
+  } else {
+    cardEl.classList.remove('wrong');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('wrong');
+    setTimeout(() => cardEl.classList.remove('wrong'), 450);
+    hintEl.textContent = 'Not ' + cat.toLowerCase() + '. Try another category for ' + ctrl.name + '.';
+  }
+}
+
+zones.forEach(zone => {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', e => {
+    if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (!draggingId) return;
+    const id = draggingId;
+    draggingId = null;
+    attempt(id, zone.dataset.cat);
+  });
+  const place = () => {
+    if (!selectedId) return;
+    const id = selectedId;
+    const wasLocked = locked.size;
+    attempt(id, zone.dataset.cat);
+    if (locked.size > wasLocked) {
+      selectedId = null;
+      zones.forEach(z => z.classList.remove('targetable'));
+    }
+  };
+  zone.addEventListener('click', place);
+  zone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); place(); }
+  });
+});
+
+document.getElementById('reset-btn').addEventListener('click', resetGame);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') clearSelection(); });
+
+resetGame();
+</script>
+</body>
+</html>
