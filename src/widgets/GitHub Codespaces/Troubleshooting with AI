@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Troubleshooting with GenAI</title>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --ink: #000000;
+    --muted: #4A4F5C;
+    --heading: #002060;
+    --line: #002060;
+    --card: #EAEAF1;
+    --node: #002E5D;
+    --node-ink: #FFFFFF;
+    --yellow: #FFD200;
+    --panel: #F4F5F9;
+    --panel-border: #C2C2CE;
+    --btn: #002E5D;
+    --btn-ink: #FFFFFF;
+    --dot: #C2C2CE;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151922; --ink: #F2F3F7; --muted: #B6BCCB; --heading: #A9C1FF; --line: #A9C1FF;
+      --card: #252B39; --node: #0B3A73; --node-ink: #FFFFFF; --panel: #1D2230;
+      --panel-border: #3A4254; --btn: #FFD200; --btn-ink: #000000; --dot: #4A5368;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151922; --ink: #F2F3F7; --muted: #B6BCCB; --heading: #A9C1FF; --line: #A9C1FF;
+    --card: #252B39; --node: #0B3A73; --node-ink: #FFFFFF; --panel: #1D2230;
+    --panel-border: #3A4254; --btn: #FFD200; --btn-ink: #000000; --dot: #4A5368;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 20px 32px; }
+
+  h1 { margin: 0 0 18px; font-size: 30px; color: var(--heading); }
+
+  .graphic-scroll { overflow-x: auto; }
+  svg.graphic { display: block; width: 100%; min-width: 640px; height: auto; }
+
+  /* Fill and text colors pulled from the tokens */
+  .t-ink { fill: var(--ink); }
+  .t-head { fill: var(--heading); }
+  .t-node { fill: var(--node-ink); }
+  .f-card { fill: var(--card); }
+  .f-node { fill: var(--node); }
+  .f-line { fill: var(--line); }
+  .s-line { stroke: var(--line); fill: none; }
+  .arrowhead { fill: var(--line); }
+
+  [data-stops] { transition: opacity 0.3s ease; }
+  .dim { opacity: 0.18; }
+  @media (prefers-reduced-motion: reduce) { [data-stops] { transition: none; } }
+
+  .panel {
+    margin-top: 20px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-left: 6px solid var(--yellow);
+    padding: 20px 24px;
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+  }
+  .progress { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .panel h2 { margin: 0 0 8px; font-size: 22px; color: var(--heading); }
+  .panel p.body { margin: 0; font-size: 17px; line-height: 1.5; max-width: 72ch; }
+
+  .controls { margin-top: auto; padding-top: 18px; display: flex; align-items: center; gap: 12px; }
+  .dots { display: flex; gap: 8px; margin-right: auto; }
+  .dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--dot); }
+  .dots span.on { background: var(--yellow); }
+  button {
+    font: inherit; font-size: 16px; font-weight: 700;
+    padding: 10px 22px; border-radius: 4px; cursor: pointer;
+    border: 2px solid var(--btn); background: var(--btn); color: var(--btn-ink);
+  }
+  button.secondary { background: transparent; color: var(--ink); border-color: var(--panel-border); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Troubleshooting with GenAI</h1>
+
+  <div class="graphic-scroll">
+    <svg class="graphic" viewBox="0 0 1000 412" role="img" aria-labelledby="g-desc">
+      <desc id="g-desc">Troubleshooting process. Start when something isn't working or you wonder if something is possible. Steps 1 to 3 give GenAI the full picture: explain your goal, show what you see, share what you've tried. Steps 4 and 5 repeat until it's solved: try one step, report back. If you're going in circles, start fresh with steps 1 to 3.</desc>
+      <defs>
+        <marker id="head" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+          <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+        </marker>
+      </defs>
+
+      <!-- Start here -->
+      <g data-stops="0">
+        <rect x="0" y="0" width="1000" height="56" fill="#FFD200"/>
+        <text x="24" y="35" font-size="20" fill="#000000"><tspan font-weight="700">Start here:</tspan> something isn’t working, or you wonder if something is possible</text>
+      </g>
+
+      <!-- Left stage -->
+      <text data-stops="1,2,3" class="t-head" x="0" y="96" font-size="20" font-weight="700">Give GenAI the full picture</text>
+
+      <g data-stops="1">
+        <rect class="f-card" x="0" y="116" width="430" height="64"/>
+        <rect class="f-line" x="0" y="116" width="5" height="64"/>
+        <circle cx="42" cy="148" r="20" fill="#FFD200"/>
+        <text x="42" y="155" text-anchor="middle" font-size="20" font-weight="700" fill="#000000">1</text>
+        <text class="t-ink" x="78" y="155" font-size="20" font-weight="700">Explain your goal</text>
+      </g>
+      <rect data-stops="1,2" class="f-line" x="40.5" y="180" width="3" height="16"/>
+      <g data-stops="2">
+        <rect class="f-card" x="0" y="196" width="430" height="64"/>
+        <rect class="f-line" x="0" y="196" width="5" height="64"/>
+        <circle cx="42" cy="228" r="20" fill="#FFD200"/>
+        <text x="42" y="235" text-anchor="middle" font-size="20" font-weight="700" fill="#000000">2</text>
+        <text class="t-ink" x="78" y="235" font-size="20" font-weight="700">Show what you see</text>
+      </g>
+      <rect data-stops="2,3" class="f-line" x="40.5" y="260" width="3" height="16"/>
+      <g data-stops="3">
+        <rect class="f-card" x="0" y="276" width="430" height="64"/>
+        <rect class="f-line" x="0" y="276" width="5" height="64"/>
+        <circle cx="42" cy="308" r="20" fill="#FFD200"/>
+        <text x="42" y="315" text-anchor="middle" font-size="20" font-weight="700" fill="#000000">3</text>
+        <text class="t-ink" x="78" y="315" font-size="20" font-weight="700">Share what you’ve tried</text>
+      </g>
+
+      <!-- Into the loop -->
+      <path data-stops="4" class="s-line" stroke-width="2.5" d="M 436 308 C 580 308, 570 148, 690 148" marker-end="url(#head)"/>
+
+      <!-- Right stage -->
+      <text data-stops="4,5" class="t-head" transform="translate(50 0)" x="650" y="96" font-size="20" font-weight="700">Work through it together</text>
+
+      <g data-stops="4" transform="translate(50 0)">
+        <rect class="f-node" x="650" y="116" width="300" height="64"/>
+        <circle cx="690" cy="148" r="20" fill="#FFD200"/>
+        <text x="690" y="155" text-anchor="middle" font-size="20" font-weight="700" fill="#000000">4</text>
+        <text class="t-node" x="726" y="155" font-size="20" font-weight="700">Try one step</text>
+      </g>
+      <g data-stops="5" transform="translate(50 0)">
+        <rect class="f-node" x="650" y="336" width="300" height="64"/>
+        <circle cx="690" cy="368" r="20" fill="#FFD200"/>
+        <text x="690" y="375" text-anchor="middle" font-size="20" font-weight="700" fill="#000000">5</text>
+        <text class="t-node" x="726" y="375" font-size="20" font-weight="700">Report back</text>
+      </g>
+
+      <!-- Loop -->
+      <g data-stops="6" transform="translate(50 0)">
+        <path class="s-line" stroke-width="3.5" d="M 891.2 196.5 A 110 110 0 0 1 891.2 319.5" marker-end="url(#head)"/>
+        <path class="s-line" stroke-width="3.5" d="M 708.8 319.5 A 110 110 0 0 1 708.8 196.5" marker-end="url(#head)"/>
+        <text class="t-head" x="800" y="252" text-anchor="middle" font-size="16" font-weight="700">Repeat 4 and 5</text>
+        <text class="t-head" x="800" y="274" text-anchor="middle" font-size="16" font-weight="700">until it’s solved</text>
+      </g>
+
+      <!-- Going in circles -->
+      <g data-stops="6">
+        <rect x="1" y="357" width="428" height="46" fill="none" stroke-dasharray="7 5" class="s-line" stroke-width="2"/>
+        <text class="t-ink" x="20" y="386" font-size="17"><tspan font-weight="700">Going in circles?</tspan> Start fresh with steps 1–3.</text>
+        <path class="s-line" stroke-width="2" stroke-dasharray="7 5" d="M 696 382 C 620 394, 530 382, 440 380" marker-end="url(#head)"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="panel">
+    <p class="progress" id="progress" aria-live="polite"></p>
+    <h2 id="title"></h2>
+    <p class="body" id="body"></p>
+    <div class="controls">
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="secondary" id="back" type="button">Back</button>
+      <button id="next" type="button">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var stops = [
+    { title: "Start here",
+      body: "Things won’t always go the way you expect. When something isn’t working, or you wonder whether something is even possible, don’t guess and don’t give up. Ask GenAI, using the steps that follow." },
+    { title: "Step 1: explain your goal",
+      body: "Your first message should give GenAI the full picture, starting with your goal. Say what you’re trying to do, not just what went wrong. If something didn’t work, describe what you expected to happen and what actually happened." },
+    { title: "Step 2: show what you see",
+      body: "GenAI can’t see your screen, so show it. Copy the exact error message, or take a screenshot. The more GenAI can see, the less it has to guess." },
+    { title: "Step 3: share what you’ve tried",
+      body: "Tell GenAI what you’ve already tried. This keeps it from suggesting fixes that already didn’t work, and it often points to the real cause faster." },
+    { title: "Step 4: try one step",
+      body: "Now work through it together. Ask GenAI for one step at a time, and do that step before moving on." },
+    { title: "Step 5: report back",
+      body: "Tell GenAI what happened, and send a new screenshot if anything looks different than expected. GenAI will use what you share to figure out the next step." },
+    { title: "Repeat until it’s solved",
+      body: "Keep trying one step and reporting back until the problem is solved. Most fixes take a few rounds, and that’s normal. If you feel like you’re going in circles, start fresh with a new explanation of your goal, what you see, and what you’ve tried. Starting a new chat can help too." }
+  ];
+
+  var current = 0;
+  var last = stops.length - 1;
+  var parts = document.querySelectorAll("[data-stops]");
+  var dots = document.getElementById("dots");
+  var back = document.getElementById("back");
+  var next = document.getElementById("next");
+
+  stops.forEach(function () { dots.appendChild(document.createElement("span")); });
+
+  function render() {
+    parts.forEach(function (el) {
+      var list = el.getAttribute("data-stops").split(",").map(Number);
+      var lit = current === last || list.indexOf(current) !== -1;
+      el.classList.toggle("dim", !lit);
+    });
+    document.getElementById("progress").textContent = (current + 1) + " of " + stops.length;
+    document.getElementById("title").textContent = stops[current].title;
+    document.getElementById("body").textContent = stops[current].body;
+    Array.prototype.forEach.call(dots.children, function (d, i) { d.classList.toggle("on", i <= current); });
+    back.disabled = current === 0;
+    next.textContent = current === last ? "Start over" : "Next";
+  }
+
+  next.addEventListener("click", function () { current = current === last ? 0 : current + 1; render(); });
+  back.addEventListener("click", function () { if (current > 0) { current--; render(); } });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" && current < last) { current++; render(); }
+    if (e.key === "ArrowLeft" && current > 0) { current--; render(); }
+  });
+
+  render();
+</script>
+</body>
+</html>
