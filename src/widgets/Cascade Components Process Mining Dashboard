@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascade Components - Process Mining Audit</title>
+<link rel="icon" href="assets/cascade-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script defer src="js/vendor/dagre.min.js"></script>
+<script defer src="js/config.js"></script>
+<script defer src="js/data.js"></script>
+<script defer src="js/core.js"></script>
+<script defer src="js/diagram.js"></script>
+<script defer src="js/app.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <img class="topbar-logo" id="topLogo" src="assets/cascade-mark-white.svg" alt="">
+  <div class="topbar-title">
+    <h1 id="appTitle">Cascade Components - Process Mining Audit</h1>
+    <span class="topbar-sub" id="topSub">Procure-to-Pay · Purchase-order event log</span>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Dashboards">
+  <button class="tab active" role="tab" data-view="intro" aria-selected="true">Introduction</button>
+  <button class="tab" role="tab" data-view="overview">Dashboard</button>
+  <button class="tab" role="tab" data-view="variants">Process Variants</button>
+  <button class="tab" role="tab" data-view="transactions">Transaction Details</button>
+  <button class="tab" role="tab" data-view="sod">Segregation of Duties</button>
+</nav>
+
+<!-- global filter breadcrumbs: every chip applies to every tab -->
+<div class="crumbs" id="crumbs">
+  <span class="crumbs-label">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+    Filters
+  </span>
+  <div class="chips" id="chips"><span class="chips-empty">None</span></div>
+  <button class="link-btn" id="clearFilters" hidden>Clear all</button>
+  <span class="crumbs-count" id="crumbCount"></span>
+</div>
+
+<main id="main">
+
+  <!-- ================= Introduction ================= -->
+  <section id="view-intro" class="view" role="tabpanel">
+    <div class="intro-hero photo-hero card">
+      <div class="hero-inner">
+      <img class="logo" id="heroLogo" src="assets/cascade-logo-white.svg" alt="Cascade Components, Inc.">
+        <div class="eyebrow" id="heroEyebrow">Procure-to-Pay</div>
+        <h2 id="heroTitle">Cascade Components - Process Mining Audit</h2>
+        <p id="introLead">Process-mining dashboards for the purchase-order event log.</p>
+      </div>
+    </div>
+
+
+    <div class="inside">
+      <figure><img src="assets/photos/purchasing-office.jpg" alt="Purchasing and accounts payable office" loading="lazy" style="object-position: 50% 20%">
+        <figcaption><b>Purchasing &amp; Accounts Payable</b>Requisitions, purchase orders, invoices and payments run through this team.</figcaption></figure>
+      <figure><img src="assets/photos/rnd-lab.jpg" alt="Research and development lab" loading="lazy">
+        <figcaption><b>Research &amp; Development</b>Engineers prototype and test new components.</figcaption></figure>
+      <figure><img src="assets/photos/machining.jpg" alt="Precision machining floor" loading="lazy">
+        <figcaption><b>Precision Machining</b>CNC machining and coordinate-measuring inspection on the shop floor.</figcaption></figure>
+    </div>
+
+    <div class="card how-to">
+      <h3 class="card-title">Filtering</h3>
+      <p>Click any activity or connection on the process map and choose whether to keep only the purchase orders that include it or to exclude them. Clicking any bar on the Dashboard, any value in Transaction Details, or any cell in the Segregation of Duties tables keeps only the POs that match (shift-click excludes instead). Each filter appears as a pill in the bar under the tabs and applies to <strong>every</strong> tab; click a pill to flip it between <em>include</em> and <em>exclude</em>, remove it with its ✕, or clear them all. In Transaction Details the table narrows to the matching rows themselves, so one click shows all the lines for a PO, an activity, a user or a vendor.</p>
+    </div>
+  </section>
+
+  <!-- ================= Dashboard ================= -->
+  <section id="view-overview" class="view" role="tabpanel" hidden>
+    <div class="page-title">
+      <div class="title-line"><h2>Dashboard</h2></div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Summary Metrics about the Purchasing Data</h3>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Number of Purchase Orders</div><div class="kpi-value" id="kSales">—</div></div>
+        <div class="kpi"><div class="kpi-label">Total Value of Purchase Orders</div><div class="kpi-value" id="kValue">—</div></div>
+        <div class="kpi"><div class="kpi-label"># of Unique Vendors Supplying</div><div class="kpi-value" id="kCust">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Summary Metrics about the Process and Activities</h3>
+      <div class="kpi-row kpi4">
+        <div class="kpi"><div class="kpi-label">Number of Events (Activities)</div><div class="kpi-value" id="kEvents">—</div></div>
+        <div class="kpi"><div class="kpi-label">Number of Different Process Variants</div><div class="kpi-value" id="kVariants">—</div></div>
+        <div class="kpi"><div class="kpi-label">Average Activities per PO</div><div class="kpi-value" id="kAvg">—</div></div>
+        <div class="kpi"><div class="kpi-label">% POs Without PO Approval</div><div class="kpi-value" id="kDenied">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Purchase Orders Started Over Time <span class="hint"><a href="#overview" class="link-inline" id="goStartFilter" aria-expanded="false" aria-controls="startPanel">set a case start date range</a></span></h3>
+      <div id="monthChart" class="bar-chart month-chart"></div>
+      <!-- Case start date range: a global filter (pill in the filter bar) on the date each PO started -->
+      <div class="start-panel" id="startPanel" hidden>
+        <p class="tf-lead">Keep only purchase orders whose <b>first step</b> (Create Purchase Requisition) happened in a date range. This applies to <b>every tab</b>.</p>
+        <div class="tf-start-row">
+          <label>Case start date from<input type="date" id="tsFrom"></label>
+          <label>to (not included)<input type="date" id="tsTo"></label>
+          <button class="tf-apply" id="tsApply">Apply</button>
+          <button class="link-btn" id="tsRemove">Remove</button>
+        </div>
+        <div class="tf-quick tf-start-quick" id="tsQuick">
+          <span class="muted">Quick pick:</span>
+        </div>
+        <p class="muted small" id="tsStatus"></p>
+      </div>
+    </div>
+
+    <div class="card peak-card">
+      <div class="dup-head">
+        <h3 class="card-title">Peak-Period Control Check</h3>
+        <div class="dup-actions">
+          <label class="tod-by">Month
+            <select id="peakMonth"></select>
+          </label>
+          <button class="mini-btn" id="peakOnly" title="Keep only POs started in this month (applies to every tab)">Show only this month's POs</button>
+        </div>
+      </div>
+      <div class="dup-kpis">
+        <div class="kpi"><div class="kpi-label">POs Started</div><div class="kpi-value" id="pkVol">—</div><div class="kpi-sub" id="pkVolSub"></div></div>
+        <div class="kpi"><div class="kpi-label">vs. Typical Month</div><div class="kpi-value" id="pkRatio">—</div><div class="kpi-sub" id="pkRatioSub"></div></div>
+        <div class="kpi"><div class="kpi-label">Median Approval Wait</div><div class="kpi-value" id="pkWait">—</div><div class="kpi-sub" id="pkWaitSub"></div></div>
+        <div class="kpi"><div class="kpi-label">Approvals in Under <span id="pkFastH">1 h</span></div><div class="kpi-value" id="pkFast">—</div><div class="kpi-sub" id="pkFastSub"></div></div>
+      </div>
+      <div class="table-scroll dup-scroll peak-scroll">
+        <table class="data-table peak-table" id="peakTable"></table>
+      </div>
+    </div>
+
+
+    <div class="card">
+      <h3 class="card-title">Number of Times Each Activity is Performed</h3>
+      <div class="chart-wrap">
+        <div class="axis-title">↑ Activity</div>
+        <div id="actChart" class="bar-chart"></div>
+        <div class="axis-title right">COUNT →</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Process Variants ================= -->
+  <section id="view-variants" class="view" role="tabpanel" hidden>
+    <div class="page-title">
+      <div class="title-line"><h2>Process Variants</h2></div>
+    </div>
+
+    <div class="explorer-body">
+      <aside class="variant-panel" id="variantPanel">
+        <button class="rail" id="btnExpand" title="Show the variant list" aria-label="Show the variant list" hidden>
+          <span class="rail-ico">›</span>
+          <span class="rail-text">Variants</span>
+        </button>
+        <div class="panel-head">
+          <div class="coverage">
+            <svg class="donut" id="donut" viewBox="0 0 96 96" role="img" aria-label="Share of cases covered">
+              <circle class="donut-track" cx="48" cy="48" r="38"></circle>
+              <circle class="donut-ring" id="donutRing" cx="48" cy="48" r="38"></circle>
+              <text class="donut-pct" id="donutPct" x="48" y="48">100%</text>
+            </svg>
+            <div class="coverage-text">
+              <b id="covCases">—</b>
+              <span class="muted" id="covVariants">—</span>
+            </div>
+            <button class="icon-btn" id="btnCollapse" title="Hide the variant list to give the map the full width" aria-label="Hide the variant list">‹</button>
+          </div>
+          <div class="panel-actions" id="presetButtons"></div>
+          <div class="strip-legend" id="stripLegend"></div>
+        </div>
+
+        <div class="variant-table-wrap">
+          <table class="variant-table" id="variantTable">
+            <thead>
+              <tr>
+                <th class="chk"><input type="checkbox" id="chkAll" checked aria-label="Select all variants"></th>
+                <th>#</th>
+                <th>Steps</th>
+                <th class="num sortable" data-sort="count">Cases <span class="sort-ico"></span></th>
+                <th>Share</th>
+                <th class="num sortable th-menu" data-sort="tpt" id="thTime"><span id="thTimeLabel">Avg time</span> <span class="sort-ico"></span>
+                  <div class="menu right" id="timeMenu" hidden>
+                    <div class="menu-title">Sort</div>
+                    <button data-tsort="desc">Longest first</button>
+                    <button data-tsort="asc">Shortest first</button>
+                    <div class="menu-title">Unit</div>
+                    <button data-unit="auto">Auto (d / h / min)</button>
+                    <button data-unit="s">Seconds</button>
+                    <button data-unit="m">Minutes</button>
+                    <button data-unit="h">Hours</button>
+                    <button data-unit="d">Days</button>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </aside>
+
+      <div class="map-wrap">
+        <div id="diagram" class="diagram"></div>
+        <div class="map-ctls left">
+          <div class="seg" role="group" aria-label="Connection labels">
+            <button class="seg-btn active" data-metric="cases" title="Label each connection with the number of cases">Cases</button>
+            <button class="seg-btn" data-metric="time" title="Label each connection with the average wait between the two activities">Avg. time</button>
+            <button class="seg-btn" data-metric="median" title="Label each connection with the median wait between the two activities">Median time</button>
+          </div>
+        </div>
+        <div class="map-ctls">
+          <button class="ctl legend-btn" id="btnLegend" aria-expanded="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="5" cy="6" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="5" cy="18" r="1.5"/><path d="M10 6h10M10 12h10M10 18h10"/></svg>
+            Legend
+          </button>
+          <div class="zoom-group">
+            <button class="ctl" id="btnFit" title="Fit to window">⛶</button>
+            <button class="ctl" id="btnZoomOut" title="Zoom out">−</button>
+            <span class="zoom-pct" id="zoomPct">100%</span>
+            <button class="ctl" id="btnZoomIn" title="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="legend" id="legendBox" hidden>
+          <b>Reading the process map</b>
+          <div id="legendCats"></div>
+          <div class="legend-row"><span class="lg-edge"></span> Connection — thicker = more cases, or a longer wait in Avg. / Median time mode; the label is the count or the wait</div>
+          <div class="legend-row"><span class="lg-term"></span> Start / End of the cases</div>
+          <div class="legend-row"><span class="lg-node selected"></span> Gold outline = currently filtered on</div>
+          <div class="legend-row muted">Click an activity or connection for filter options · drag to pan · scroll or double-click to zoom</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Transaction Details ================= -->
+  <section id="view-transactions" class="view" role="tabpanel" hidden>
+    <div class="page-title">
+      <div class="title-line"><h2>Transaction Details</h2></div>
+      <div class="title-kpi">
+        <span class="kpi-label" id="soLabel">PO Value of Selected Items</span>
+        <span class="kpi-value" id="soValue">—</span>
+        <span class="kpi-note" id="soNote" hidden></span>
+      </div>
+    </div>
+
+    <!-- Filters: narrow the event table below -->
+    <div class="card tf-card" id="tfCard">
+      <div class="tf-panel" id="tfPanelFind">
+      <div class="tf-head">
+        <h3 class="card-title">Filters</h3>
+        <div class="tf-quick" id="tfQuick">
+          <label class="tf-quick-lab" for="tfQuickSel">Quick view</label>
+          <select id="tfQuickSel" aria-label="Quick view">
+            <option value="">Choose a quick view…</option>
+            <option value="split">Possible split purchases</option>
+            <option value="pay">Possible duplicate payments</option>
+            <option value="night">After-hours activity</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <button class="link-btn" id="tfClear">Clear filters</button>
+        </div>
+      </div>
+      <!-- shown only for the "Possible split purchases" quick view; left blank for students to fill in -->
+      <div class="tf-split-amt" id="tfSplitAmt" hidden>
+        <span class="tf-split-lab">Filter by PO amount</span>
+        <span class="tf-range"><span>$</span><input type="number" id="tfSplitMin" placeholder="min" min="0" step="any" aria-label="Minimum PO amount"><span>to $</span><input type="number" id="tfSplitMax" placeholder="max" min="0" step="any" aria-label="Maximum PO amount"></span>
+        <button class="link-btn" id="tfSplitClear">Clear amount</button>
+      </div>
+      <div id="tfCustom" hidden>
+      <div class="tf-grid">
+        <label>Activity<select id="tfAct"><option value="">All activities</option></select></label>
+        <label>Time of day<select id="tfPeriod"><option value="">Any time</option></select></label>
+        <label>Vendor<select id="tfVendor"><option value="">All vendors</option></select></label>
+        <label>Department<select id="tfDept"><option value="">All departments</option></select></label>
+        <label>User<select id="tfUser"><option value="">All users</option></select></label>
+        <label>Amount ($)<span class="tf-range"><input type="number" id="tfMin" placeholder="min" min="0"><span>–</span><input type="number" id="tfMax" placeholder="max" min="0"></span></label>
+        <label>Date<span class="tf-range"><input type="date" id="tfFrom"><span>–</span><input type="date" id="tfTo"></span></label>
+      </div>
+      <div class="tf-similar">
+        <label class="tf-chk"><input type="checkbox" id="tfSim"> <b>Only similar amounts</b></label>
+        <span id="tfSimOpts">— same activity, amounts within <input type="number" id="tfTol" min="0" max="100" step="0.5" value="5">%, within <input type="number" id="tfWin" min="0" max="365" step="1" value="1"> day(s), for the same
+          <select id="tfKey">
+            <option value="vendor">vendor</option>
+            <option value="vendorDept">vendor and department</option>
+            <option value="user">user</option>
+          </select></span>
+        <span class="muted small" id="tfSimHint"></span>
+      </div>
+      <label class="tf-chk tf-all"><input type="checkbox" id="tfAll"> Show every step of the matching POs (not just the matching rows)</label>
+      </div>
+      </div>
+
+    </div>
+
+    <div class="card table-card">
+      <div class="table-tools">
+        <input type="search" id="txSearch" placeholder="Search PO, activity, user, role, department or vendor…" aria-label="Search transactions">
+        <span class="muted" id="txCount"></span>
+      </div>
+      <div class="table-scroll" id="txScroll">
+        <table class="data-table" id="txTable">
+          <thead>
+            <tr>
+              <th class="num sortable" data-col="id">PO ID</th>
+              <th class="sortable" data-col="act">Activity</th>
+              <th class="num sortable" data-col="ts">Timestamp</th>
+              <th class="sortable" data-col="period">Time of Day</th>
+              <th class="sortable" data-col="empName">User</th>
+              <th class="sortable" data-col="role">Role</th>
+              <th class="sortable" data-col="dept">Department</th>
+              <th class="sortable" data-col="vendor">Vendor</th>
+              <th class="num sortable" data-col="amount">PO Amount</th>
+              <th class="num sortable" data-col="payAmt" title="Amount paid by this payment (Execute Payment rows only)">Payment Amount</th>
+              <th class="num sortable" data-col="remaining" title="Invoice amount still unpaid after this step. Starts when the invoice is posted and drops with each payment; below zero means the PO was overpaid">Remaining Invoice Total</th>
+              <th class="num sortable tf-grp-col" data-col="grp" hidden>Match group</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Segregation of Duties ================= -->
+  <section id="view-sod" class="view" role="tabpanel" hidden>
+    <div class="page-title">
+      <div class="title-line"><h2>Segregation of Duties</h2></div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Same-User Conflicts</h3>
+      <table class="conflict-table" id="conflictTable"></table>
+    </div>
+
+    <div class="card">
+      <div class="sod-head">
+        <h3 class="card-title">Activities by Role</h3>
+        <div class="sod-by"><span class="muted">Rows:</span>
+          <div class="seg" id="sodBy" role="group" aria-label="Table rows">
+            <button class="seg-btn active" data-by="role">Role</button>
+            <button class="seg-btn" data-by="person">Person</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-scroll pivot-scroll">
+        <table class="pivot-table" id="sodTable"></table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="tooltip" class="tooltip" hidden></div>
+</body>
+</html>
