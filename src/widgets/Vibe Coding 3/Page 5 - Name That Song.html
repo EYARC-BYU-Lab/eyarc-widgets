@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>EYARC | Name That Song! API Flow</title>
+<style>
+:root{--navy:#173455;--blue:#4188d1;--green:#229a78;--muted:#6d8094;--stroke:#deebf2}*{box-sizing:border-box}body{margin:0;padding:24px 12px;background:#f3f8fc;color:var(--navy);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.widget{max-width:950px;margin:auto;background:#fff;border:1px solid #dbe5ec;border-radius:24px;overflow:hidden;box-shadow:0 18px 50px #1c4a6b10}.header{padding:21px 28px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.eyebrow{font-size:10px;letter-spacing:.13em;font-weight:850;color:var(--blue);text-transform:uppercase}h2{font-size:23px;letter-spacing:-.03em;margin:3px 0 2px}.header p{font-size:12px;color:var(--muted);margin:0}.counter{background:#eef5fb;color:#698099;font-size:11px;font-weight:800;padding:7px 12px;border-radius:30px;white-space:nowrap}.scene{margin:4px 26px 0;position:relative;height:328px;border-radius:19px;background:linear-gradient(to bottom,#f1fbf5 0 46%,#f8fbfe 46% 100%);border:1px solid #e2ebf2;overflow:hidden}.zone-label{position:absolute;z-index:2;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:850;color:#3d8663}.zone-label.external{top:12px;right:18px}.zone-label.local{bottom:11px;left:18px;color:#66849f}.boundary{position:absolute;top:46%;left:0;right:0;border-top:2px dashed #a8c4d6;z-index:1}.boundary span{position:absolute;right:12px;top:-12px;padding:1px 7px;background:#f7fbfa;border-radius:8px;font-size:9px;font-weight:750;color:#8296a9}.paths{position:absolute;z-index:4;inset:0;width:100%;height:100%;pointer-events:none}.path{opacity:.18;transition:opacity .2s,stroke-width .2s;stroke-dasharray:9 7}.path.on{opacity:1;stroke-width:5;stroke-dasharray:none;filter:drop-shadow(0 1px 1px #ffffff)}.node{position:absolute;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;background:white;border:1.5px solid #dbe6ef;border-radius:15px;box-shadow:0 3px 0 #e9f1f8;padding:8px 6px;transform:translateX(-50%);transition:border-color .2s,background .2s,box-shadow .2s}.node.active{background:#f0f8ff;border-color:#8cbfea;box-shadow:0 4px 0 #e1effc}.node strong{font-size:13px;margin-top:1px}.node small{font-size:10px;color:#6b8092;white-space:nowrap}.node .drawing{width:89px;height:54px}.node.spotify{top:26px;left:69%;width:168px;height:113px;background:#fafffb;border-color:#b8dfc6}.node.spotify.active{background:#effbf3;border-color:#62c990;box-shadow:0 4px 0 #d7f4e4}.node.frontend{top:199px;left:16%;width:162px;height:111px}.node.api{top:199px;left:50%;width:162px;height:111px}.node.db{top:199px;left:84%;width:162px;height:111px}.node.idle{opacity:.66}.message{position:absolute;z-index:6;top:25px;left:13%;width:280px;min-height:106px;background:#fff;border:2px solid #a9cfee;border-radius:18px;padding:12px 15px 14px;box-shadow:0 6px 0 #e6f2fd,0 9px 19px #1c4a6b0e;transition:border-color .2s,box-shadow .2s}.message:after{content:"";position:absolute;bottom:-12px;left:28%;width:18px;height:18px;background:#fff;border-right:2px solid #a9cfee;border-bottom:2px solid #a9cfee;transform:rotate(45deg)}.message.response{border-color:#8dd5b5;box-shadow:0 6px 0 #e3f6ec,0 9px 19px #1c4a6b0e}.message.response:after{border-color:#8dd5b5}.meta{display:flex;gap:8px;align-items:center;margin-bottom:8px}.number{display:grid;place-items:center;width:25px;height:25px;flex-shrink:0;border-radius:50%;background:#dfeeff;color:#236aab;font-size:12px;font-weight:900}.response .number{background:#daf5e7;color:#188565}.speaker{font-size:10px;letter-spacing:.055em;text-transform:uppercase;font-weight:900;color:#6385a5}.response .speaker{color:#188565}.quote{font-size:14px;line-height:1.45;font-weight:720;color:#244665;padding-right:12px}.response .quote{color:#1c6752}.emoji{position:absolute;top:10px;right:12px;font-size:18px}.legend{display:flex;justify-content:center;gap:24px;margin:13px 0 0;color:#6b8195;font-size:11px}.legend span{display:flex;align-items:center;gap:7px}.swatch{width:19px;height:3px;border-radius:3px;background:var(--blue)}.swatch.green{background:var(--green)}.nav{padding:17px 27px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}.dots{display:flex;gap:7px}.dot{border:0;border-radius:20px;width:19px;height:8px;background:#dfe8f1;cursor:pointer}.dot.current{width:32px;background:#367dc1}.buttons{display:flex;gap:9px}.btn{font:750 12px system-ui;border:1px solid #d2e0eb;border-radius:11px;background:white;padding:10px 17px;color:#36546d;cursor:pointer}.btn.primary{background:#183858;border-color:#183858;color:#fff}.btn:disabled{opacity:.35;cursor:default}.btn:focus-visible,.dot:focus-visible{outline:3px solid #75ade8;outline-offset:3px}@media(max-width:630px){body{padding:8px}.header{padding:16px 14px 8px}h2{font-size:19px}.header p{font-size:11px}.counter{font-size:10px}.scene{margin:4px 9px 0;height:292px}.zone-label{font-size:8px}.zone-label.external{right:8px;top:5px}.zone-label.local{bottom:5px;left:8px}.node{padding:5px 2px;border-radius:11px}.node .drawing{width:65px;height:45px}.node strong{font-size:11px}.node small{font-size:8px}.node.spotify{top:26px;width:121px;height:99px;left:73%}.node.frontend,.node.api,.node.db{top:198px;width:30%;height:81px}.node.frontend{left:16%}.node.api{left:50%}.node.db{left:84%}.message{top:22px;left:2.5%;width:53%;min-height:106px;padding:9px 10px}.quote{font-size:11px;padding-right:0}.speaker{font-size:8px}.number{width:21px;height:21px;font-size:10px}.emoji{font-size:13px;right:7px;top:7px}.boundary{top:50%}.legend{font-size:10px;gap:14px}.nav{padding:16px 12px 18px}.btn{padding:9px 10px;font-size:11px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<section class="widget" aria-label="Name That Song API walkthrough"><header class="header"><div><div class="eyebrow">A little API adventure ✨</div><h2>Name that song! 🎵</h2><p>Your game talks directly to Spotify. Chad is not invited to this conversation.</p></div><div class="counter" id="counter">Step 1 of 4</div></header>
+<div class="scene">
+  <div class="zone-label external">🌍 Another company's app · Spotify</div><div class="zone-label local">🏠 Your app · Name That Song!</div><div class="boundary"><span>Different apps</span></div>
+  <svg class="paths" id="paths" viewBox="0 0 900 328" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="requestHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0 0 L8 3 L0 6" fill="none" stroke="#4188d1" stroke-width="1.8"/></marker><marker id="responseHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0 0 L8 3 L0 6" fill="none" stroke="#229a78" stroke-width="1.8"/></marker></defs><path id="requestLine" class="path on" d="M225 225 L528 112" stroke="#4188d1" stroke-width="3.4" fill="none" stroke-linecap="round" marker-end="url(#requestHead)"/><path id="responseLine" class="path" d="M528 128 L225 241" stroke="#229a78" stroke-width="3.4" fill="none" stroke-linecap="round" marker-end="url(#responseHead)"/></svg>
+  <div class="message" id="message" role="status" aria-live="polite"><div class="meta"><span class="number" id="number">1</span><span class="speaker" id="speaker"></span></div><div class="quote" id="quote"></div><span class="emoji" id="emoji">📨</span></div>
+  <div class="node spotify active" id="spotify"><svg class="drawing" viewBox="0 0 120 80" aria-hidden="true"><circle cx="60" cy="39" r="29" fill="#1db954"/><path d="M42 30q20 -5 37 3M44 40q18 -4 33 3M47 50q15 -3 28 3" stroke="#0a5830" stroke-width="4" stroke-linecap="round" fill="none"/></svg><strong>Spotify API</strong><small>Music &amp; playback</small></div>
+  <div class="node frontend active" id="frontend"><svg class="drawing" viewBox="0 0 120 80" aria-hidden="true"><rect x="10" y="5" width="100" height="64" rx="9" fill="#d3eafa" stroke="#3b82ba" stroke-width="3"/><rect x="18" y="15" width="84" height="45" rx="4" fill="white"/><text x="60" y="29" font-size="7.5" text-anchor="middle" fill="#2871a8" font-weight="900">NAME THAT SONG!</text><circle cx="60" cy="45" r="11" fill="#d8f6e6"/><path d="M57 39v12l10-6z" fill="#26956e"/></svg><strong>Frontend</strong><small>Your trivia game</small></div>
+  <div class="node api idle" id="api"><svg class="drawing" viewBox="0 0 120 80" aria-hidden="true"><rect x="25" y="11" width="70" height="23" rx="7" fill="#d9e9f8" stroke="#5c91c3" stroke-width="2.5"/><rect x="25" y="40" width="70" height="23" rx="7" fill="#d9e9f8" stroke="#5c91c3" stroke-width="2.5"/><circle cx="82" cy="22" r="4" fill="#7bcbb6"/><circle cx="82" cy="51" r="4" fill="#7bcbb6"/></svg><strong>API</strong><small>Your backend</small></div>
+  <div class="node db idle" id="db"><svg class="drawing" viewBox="0 0 120 80" aria-hidden="true"><path d="M30 18v40c0 12 60 12 60 0V18" fill="#d9edfa" stroke="#5c91c3" stroke-width="3"/><ellipse cx="60" cy="18" rx="30" ry="10" fill="#b8dcf4" stroke="#5c91c3" stroke-width="3"/><path d="M30 39c0 12 60 12 60 0" stroke="#5c91c3" stroke-width="2" fill="none"/></svg><strong>Database</strong><small>Your app's data</small></div>
+</div>
+<div class="legend"><span><i class="swatch"></i>Frontend → Spotify</span><span><i class="swatch green"></i>Spotify → Frontend</span></div>
+<footer class="nav"><div class="dots" id="dots" aria-label="Choose a step"></div><div class="buttons"><button id="back" class="btn" type="button">← Back</button><button id="next" class="btn primary" type="button">Next step →</button></div></footer>
+</section>
+<script>
+// Each step represents one moment in the story. Steps 2–3 show the direct API exchange.
+const steps=[
+ {speaker:'You',quote:'“Tonight, we dethrone Chad. Hit play!”',emoji:'🎲',direction:'intro'},
+ {speaker:'Your game → Spotify API',quote:'“Spotify, load a mystery song for round one! And whatever you do, don’t let Chad peek.”',emoji:'📨',direction:'request'},
+ {speaker:'Spotify API → Your game',quote:'“♪ Music coming right up! Chad’s losing streak starts now.”',emoji:'🎧',direction:'response'},
+ {speaker:'You',quote:'“NAILED IT. Chad, your reign is over.”',emoji:'🏆',direction:'outro'}
+];
+let current=0;const $=id=>document.getElementById(id);
+function positionArrows(){
+ const scene=document.querySelector('.scene').getBoundingClientRect();
+ const front=$('frontend').getBoundingClientRect();
+ const spot=$('spotify').getBoundingClientRect();
+ const x1=front.right-scene.left+7, y1=front.top-scene.top+24;
+ const x2=spot.left-scene.left-10, y2=spot.bottom-scene.top-25;
+ const svg=$('paths');
+ svg.setAttribute('viewBox',`0 0 ${scene.width} ${scene.height}`);
+ // Two deliberately separated diagonal paths; arrow tips stop before the Spotify/frontend cards.
+ $('requestLine').setAttribute('d',`M${x1} ${y1} L${x2} ${y2}`);
+ $('responseLine').setAttribute('d',`M${x2} ${y2+17} L${x1} ${y1+17}`);
+}
+function render(){
+ const s=steps[current];
+ $('counter').textContent=`Step ${current+1} of ${steps.length}`;
+ $('number').textContent=current+1;
+ $('speaker').textContent=s.speaker;
+ $('quote').textContent=s.quote;
+ $('emoji').textContent=s.emoji;
+ $('message').classList.toggle('response',s.direction==='response'||s.direction==='outro');
+ const req=s.direction==='request',res=s.direction==='response';
+ $('requestLine').classList.toggle('on',req);
+ $('responseLine').classList.toggle('on',res);
+ $('frontend').classList.toggle('active',true);
+ $('spotify').classList.toggle('active',req||res);
+ $('api').classList.add('idle'); $('db').classList.add('idle');
+ $('back').disabled=current===0;
+ $('next').textContent=current===steps.length-1?'↺ Start over':'Next step →';
+ $('dots').replaceChildren(...steps.map((_,i)=>{
+  const b=document.createElement('button');b.type='button';b.className='dot'+(i===current?' current':'');
+  b.setAttribute('aria-label',`Step ${i+1}`);
+  if(i===current)b.setAttribute('aria-current','step');
+  b.addEventListener('click',()=>{current=i;render()});return b;
+ }));
+ positionArrows();
+}
+window.addEventListener('resize',positionArrows);
+$('back').addEventListener('click',()=>{current=Math.max(0,current-1);render()});$('next').addEventListener('click',()=>{current=(current+1)%steps.length;render()});render();
+</script></body></html>
