@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Fraud Files – Submit your findings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1C2A3A;
+  --ink-soft: #4D5E70;
+  --paper: #F5F7F9;
+  --sheet: #FFFFFF;
+  --rule: #D5DCE3;
+  --flag: #F2C230;
+  --flag-wash: #FFF5D1;
+  --flag-ink: #3A2E05;
+  --error: #A3261B;
+  --focus: #2F6FB3;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #E6ECF2;
+    --ink-soft: #A3B1BF;
+    --paper: #121A23;
+    --sheet: #1A2430;
+    --rule: #2E3C4B;
+    --flag: #E0B32A;
+    --flag-wash: #3A3215;
+    --flag-ink: #FFF1C2;
+    --error: #F08A80;
+    --focus: #7FB2EA;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #E6ECF2;
+  --ink-soft: #A3B1BF;
+  --paper: #121A23;
+  --sheet: #1A2430;
+  --rule: #2E3C4B;
+  --flag: #E0B32A;
+  --flag-wash: #3A3215;
+  --flag-ink: #FFF1C2;
+  --error: #F08A80;
+  --focus: #7FB2EA;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1rem/1.55 "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+}
+main { max-width: 46rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+h1, h2 { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; font-weight: 650; line-height: 1.2; }
+h1 { font-size: 2rem; margin: 0 0 .75rem; }
+.intro { color: var(--ink-soft); max-width: 38rem; margin: 0 0 2.25rem; }
+.intro p { margin: 0 0 .6rem; }
+
+section.q {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.5rem 1.5rem 1.6rem;
+  margin-bottom: 1.25rem;
+}
+.q h2 { font-size: 1.3rem; margin: 0 0 .25rem; }
+.q .help { color: var(--ink-soft); margin: 0 0 1.1rem; font-size: .95rem; }
+
+.choices { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
+.choice {
+  position: relative;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: .7rem .85rem .75rem 1.1rem;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+.choice::before {
+  content: "";
+  position: absolute; left: -1px; top: -1px; bottom: -1px;
+  width: 5px;
+  border-radius: 4px 0 0 4px;
+  background: transparent;
+  transition: background-color .15s;
+}
+.choice:hover { border-color: var(--ink-soft); }
+.choice[aria-pressed="true"] { background: var(--flag-wash); border-color: var(--flag); color: var(--flag-ink); }
+.choice[aria-pressed="true"]::before { background: var(--flag); }
+.choice .name { display: block; font-weight: 600; }
+.choice .desc { display: block; font-size: .85rem; color: var(--ink-soft); margin-top: .15rem; }
+.choice[aria-pressed="true"] .desc { color: inherit; opacity: .8; }
+
+.people .choice { display: flex; align-items: center; gap: .75rem; }
+.avatar {
+  flex: none;
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-weight: 650;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+}
+.choice[aria-pressed="true"] .avatar { border-color: var(--flag); background: var(--flag); color: #2A2104; }
+
+.money { display: flex; align-items: stretch; max-width: 18rem; }
+.money span {
+  display: grid; place-items: center;
+  padding: 0 .8rem;
+  border: 1px solid var(--rule); border-right: 0;
+  border-radius: 4px 0 0 4px;
+  background: var(--paper);
+  font-weight: 600;
+}
+input[type="text"], textarea {
+  font: inherit; color: inherit;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  padding: .65rem .8rem;
+  width: 100%;
+}
+.money input { border-radius: 0 4px 4px 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+textarea { border-radius: 4px; min-height: 8.5rem; resize: vertical; line-height: 1.55; }
+.count { font-size: .85rem; color: var(--ink-soft); margin-top: .4rem; }
+.count.ok { color: var(--ink); }
+.field-error { color: var(--error); font-size: .85rem; margin-top: .4rem; min-height: 1.2em; }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.submit-bar {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+.status { color: var(--ink-soft); font-size: .95rem; margin: 0 0 1rem; }
+.status ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+.btn {
+  font: 600 1rem/1 "IBM Plex Sans", system-ui, sans-serif;
+  border-radius: 4px;
+  padding: .85rem 1.4rem;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--sheet);
+}
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.btn.secondary { background: transparent; color: var(--ink); }
+.confirm {
+  display: none;
+  border: 1px solid var(--flag);
+  background: var(--flag-wash);
+  color: var(--flag-ink);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem;
+  margin-top: 1rem;
+}
+.confirm.open { display: block; }
+.confirm p { margin: 0 0 .9rem; }
+.confirm .row { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+.locked .choice, .locked input, .locked textarea { pointer-events: none; }
+.locked-note { display: none; }
+.locked .locked-note { display: block; }
+.locked .intro, .locked section.q { display: none; }
+.lead { color: var(--ink-soft); margin: 0 0 1.75rem; max-width: 38rem; }
+
+:root { --ok: #1F7A4D; --miss: #8A5A00; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ok: #6FCF9A; --miss: #E0B32A; }
+}
+:root[data-theme="dark"] { --ok: #6FCF9A; --miss: #E0B32A; }
+section.rb { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+.rb h2 { font-size: 1.15rem; margin: 0 0 .6rem; }
+.rb p { margin: 0; }
+.keylist { list-style: none; margin: 0; padding: 0; font-variant-numeric: tabular-nums; }
+.keylist li { display: grid; grid-template-columns: 1.5rem 1fr auto; gap: .5rem; align-items: baseline; padding: .5rem 0; border-bottom: 1px solid var(--rule); }
+.keylist li:last-child { border-bottom: 0; }
+.keylist .mark { font-weight: 600; }
+.keylist .hit .mark { color: var(--ok); }
+.keylist .miss .mark, .keylist .miss .lbl, .keylist .miss .amt { color: var(--ink-soft); }
+.keylist li.total { font-weight: 600; }
+.tag { font-size: .8rem; font-weight: 600; color: var(--miss); margin-left: .4rem; }
+.extra { color: var(--ink-soft); font-size: .92rem; margin: .75rem 0 0 !important; }
+.totals { display: flex; gap: .75rem 2.5rem; flex-wrap: wrap; }
+.totals .k { display: block; font-size: .85rem; color: var(--ink-soft); }
+.totals .v { font-family: "Source Serif 4", Georgia, serif; font-size: 1.6rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.rb blockquote { margin: .35rem 0 0; padding-left: .9rem; border-left: 3px solid var(--rule); }
+.rb blockquote.mine { border-left-color: var(--flag); }
+.rb .sub { font: 600 .85rem/1.3 "IBM Plex Sans", system-ui, sans-serif; color: var(--ink-soft); margin: 1rem 0 0; }
+.rb h2 + .sub { margin-top: 0; }
+.score { font-family: "Source Serif 4", Georgia, serif; font-size: 1.3rem; line-height: 1.4; margin: 0 0 1.25rem; max-width: 38rem; }
+@media (max-width: 30rem) {
+  h1 { font-size: 1.65rem; }
+  section.q { padding: 1.2rem 1rem 1.3rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<main id="app">
+  <h1 id="title">Submit your findings</h1>
+  <div class="intro">
+    <p>Look back at your fraud tracking worksheet and interview notes before you answer. Your conclusions should be supported by the evidence.</p>
+    <p>Once you submit, your answers are locked.</p>
+  </div>
+
+  <section class="q" aria-labelledby="q1-title">
+    <h2 id="q1-title">What happened?</h2>
+    <p class="help">Select every fraud scheme you believe occurred at RMG.</p>
+    <div class="choices" id="schemes" role="group" aria-labelledby="q1-title"></div>
+  </section>
+
+  <section class="q" aria-labelledby="q2-title">
+    <h2 id="q2-title">Who was responsible?</h2>
+    <p class="help">Select everyone you believe was involved in the fraud.</p>
+    <div class="choices people" id="people" role="group" aria-labelledby="q2-title"></div>
+  </section>
+
+  <section class="q" aria-labelledby="q3-title">
+    <h2 id="q3-title">How much was lost?</h2>
+    <p class="help">Enter the total confirmed loss from your fraud tracking worksheet.</p>
+    <label for="loss" class="money"><span aria-hidden="true">$</span><input type="text" id="loss" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-describedby="loss-error"></label>
+    <div class="field-error" id="loss-error" aria-live="polite"></div>
+  </section>
+
+  <section class="q" aria-labelledby="q4-title">
+    <h2 id="q4-title">What made it possible?</h2>
+    <p class="help">Which internal control failure most allowed the fraud to occur? In one or two sentences, explain why.</p>
+    <textarea id="control" aria-labelledby="q4-title" aria-describedby="control-count"></textarea>
+    <div class="count" id="control-count" aria-live="polite">0 of 30 words minimum</div>
+  </section>
+
+  <div class="submit-bar" id="submit-bar">
+    <div class="status" id="status" aria-live="polite"></div>
+    <button class="btn" id="submit" disabled>Submit findings</button>
+    <div class="confirm" id="confirm" role="alertdialog" aria-labelledby="confirm-text">
+      <p id="confirm-text">After you submit, you can’t change your answers. Submit your findings?</p>
+      <div class="row">
+        <button class="btn" id="confirm-yes">Submit findings</button>
+        <button class="btn secondary" id="confirm-no">Keep reviewing</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="locked-note" id="locked-note" tabindex="-1">
+    <p class="lead">Here’s how your findings compare with the answer key, based on the evidence you reviewed. Continue to the next page to find out what investigators actually discovered.</p>
+    <div id="reveal"></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  // ---- Edit these lists to match the case ----
+  const SCHEMES = [
+    { id: "cash-larceny", name: "Cash larceny", desc: "Stealing cash after it has been recorded" },
+    { id: "skimming", name: "Skimming", desc: "Stealing cash before it is recorded" },
+    { id: "lapping", name: "Lapping", desc: "Covering stolen payments with later payments" },
+    { id: "fraudulent-checks", name: "Fraudulent checks", desc: "Writing company checks for improper payments" },
+    { id: "ghost-employee", name: "Ghost employee", desc: "Paying someone who doesn’t work there" },
+    { id: "credit-card", name: "Unauthorized credit card payments", desc: "Using company funds to pay personal card balances" },
+    { id: "expense-reimbursement", name: "Expense reimbursement fraud", desc: "Claiming fake or inflated expenses" },
+    { id: "kickbacks", name: "Kickbacks", desc: "Taking payments from a vendor in exchange for business" },
+    { id: "inventory-theft", name: "Inventory theft", desc: "Stealing supplies or products" },
+    { id: "financial-statement", name: "Financial statement fraud", desc: "Misstating revenue or expenses to make the business look healthier" }
+  ];
+  const PEOPLE = [
+    { id: "david", name: "Doctor David", role: "Owner and physician" },
+    { id: "mary", name: "Mary", role: "Bookkeeper" },
+    { id: "sarah", name: "Sarah", role: "Secretary" },
+    { id: "jennifer", name: "Jennifer", role: "Nurse" },
+    { id: "rachel", name: "Rachel", role: "Esthetician" },
+    { id: "tom", name: "Tom", role: "Receptionist" },
+    { id: "abigail", name: "Abigail", role: "Doctor David’s wife" },
+    { id: "larry", name: "Larry", role: "Outside attorney" }
+  ];
+  const MIN_WORDS = 30;
+
+  // ---- Answer key (based only on the evidence students review) ----
+  const ANSWER_KEY = {
+    schemes: ["cash-larceny", "fraudulent-checks", "credit-card"],
+    people: ["mary"],
+    losses: [
+      { scheme: "cash-larceny", amount: 6406.40 },
+      { scheme: "fraudulent-checks", amount: 20650.00 },
+      { scheme: "credit-card", amount: 938.30 }
+    ],
+    total: 27994.70,
+    sampleControl: "There was no segregation of duties. Mary handled collections, deposits, check writing, vendor records, and online banking, and no one independently reviewed her work. Because one person controlled both the money and the records, she could take funds and hide the theft in the same records she kept."
+  };
+  // --------------------------------------------
+
+  const state = { schemes: new Set(), people: new Set(), loss: null, control: "" };
+  const STORE = "rmg-fraud-files-page9-v1";
+  let submitted = null;
+  function saveStore() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify({
+        draft: { schemes: [...state.schemes], people: [...state.people], loss: lossEl.value, control: controlEl.value },
+        submitted: submitted
+      }));
+    } catch (e) {}
+  }
+  function loadStore() {
+    try { return JSON.parse(localStorage.getItem(STORE)) || null; } catch (e) { return null; }
+  }
+
+  function makeChoice(item, set, isPerson) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "choice";
+    b.setAttribute("aria-pressed", "false");
+    b.dataset.id = item.id;
+    if (isPerson) {
+      const initials = item.name.replace(/^Doctor\s+/, "").split(/\s+/).map(w => w[0]).join("").slice(0, 2);
+      b.innerHTML = '<span class="avatar" aria-hidden="true"></span><span><span class="name"></span>' + (item.role ? '<span class="desc"></span>' : '') + '</span>';
+      b.querySelector(".avatar").textContent = initials;
+      if (item.role) b.querySelector(".desc").textContent = item.role;
+    } else {
+      b.innerHTML = '<span class="name"></span><span class="desc"></span>';
+      b.querySelector(".desc").textContent = item.desc;
+    }
+    b.querySelector(".name").textContent = item.name;
+    b.addEventListener("click", () => {
+      if (set.has(item.id)) set.delete(item.id); else set.add(item.id);
+      b.setAttribute("aria-pressed", set.has(item.id) ? "true" : "false");
+      update();
+    });
+    return b;
+  }
+
+  const schemesEl = document.getElementById("schemes");
+  SCHEMES.forEach(s => schemesEl.appendChild(makeChoice(s, state.schemes, false)));
+  const peopleEl = document.getElementById("people");
+  PEOPLE.forEach(p => peopleEl.appendChild(makeChoice(p, state.people, true)));
+
+  const lossEl = document.getElementById("loss");
+  const lossErr = document.getElementById("loss-error");
+  function parseMoney(v) {
+    const clean = v.replace(/[$,\s]/g, "");
+    if (clean === "") return null;
+    if (!/^\d+(\.\d{1,2})?$/.test(clean)) return NaN;
+    return Number(clean);
+  }
+  lossEl.addEventListener("input", () => {
+    const n = parseMoney(lossEl.value);
+    state.loss = n;
+    lossErr.textContent = Number.isNaN(n) ? "Enter a dollar amount, like 12,450.00" : "";
+    update();
+  });
+  lossEl.addEventListener("blur", () => {
+    if (typeof state.loss === "number" && !Number.isNaN(state.loss)) {
+      lossEl.value = state.loss.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  });
+
+  const controlEl = document.getElementById("control");
+  const countEl = document.getElementById("control-count");
+  function wordCount(t) { const m = t.trim().match(/\S+/g); return m ? m.length : 0; }
+  controlEl.addEventListener("input", () => {
+    state.control = controlEl.value;
+    const n = wordCount(state.control);
+    countEl.textContent = n >= MIN_WORDS ? n + " words" : n + " of " + MIN_WORDS + " words minimum";
+    countEl.classList.toggle("ok", n >= MIN_WORDS);
+    update();
+  });
+
+  const statusEl = document.getElementById("status");
+  const submitBtn = document.getElementById("submit");
+  const confirmEl = document.getElementById("confirm");
+
+  function missing() {
+    const m = [];
+    if (state.schemes.size === 0) m.push("what happened");
+    if (state.people.size === 0) m.push("who was responsible");
+    if (state.loss === null || Number.isNaN(state.loss)) m.push("how much was lost");
+    if (wordCount(state.control) < MIN_WORDS) m.push("what made it possible");
+    return m;
+  }
+  function update() {
+    const m = missing();
+    submitBtn.disabled = m.length > 0;
+    statusEl.textContent = m.length
+      ? (4 - m.length) + " of 4 questions answered. Still to answer: " + listJoin(m) + "."
+      : "All four questions are answered.";
+    confirmEl.classList.remove("open");
+    submitBtn.hidden = false;
+    if (!submitted) saveStore();
+  }
+
+  submitBtn.addEventListener("click", () => {
+    submitBtn.hidden = true;
+    confirmEl.classList.add("open");
+    document.getElementById("confirm-yes").focus();
+  });
+  document.getElementById("confirm-no").addEventListener("click", () => {
+    confirmEl.classList.remove("open");
+    submitBtn.hidden = false;
+    submitBtn.focus();
+  });
+  document.getElementById("confirm-yes").addEventListener("click", () => {
+    const answers = {
+      schemes: [...state.schemes],
+      people: [...state.people],
+      totalLoss: state.loss,
+      controlFailure: state.control.trim()
+    };
+    // Tech team: send `answers` to the grading system here.
+    console.log("Submitted findings", answers);
+    submitted = answers;
+    saveStore();
+    lockAndReveal(answers);
+  });
+
+  function lockAndReveal(answers) {
+    document.getElementById("app").classList.add("locked");
+    document.getElementById("submit-bar").style.display = "none";
+    lossEl.readOnly = true;
+    controlEl.readOnly = true;
+    document.querySelectorAll(".choice").forEach(c => c.setAttribute("aria-disabled", "true"));
+    renderReveal(answers);
+    const note = document.getElementById("locked-note");
+    note.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+
+  function fmt(n) { return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function listJoin(a) {
+    if (a.length < 2) return a.join("");
+    if (a.length === 2) return a[0] + " and " + a[1];
+    return a.slice(0, -1).join(", ") + ", and " + a[a.length - 1];
+  }
+  function row(hit, label, amount) {
+    return '<li class="' + (hit ? "hit" : "miss") + '"><span class="mark" aria-hidden="true">' + (hit ? "✓" : "–") + '</span>' +
+      '<span class="lbl">' + esc(label) + (hit ? "" : '<span class="tag">Missed</span>') + '</span>' +
+      '<span class="amt">' + (amount == null ? "" : fmt(amount)) + '</span></li>';
+  }
+  function extras(picked, key, list) {
+    const names = picked.filter(id => !key.includes(id)).map(id => list.find(x => x.id === id).name);
+    return names.length ? '<p class="extra">You also selected ' + esc(listJoin(names)) + ', which the evidence doesn’t support.</p>' : "";
+  }
+
+  function renderReveal(answers) {
+    document.getElementById("title").textContent = "Your findings";
+    const schemeRows = ANSWER_KEY.losses.map(l =>
+      row(answers.schemes.includes(l.scheme), SCHEMES.find(x => x.id === l.scheme).name, l.amount)).join("");
+    const peopleRows = ANSWER_KEY.people.map(id => {
+      const p = PEOPLE.find(x => x.id === id);
+      return row(answers.people.includes(id), p.name + (p.role ? ", " + p.role.toLowerCase() : ""), null);
+    }).join("");
+    const diff = Math.round((answers.totalLoss - ANSWER_KEY.total) * 100) / 100;
+    const diffLine = diff === 0 ? "Your total matches the answer key." :
+      "You were " + fmt(Math.abs(diff)) + (diff < 0 ? " under" : " over") + " the answer key.";
+    const schemeHits = ANSWER_KEY.schemes.filter(id => answers.schemes.includes(id)).length;
+    const peopleOk = ANSWER_KEY.people.every(id => answers.people.includes(id));
+    const peopleExtra = answers.people.some(id => !ANSWER_KEY.people.includes(id));
+    const score = "You found " + schemeHits + " of " + ANSWER_KEY.schemes.length + " schemes, " +
+      (peopleOk ? (peopleExtra ? "identified the person responsible but also flagged others" : "identified the person responsible") : "missed the person responsible") + ", and " +
+      (diff === 0 ? "matched the total loss." : "were " + fmt(Math.abs(diff)) + (diff < 0 ? " under" : " over") + " on the total loss.");
+
+    document.getElementById("reveal").innerHTML =
+      '<p class="score">' + esc(score) + '</p>' +
+      '<section class="rb"><h2>What happened?</h2><ul class="keylist">' + schemeRows +
+        '<li class="total"><span></span><span>Total confirmed loss</span><span class="amt">' + fmt(ANSWER_KEY.total) + '</span></li></ul>' +
+        extras(answers.schemes, ANSWER_KEY.schemes, SCHEMES) + '</section>' +
+      '<section class="rb"><h2>Who was responsible?</h2><ul class="keylist">' + peopleRows + '</ul>' +
+        extras(answers.people, ANSWER_KEY.people, PEOPLE) + '</section>' +
+      '<section class="rb"><h2>How much was lost?</h2><div class="totals">' +
+        '<div><span class="k">Your total</span><span class="v">' + fmt(answers.totalLoss) + '</span></div>' +
+        '<div><span class="k">Answer key</span><span class="v">' + fmt(ANSWER_KEY.total) + '</span></div></div>' +
+        '<p class="extra">' + diffLine + '</p></section>' +
+      '<section class="rb"><h2>What made it possible?</h2>' +
+        '<p class="sub">Your answer</p><blockquote class="mine">' + esc(answers.controlFailure) + '</blockquote>' +
+        '<p class="sub">Example of a strong answer</p><blockquote>' + esc(ANSWER_KEY.sampleControl) + '</blockquote>' +
+        '<p class="extra">Your answer will be graded separately.</p></section>';
+  }
+
+  // Restore a saved draft or a submission after a page reload
+  function restoreSet(ids, set, container) {
+    (ids || []).forEach(id => {
+      const b = container.querySelector('[data-id="' + id + '"]');
+      if (b) { set.add(id); b.setAttribute("aria-pressed", "true"); }
+    });
+  }
+  const saved = location.hash === "#reset"
+    ? (function () { try { localStorage.removeItem(STORE); } catch (e) {} return null; })()
+    : loadStore();
+  if (saved && saved.submitted && typeof saved.submitted.totalLoss === "number") {
+    const s = saved.submitted;
+    s.schemes = (s.schemes || []).filter(id => SCHEMES.some(x => x.id === id));
+    s.people = (s.people || []).filter(id => PEOPLE.some(x => x.id === id));
+    s.controlFailure = s.controlFailure || "";
+    submitted = s;
+  }
+  if (saved && saved.draft) {
+    restoreSet(saved.draft.schemes, state.schemes, schemesEl);
+    restoreSet(saved.draft.people, state.people, peopleEl);
+    lossEl.value = saved.draft.loss || "";
+    state.loss = parseMoney(lossEl.value);
+    controlEl.value = saved.draft.control || "";
+    controlEl.dispatchEvent(new Event("input"));
+  }
+  if (submitted) lockAndReveal(submitted);
+  else update();
+})();
+</script>
+</body>
+</html>
